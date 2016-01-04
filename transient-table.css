@@ -1,0 +1,16 @@
+.lci {
+	background-image: url('https://sne.space/sne/wp-content/plugins/wordpress-transient-table/light-curve-icon.png');
+    background-size: 20px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-clip: border-box;
+
+    display: block;
+    width: 20px;
+    height: 20px;
+    text-decoration: none;
+    cursor: pointer;
+    overflow: hidden;
+    text-indent: 100%;
+    white-space:nowrap;
+} 

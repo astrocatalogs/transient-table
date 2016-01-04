@@ -27,7 +27,7 @@ function sne_catalog() {
 		var table = jQuery('#example').DataTable( {
 			ajax: '../../sne/sne-catalog.json',
             dom: 'Bfrtlip',
-            colReorder: true,
+            //colReorder: true,
             pagingType: 'simple_numbers',
             pageLength: 50,
             responsive: true,
@@ -87,4 +87,9 @@ function sne_catalog() {
 <?php
 }
 
+function transient_table_scripts() {
+	wp_enqueue_style( 'style-name', plugins_url( 'transient-table.css', __FILE__) );
+}
+
+add_action( 'wp_enqueue_scripts', 'transient_table_scripts' );
 ?>
