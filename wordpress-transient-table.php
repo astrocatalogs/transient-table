@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: JFG Catalog
+ * Plugin Name: Wordpress Transient Table
  * Plugin URI: http://astrocrash.net
  * Description: DataTables implementation
  * Version: 1.0.0
