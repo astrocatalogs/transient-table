@@ -1,16 +1,87 @@
-.lci {
-	background-image: url('https://sne.space/sne/wp-content/plugins/wordpress-transient-table/light-curve-icon.png');
-    background-size: 20px;
+.ics {
+    white-space:nowrap;
+}
+
+.dci {
+	background-image: url('https://sne.space/wp-content/plugins/wordpress-transient-table/data-icon.png');
+    background-size: 22px;
     background-repeat: no-repeat;
     background-position: center;
     background-clip: border-box;
 
-    display: block;
-    width: 20px;
-    height: 20px;
-    text-decoration: none;
+    display: inline-block;
+	margin: -2px 2px -6px -2px;
+    width: 22px;
+    height: 22px;
     cursor: pointer;
     overflow: hidden;
     text-indent: 100%;
-    white-space:nowrap;
 } 
+
+.lci {
+	background-image: url('https://sne.space/wp-content/plugins/wordpress-transient-table/light-curve-icon.png');
+    background-size: 22px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-clip: border-box;
+
+    display: inline-block;
+	margin: -2px -2px -6px 0px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    overflow: hidden;
+    text-indent: 100%;
+} 
+
+#example tr td {
+    border-right: 1px solid #777!important;
+    color: #000!important;
+} 
+
+#example tr th, #example thead th, #example tfoot th {
+    font-size: 12px!important;
+    border-right: 1px solid #777!important;
+    padding: 4px 18px 4px 4px!important;
+    line-height: 18px!important;
+}
+
+.dataTables_paginate a {
+    color: #777!important;
+} 
+
+.paginate_button.disabled {
+    color: #333!important;
+} 
+
+#example tbody tr td {
+    font-size: 12px;
+    padding: 4px;
+    line-height: 16px;
+}
+
+a.dt-button {
+    line-height: 12px;
+}
+
+table.dataTable td.select-checkbox:before, table.dataTable td.select-checkbox:after {
+    top: 0.9em !important;
+}
+
+input.colsearch {
+    line-height: 18px !important;
+    font-size: 12px !important;
+    width: 100%;
+}
+
+table.dataTable tr.selected td.select-checkbox:after {
+    margin-top: -9px !important;
+} 
+
+.entry-content input {
+	line-height: 12px !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+	padding: 0em 1em !important;
+}

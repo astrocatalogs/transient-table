@@ -63,7 +63,7 @@ function sne_catalog() {
                 targets: 0
             }, {
                 visible: false,
-                targets: [ 'maxdate' ]
+                targets: [ 'maxdate', 'hvel' ]
             } ],
             select: {
                 style:    'os',
