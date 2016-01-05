@@ -36,12 +36,11 @@ function sne_catalog() {
             deferRender: true,
             autoWidth: false,
             buttons: [
-                'selectAll',
                 {
                     action: function ( e, dt, button, config ) {
                         table.rows( { filter: 'applied' } ).select();
                     },
-                    text: 'Select filtered'
+                    text: 'Select all'
                 },
                 'selectNone',
                 {
