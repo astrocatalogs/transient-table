@@ -34,6 +34,25 @@
     text-indent: 100%;
 } 
 
+.tips-ico {
+	float: left;
+    width: 64px;
+	height: 64px;
+    margin-right: 10px;
+
+	background-image: url('https://sne.space/wp-content/plugins/wordpress-transient-table/bulb.png');
+    background-size: 64px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-clip: border-box;
+
+    overflow: hidden;
+}
+
+.tips-txt {
+	margin-left: 80px;
+}
+
 #example tr td {
     border-right: 1px solid #777!important;
     color: #000!important;
