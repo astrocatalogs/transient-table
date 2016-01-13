@@ -101,6 +101,23 @@ table.dataTable tr.selected td.select-checkbox:after {
 	line-height: 12px !important;
 }
 
-.dataTables_wrapper .dataTables_paginate .paginate_button {
+.dataTables_wrapper .paginate_button {
 	padding: 0em 1em !important;
+}
+
+.dataTables_wrapper .dataTables_paginate {
+	padding-top: 0 !important;
+	margin-bottom: 8px;
+}
+
+.dataTables_length {
+	clear: left;
+}
+
+.dataTables_info {
+	clear: none !important;
+}
+
+#content table {
+	margin: 0!important;
 }

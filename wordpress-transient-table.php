@@ -16,7 +16,7 @@ function sne_catalog() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = ['z', 'Data', 'mmax', 'Mmax', 'v&#9737; (km/s)', 'dL (Mpc)' ];
+		var floatSearchCols = ['z', 'Data', 'mmax', 'Mmax', 'v☉ (km/s)', 'dL (Mpc)' ];
 		var stringColValDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['Name', 'Aliases', 'Host Name', 'Instruments/Bands', 'Claimed Type' ];
@@ -78,7 +78,7 @@ function sne_catalog() {
 				{ "data": "data", "type": "html-num", "responsivePriority": 2 },
 				{ "defaultContent": "" },
 			],
-            dom: 'Bfprtlip',
+            dom: 'Bflprti',
             //colReorder: true,
 			orderMulti: true,
             pagingType: 'simple_numbers',
@@ -103,14 +103,14 @@ function sne_catalog() {
                 'selectNone',
                 {
                     extend: 'colvis',
-                    columns: ':not(:first-child)'
+                    columns: ':not(:first-child):not(:last-child)'
                 },
                 {
                     extend: 'csv',
                     text: 'Export selected to CSV',
                     exportOptions: {
                         modifier: { selected: true },
-                        columns: ':visible:not(:first-child)'
+                        columns: ':visible:not(:first-child):not(:last-child)'
                     }
                 }
             ],
@@ -180,8 +180,8 @@ function sne_catalog() {
 				if ( splitString[i].indexOf('-') !== -1 )
 				{
 					var splitRange = splitString[i].split('-');
-					var minStr = splitRange[0].trim();
-					var maxStr = splitRange[1].trim();
+					var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
+					var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
 					var minVal = minStr * 1.0;
 					var maxVal = maxStr * 1.0;
 					if (minStr !== '') {
@@ -189,7 +189,7 @@ function sne_catalog() {
 					}
 				}
 				var idStr = splitString[i].replace(/[<=>]/g, '').trim();
-				if ( idStr === "" || idStr === NaN ) {
+				if ( idStr === "" || idStr === NaN || idStr === '-' ) {
 					if (i === 0) return true;
 				}
 				else {
