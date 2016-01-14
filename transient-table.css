@@ -34,6 +34,22 @@
     text-indent: 100%;
 } 
 
+.sci {
+	background-image: url('https://sne.space/wp-content/plugins/wordpress-transient-table/spectrum-icon.png');
+    background-size: 22px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-clip: border-box;
+
+    display: inline-block;
+	margin: -2px 0px -6px 0px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    overflow: hidden;
+    text-indent: 100%;
+} 
+
 .tips-ico {
 	float: left;
     width: 64px;
