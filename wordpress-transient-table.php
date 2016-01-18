@@ -16,24 +16,29 @@ function sne_catalog() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = ['z', 'Data', 'mmax', 'Mmax', 'v☉ (km/s)', 'dL (Mpc)' ];
+		var floatSearchCols = ['redshift', 'photolink', 'spectralink', 'maxappmag', 'magabsmag', 'hvel', 'lumdist' ];
 		var stringColValDict = {};
 		var stringColInds = [];
-		var stringSearchCols = ['Name', 'Aliases', 'Host Name', 'Instruments/Bands', 'Claimed Type' ];
+		var stringSearchCols = ['name', 'aliases', 'host', 'instruments', 'claimedtype' ];
         jQuery('#example tfoot th').each( function ( index ) {
-            if (index == 0) return;
-            var title = jQuery(this).text();
-			if (floatSearchCols.indexOf(title) !== -1)
-			{
-				floatColValDict[index] = title;
-				floatColInds.push(index);
+			var title = jQuery(this).text();
+			var classname = jQuery(this).attr('class').split(' ')[0];
+			if (classname == 'check' || classname == 'download') return;
+			for (i = 0; i < floatSearchCols.length; i++) {
+				if (jQuery(this).hasClass(floatSearchCols[i])) {
+					floatColValDict[index] = floatSearchCols[i];
+					floatColInds.push(index);
+					break;
+				}
 			}
-			if (stringSearchCols.indexOf(title) !== -1)
-			{
-				stringColValDict[index] = title;
-				stringColInds.push(index);
+			for (i = 0; i < stringSearchCols.length; i++) {
+				if (jQuery(this).hasClass(stringSearchCols[i])) {
+					stringColValDict[index] = stringSearchCols[i];
+					stringColInds.push(index);
+					break;
+				}
 			}
-            jQuery(this).html( '<input class="colsearch" type="text" id="'+title+'" placeholder="'+title+'" />' );
+            jQuery(this).html( '<input class="colsearch" type="text" id="'+classname+'" placeholder="'+title+'" />' );
         } );
 		jQuery.fn.dataTableExt.oSort['nullable-asc'] = function(a,b) {
 			if (a == '')
@@ -60,22 +65,27 @@ function sne_catalog() {
 			}
 		}
 		var table = jQuery('#example').DataTable( {
-			ajax: '../../sne/sne-catalog.json',
+			ajax: {
+				url: '../../sne/sne-catalog.json',
+				dataSrc: ''
+			},
 			columns: [
-				{ "defaultContent": "", "responsivePriority": 5 },
+				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": "name", "type": "string", "responsivePriority": 1 },
 				{ "data": "aliases[, ]", "type": "string" },
 				{ "data": "discoverdate", "type": "date" },
 				{ "data": "maxdate", "type": "date" },
 				{ "data": "maxappmag", "type": "nullable" },
 				{ "data": "maxabsmag", "type": "nullable" },
-				{ "data": "host", "type": "string" },
+				{ "data": "host[, ].value", "type": "string" },
 				{ "data": "instruments", "type": "string" },
-				{ "data": "redshift", "type": "nullable", "responsivePriority": 4 },
-				{ "data": "hvel", "type": "nullable" },
+				{ "data": "redshift[, ].value", "type": "nullable", "responsivePriority": 5 },
+				{ "data": "hvel[, ].value", "type": "nullable" },
 				{ "data": "lumdist", "type": "nullable" },
-				{ "data": "claimedtype", "type": "string", "responsivePriority": 3 },
-				{ "data": "data", "type": "html-num", "responsivePriority": 2 },
+				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 4 },
+				{ "data": "photolink", "responsivePriority": 2 },
+				{ "data": "spectralink", "responsivePriority": 2 },
+				{ "data": "download", "type": "nullable", "responsivePriority": 3 },
 				{ "defaultContent": "" },
 			],
             dom: 'Bflprti',
@@ -103,14 +113,14 @@ function sne_catalog() {
                 'selectNone',
                 {
                     extend: 'colvis',
-                    columns: ':not(:first-child):not(:last-child)'
+                    columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2))'
                 },
                 {
                     extend: 'csv',
                     text: 'Export selected to CSV',
                     exportOptions: {
                         modifier: { selected: true },
-                        columns: ':visible:not(:first-child):not(:last-child)'
+                        columns: ':visible:not(:first-child):not(:last-child):not(:nth-last-child(2))'
                     }
                 }
             ],
@@ -125,6 +135,15 @@ function sne_catalog() {
 				className: 'control',
 				orderable: false,
 				targets: -1
+			}, {
+				targets: [ 'download' ],
+				orderable: false
+			}, {
+				targets: [ 'photolink', 'spectralink' ],
+				orderSequence: [ 'desc', 'asc' ],
+			}, {
+				targets: [ 'photolink', 'spectralink', 'maxdate', 'discoverdate' ],
+				className: 'nowrap'
 			} ],
             select: {
                 style:    'os',
