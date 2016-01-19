@@ -114,6 +114,10 @@ table.dataTable tr.selected td.select-checkbox:after {
 	line-height: 12px !important;
 }
 
+.entry-content {
+	padding-top: 0 !important;
+}
+
 .dataTables_wrapper .paginate_button {
 	padding: 0em 1em !important;
 }
@@ -133,6 +137,10 @@ table.dataTable tr.selected td.select-checkbox:after {
 
 #content table {
 	margin: 0!important;
+}
+
+#container {
+	margin-top: 0!important;
 }
 
 .nowrap {

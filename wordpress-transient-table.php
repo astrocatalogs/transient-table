@@ -16,10 +16,13 @@ function sne_catalog() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = ['redshift', 'photolink', 'spectralink', 'maxappmag', 'magabsmag', 'hvel', 'lumdist' ];
+		var floatSearchCols = ['redshift', 'photolink', 'spectralink', 'maxappmag', 'maxabsmag', 'hvel', 'lumdist' ];
 		var stringColValDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['name', 'aliases', 'host', 'instruments', 'claimedtype' ];
+		var dateColValDict = {};
+		var dateColInds = [];
+		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
@@ -38,29 +41,36 @@ function sne_catalog() {
 					break;
 				}
 			}
+			for (i = 0; i < dateSearchCols.length; i++) {
+				if (jQuery(this).hasClass(dateSearchCols[i])) {
+					dateColValDict[index] = dateSearchCols[i];
+					dateColInds.push(index);
+					break;
+				}
+			}
             jQuery(this).html( '<input class="colsearch" type="text" id="'+classname+'" placeholder="'+title+'" />' );
         } );
 		jQuery.fn.dataTableExt.oSort['nullable-asc'] = function(a,b) {
-			if (a == '')
+			if (a == '' || a == null)
 				return 1;
-			else if (b == '')
+			else if (b == '' || b == null)
 				return -1;
 			else
 			{
-				var ia = parseFloat(a);
-				var ib = parseFloat(b);
+				var ia = parseFloat(a.split(',')[0]);
+				var ib = parseFloat(b.split(',')[0]);
 				return (ia<ib) ? -1 : ((ia > ib) ? 1 : 0);
 			}
 		}
 		jQuery.fn.dataTableExt.oSort['nullable-desc'] = function(a,b) {
-			if (a == '')
+			if (a == '' || a == null)
 				return 1;
-			else if (b == '')
+			else if (b == '' || b == null)
 				return -1;
 			else
 			{
-				var ia = parseFloat(a);
-				var ib = parseFloat(b);
+				var ia = parseFloat(a.split(',')[0]);
+				var ib = parseFloat(b.split(',')[0]);
 				return (ia>ib) ? -1 : ((ia < ib) ? 1 : 0);
 			}
 		}
@@ -93,6 +103,7 @@ function sne_catalog() {
 			orderMulti: true,
             pagingType: 'simple_numbers',
             pageLength: 50,
+			searchDelay: 300,
 			responsive: {
 				details: {
 					type: 'column',
@@ -152,14 +163,16 @@ function sne_catalog() {
             order: [[ 13, "desc" ]]
 		} );
 		function needAdvanced (str) {
-			return (str.indexOf('-') !== -1 || str.indexOf(',') !== -1 || str.indexOf('<') !== -1 || str.indexOf('>') !== -1);
+			var advancedStrs = ['-', 'OR', ',', '<', '>', '='];
+			return (advancedStrs.some(function(v) { return str === v; }));
 		}
         table.columns().every( function ( index ) {
             var that = this;
 
             jQuery( 'input', that.footer() ).keyup( function () {
 				if (( floatColInds.indexOf(index) === -1 ) &&
-				    ( stringColInds.indexOf(index) === -1 )) {
+				    ( stringColInds.indexOf(index) === -1 ) &&
+					( dateColInds.indexOf(index) === -1 ) ) {
 					if ( that.search() !== this.value ) {
 						that.search( this.value );
 					}
@@ -167,24 +180,82 @@ function sne_catalog() {
 				that.draw();
             } );
         } );
+		function compDates ( date1, date2, includeSame ) {
+			var d1 = new Date(date1);
+			var d2 = new Date(date2);
+			if (includeSame) {
+				return d1.getTime() <= d2.getTime();
+			} else {
+				return d1.getTime() < d2.getTime();
+			}
+		}
+		function advancedDateFilter ( data, id ) {
+			var idObj = document.getElementById(id);
+			if ( idObj === null ) return true;
+			var idString = idObj.value;
+			var splitString = idString.split(/(,|OR)+/);
+			var splitData = data.split(/(,|OR)+/);
+			for ( var d = 0; d < splitData.length; d++ ) {
+				var cData = splitData[d].trim();
+				for ( var i = 0; i < splitString.length; i++ ) {
+					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
+					if ( idStr === "" || idStr === NaN ) {
+						if (i === 0) return true;
+					}
+					else {
+						if ( splitString[i].indexOf('<=') !== -1 )
+						{
+							if ( compDates(cData, idStr, true) ) return true;
+						}
+						else if ( splitString[i].indexOf('<') !== -1 )
+						{
+							if ( compDates(cData, idStr, false) ) return true;
+						}
+						else if ( splitString[i].indexOf('>=') !== -1 )
+						{
+							if ( compDates(idStr, cData, true) ) return true;
+						}
+						else if ( splitString[i].indexOf('>') !== -1 )
+						{
+							if ( compDates(idStr, cData, false) ) return true;
+						}
+						else
+						{
+							if ( idStr.indexOf('"') !== -1 ) {
+								idStr = String(idStr.replace(/"/g, '').trim());
+								if ( cData === idStr || (idStr === "" && i === 0) ) return true;
+							}
+							else {
+								if ( cData.indexOf(idStr) !== -1 ) return true;
+							}
+						}
+					}
+				}
+			}
+			return false;
+		}
 		function advancedStringFilter ( data, id ) {
 			var idObj = document.getElementById(id);
 			if ( idObj === null ) return true;
 			var idString = idObj.value;
-			var splitString = idString.split(',');
-			for ( var i = 0; i < splitString.length; i++ ) {
-				var idStr = splitString[i].trim().toUpperCase();
-				if ( idStr === "" || idStr === NaN ) {
-					if (i === 0) return true;
-				}
-				else {
-					var lowData = String(data).toUpperCase();
-					if ( idStr.indexOf('"') !== -1 ) {
-						idStr = idStr.replace(/"/g, '');
-						if ( lowData === idStr || (idStr === "" && i === 0) ) return true;
+			var splitString = idString.split(/(,|OR)+/);
+			var splitData = data.split(/(,|OR)+/);
+			for ( var d = 0; d < splitData.length; d++ ) {
+				var cData = splitData[d].trim();
+				for ( var i = 0; i < splitString.length; i++ ) {
+					var idStr = splitString[i].trim().toUpperCase();
+					if ( idStr === "" || idStr === NaN ) {
+						if (i === 0) return true;
 					}
 					else {
-						if ( lowData.indexOf(idStr) !== -1 ) return true;
+						var lowData = String(cData).toUpperCase();
+						if ( idStr.indexOf('"') !== -1 ) {
+							idStr = idStr.replace(/"/g, '');
+							if ( lowData === idStr || (idStr === "" && i === 0) ) return true;
+						}
+						else {
+							if ( lowData.indexOf(idStr) !== -1 ) return true;
+						}
 					}
 				}
 			}
@@ -194,49 +265,53 @@ function sne_catalog() {
 			var idObj = document.getElementById(id);
 			if ( idObj === null ) return true;
 			var idString = idObj.value;
-			var splitString = idString.split(',');
-			for ( var i = 0; i < splitString.length; i++ ) {
-				if ( splitString[i].indexOf('-') !== -1 )
-				{
-					var splitRange = splitString[i].split('-');
-					var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
-					var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
-					var minVal = minStr * 1.0;
-					var maxVal = maxStr * 1.0;
-					if (minStr !== '') {
-						if (!( (minStr !== '' && data < minVal) || (maxStr !== '' && data > maxVal) )) return true;
-					}
-				}
-				var idStr = splitString[i].replace(/[<=>]/g, '').trim();
-				if ( idStr === "" || idStr === NaN || idStr === '-' ) {
-					if (i === 0) return true;
-				}
-				else {
-					idVal = idStr * 1.0;
-					if ( splitString[i].indexOf('<=') !== -1 )
+			var splitString = idString.split(/(,|OR)+/);
+			var splitData = data.split(/(,|OR)+/);
+			for ( var d = 0; d < splitData.length; d++ ) {
+				var cData = splitData[d].trim()*1.0;
+				for ( var i = 0; i < splitString.length; i++ ) {
+					if ( splitString[i].indexOf('-') !== -1 )
 					{
-						if ( idVal >= data ) return true;
-					}
-					else if ( splitString[i].indexOf('<') !== -1 )
-					{
-						if ( idVal > data ) return true;
-					}
-					else if ( splitString[i].indexOf('>=') !== -1 )
-					{
-						if ( idVal <= data ) return true;
-					}
-					else if ( splitString[i].indexOf('>') !== -1 )
-					{
-						if ( idVal < data ) return true;
-					}
-					else
-					{
-						if ( idStr.indexOf('"') !== -1 ) {
-							idStr = String(idStr.replace(/"/g, '').trim());
-							if ( data === idStr || (idStr === "" && i === 0) ) return true;
+						var splitRange = splitString[i].split('-');
+						var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
+						var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
+						var minVal = minStr*1.0;
+						var maxVal = maxStr*1.0;
+						if (minStr !== '') {
+							if (!( (minStr !== '' && cData < minVal) || (maxStr !== '' && cData > maxVal) )) return true;
 						}
-						else {
-							if ( data.indexOf(idStr) !== -1 ) return true;
+					}
+					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
+					if ( idStr === "" || idStr === NaN || idStr === '-' ) {
+						if (i === 0) return true;
+					}
+					else {
+						idVal = idStr*1.0;
+						if ( splitString[i].indexOf('<=') !== -1 )
+						{
+							if ( idVal >= cData ) return true;
+						}
+						else if ( splitString[i].indexOf('<') !== -1 )
+						{
+							if ( idVal > cData ) return true;
+						}
+						else if ( splitString[i].indexOf('>=') !== -1 )
+						{
+							if ( idVal <= cData ) return true;
+						}
+						else if ( splitString[i].indexOf('>') !== -1 )
+						{
+							if ( idVal < cData ) return true;
+						}
+						else
+						{
+							if ( idStr.indexOf('"') !== -1 ) {
+								idStr = String(idStr.replace(/"/g, '').trim());
+								if ( cData === idStr || (idStr === "" && i === 0) ) return true;
+							}
+							else {
+								if ( cData.indexOf(idStr) !== -1 ) return true;
+							}
 						}
 					}
 				}
@@ -253,6 +328,9 @@ function sne_catalog() {
 					if ( stringColInds.indexOf(i) !== -1 ) {
 						if ( !advancedStringFilter( aData[i], stringColValDict[i] ) ) return false;
 					}
+					if ( dateColInds.indexOf(i) !== -1 ) {
+						if ( !advancedDateFilter( aData[i], dateColValDict[i] ) ) return false;
+					}
 				}
 				return true;
 			}
@@ -263,9 +341,11 @@ function sne_catalog() {
 }
 
 function transient_table_scripts() {
-    wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.js", array('jquery') );
+    //wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.js", array('jquery') );
 	wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__) );
-	wp_enqueue_style( 'datatables-css', 'https://cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.css', array('transient-table') );
+	//wp_enqueue_style( 'datatables-css', 'https://cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.css', array('transient-table') );
+    wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
+	wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('transient-table') );
 }
 
 add_action( 'wp_enqueue_scripts', 'transient_table_scripts' );
