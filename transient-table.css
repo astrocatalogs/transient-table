@@ -1,5 +1,5 @@
 .dci {
-	background-image: url('https://sne.space/wp-content/plugins/wordpress-transient-table/data-icon.png');
+	background-image: url('https://sne.space/wp-content/plugins/transient-table/data-icon.png');
     background-size: 22px;
     background-repeat: no-repeat;
     background-position: center;
@@ -15,7 +15,7 @@
 } 
 
 .lci {
-	background-image: url('https://sne.space/wp-content/plugins/wordpress-transient-table/light-curve-icon.png');
+	background-image: url('https://sne.space/wp-content/plugins/transient-table/light-curve-icon.png');
     background-size: 22px;
     background-repeat: no-repeat;
     background-position: center;
@@ -31,7 +31,7 @@
 } 
 
 .sci {
-	background-image: url('https://sne.space/wp-content/plugins/wordpress-transient-table/spectrum-icon.png');
+	background-image: url('https://sne.space/wp-content/plugins/transient-table/spectrum-icon.png');
     background-size: 22px;
     background-repeat: no-repeat;
     background-position: center;
@@ -52,7 +52,7 @@
 	height: 64px;
     margin-right: 10px;
 
-	background-image: url('https://sne.space/wp-content/plugins/wordpress-transient-table/bulb.png');
+	background-image: url('https://sne.space/wp-content/plugins/transient-table/bulb.png');
     background-size: 64px;
     background-repeat: no-repeat;
     background-position: center;
