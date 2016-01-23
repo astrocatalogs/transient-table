@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Wordpress Transient Table
+ * Plugin Name: Transient Table
  * Plugin URI: http://astrocrash.net
  * Description: DataTables implementation
  * Version: 1.0.0
@@ -50,33 +50,30 @@ function sne_catalog() {
 			}
             jQuery(this).html( '<input class="colsearch" type="text" id="'+classname+'" placeholder="'+title+'" />' );
         } );
-		jQuery.fn.dataTableExt.oSort['nullable-asc'] = function(a,b) {
-			if (a == '' || a == null)
-				return 1;
-			else if (b == '' || b == null)
-				return -1;
-			else
-			{
-				var ia = parseFloat(a.split(',')[0]);
-				var ib = parseFloat(b.split(',')[0]);
-				return (ia<ib) ? -1 : ((ia > ib) ? 1 : 0);
+		jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+			'nullable-pre': function(a) {
+				return parseFloat(String(String(a).split(',')[0]));
+			},
+			'nullable-asc': function(a,b) {
+				if (a == '' || a == null)
+					return 1;
+				else if (b == '' || b == null)
+					return -1;
+				else
+					return (a<b) ? -1 : ((a > b) ? 1 : 0);
+			},
+			'nullable-desc': function(a,b) {
+				if (a == '' || a == null)
+					return 1;
+				else if (b == '' || b == null)
+					return -1;
+				else
+					return (a<b) ? -1 : ((a > b) ? 1 : 0);
 			}
-		}
-		jQuery.fn.dataTableExt.oSort['nullable-desc'] = function(a,b) {
-			if (a == '' || a == null)
-				return 1;
-			else if (b == '' || b == null)
-				return -1;
-			else
-			{
-				var ia = parseFloat(a.split(',')[0]);
-				var ib = parseFloat(b.split(',')[0]);
-				return (ia>ib) ? -1 : ((ia < ib) ? 1 : 0);
-			}
-		}
+		} );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../sne/sne-catalog.json',
+				url: '../../sne/sne-catalog.min.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -85,17 +82,19 @@ function sne_catalog() {
 				{ "data": "aliases[, ]", "type": "string" },
 				{ "data": "discoverdate", "type": "date" },
 				{ "data": "maxdate", "type": "date" },
-				{ "data": "maxappmag", "type": "nullable" },
+				{ "defaultContent": "", "data": "maxappmag", "type": "nullable" },
 				{ "data": "maxabsmag", "type": "nullable" },
 				{ "data": "host[, ].value", "type": "string" },
+				{ "data": "snra", "type": "string" },
+				{ "data": "sndec", "type": "string" },
 				{ "data": "instruments", "type": "string" },
 				{ "data": "redshift[, ].value", "type": "nullable", "responsivePriority": 5 },
 				{ "data": "hvel[, ].value", "type": "nullable" },
-				{ "data": "lumdist", "type": "nullable" },
-				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 4 },
+				{ "data": "lumdist[, ].value", "type": "nullable" },
+				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
 				{ "data": "photolink", "responsivePriority": 2 },
 				{ "data": "spectralink", "responsivePriority": 2 },
-				{ "data": "download", "type": "nullable", "responsivePriority": 3 },
+				{ "data": "download", "type": "nullable", "responsivePriority": 4 },
 				{ "defaultContent": "" },
 			],
             dom: 'Bflprti',
@@ -140,7 +139,7 @@ function sne_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
             }, {
-                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'lumdist' ],
+                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'lumdist', 'snra', 'sndec' ],
 				visible: false,
 			}, {
 				className: 'control',
@@ -160,7 +159,7 @@ function sne_catalog() {
                 style:    'os',
                 selector: 'td:first-child'
             },
-            order: [[ 13, "desc" ]]
+            order: [[ 15, "desc" ]]
 		} );
 		function needAdvanced (str) {
 			var advancedStrs = ['-', 'OR', ',', '<', '>', '='];
@@ -268,7 +267,8 @@ function sne_catalog() {
 			var splitString = idString.split(/(,|OR)+/);
 			var splitData = data.split(/(,|OR)+/);
 			for ( var d = 0; d < splitData.length; d++ ) {
-				var cData = splitData[d].trim()*1.0;
+				var cData = splitData[d].trim();
+				var cVal = cData*1.0;
 				for ( var i = 0; i < splitString.length; i++ ) {
 					if ( splitString[i].indexOf('-') !== -1 )
 					{
@@ -278,7 +278,7 @@ function sne_catalog() {
 						var minVal = minStr*1.0;
 						var maxVal = maxStr*1.0;
 						if (minStr !== '') {
-							if (!( (minStr !== '' && cData < minVal) || (maxStr !== '' && cData > maxVal) )) return true;
+							if (!( (minStr !== '' && cVal < minVal) || (maxStr !== '' && cVal > maxVal) )) return true;
 						}
 					}
 					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
@@ -289,19 +289,19 @@ function sne_catalog() {
 						idVal = idStr*1.0;
 						if ( splitString[i].indexOf('<=') !== -1 )
 						{
-							if ( idVal >= cData ) return true;
+							if ( idVal >= cVal ) return true;
 						}
 						else if ( splitString[i].indexOf('<') !== -1 )
 						{
-							if ( idVal > cData ) return true;
+							if ( idVal > cVal ) return true;
 						}
 						else if ( splitString[i].indexOf('>=') !== -1 )
 						{
-							if ( idVal <= cData ) return true;
+							if ( idVal <= cVal ) return true;
 						}
 						else if ( splitString[i].indexOf('>') !== -1 )
 						{
-							if ( idVal < cData ) return true;
+							if ( idVal < cVal ) return true;
 						}
 						else
 						{
