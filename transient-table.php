@@ -52,23 +52,30 @@ function sne_catalog() {
         } );
 		jQuery.extend( jQuery.fn.dataTableExt.oSort, {
 			'nullable-pre': function(a) {
-				return parseFloat(String(String(a).split(',')[0]));
+				var str = String(a).split(',')[0];
+				if (str === '' || str === null) return NaN;
+				return parseFloat(str);
 			},
-			'nullable-asc': function(a,b) {
+			'nullable-str-pre': function(a) {
+				var str = String(a).split(',')[0];
+				if (str === '' || str === null) return NaN;
+				return str;
+			},
+			'nullable-str-asc': function(a,b) {
 				if (a == '' || a == null)
 					return 1;
 				else if (b == '' || b == null)
 					return -1;
 				else
-					return (a<b) ? -1 : ((a > b) ? 1 : 0);
+					return a.localeCompare(b);
 			},
-			'nullable-desc': function(a,b) {
+			'nullable-str-desc': function(a,b) {
 				if (a == '' || a == null)
 					return 1;
 				else if (b == '' || b == null)
 					return -1;
 				else
-					return (a<b) ? -1 : ((a > b) ? 1 : 0);
+					return b.localeCompare(a);
 			}
 		} );
 		var table = jQuery('#example').DataTable( {
@@ -82,11 +89,11 @@ function sne_catalog() {
 				{ "data": "aliases[, ]", "type": "string" },
 				{ "data": "discoverdate", "type": "date" },
 				{ "data": "maxdate", "type": "date" },
-				{ "defaultContent": "", "data": "maxappmag", "type": "nullable" },
-				{ "data": "maxabsmag", "type": "nullable" },
+				{ "data": "maxappmag[0].value", "type": "nullable" },
+				{ "data": "maxabsmag[0].value", "type": "nullable" },
 				{ "data": "host[, ].value", "type": "string" },
-				{ "data": "snra", "type": "string" },
-				{ "data": "sndec", "type": "string" },
+				{ "data": "snra[, ].value", "type": "string" },
+				{ "data": "sndec[, ].value", "type": "string" },
 				{ "data": "instruments", "type": "string" },
 				{ "data": "redshift[, ].value", "type": "nullable", "responsivePriority": 5 },
 				{ "data": "hvel[, ].value", "type": "nullable" },
@@ -94,12 +101,12 @@ function sne_catalog() {
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
 				{ "data": "photolink", "responsivePriority": 2 },
 				{ "data": "spectralink", "responsivePriority": 2 },
-				{ "data": "download", "type": "nullable", "responsivePriority": 4 },
+				{ "data": "download", "responsivePriority": 4 },
 				{ "defaultContent": "" },
 			],
             dom: 'Bflprti',
             //colReorder: true,
-			orderMulti: true,
+			orderMulti: false,
             pagingType: 'simple_numbers',
             pageLength: 50,
 			searchDelay: 300,
