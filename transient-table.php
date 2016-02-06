@@ -80,7 +80,7 @@ function sne_catalog() {
 		} );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../sne/sne-catalog.min.json',
+				url: '../../sne/catalog.min.json',
 				dataSrc: ''
 			},
 			columns: [
