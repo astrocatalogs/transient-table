@@ -9,7 +9,7 @@
  * License: GPL2
  */
 
-function sne_catalog() {
+function transient_catalog() {
 	readfile("/var/www/html/sne/sne/catalog.html");
 ?>
 	<script>
