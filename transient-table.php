@@ -101,6 +101,7 @@ function transient_catalog() {
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
 				{ "data": "photolink", "responsivePriority": 2 },
 				{ "data": "spectralink", "responsivePriority": 2 },
+				{ "data": "citations[0].value", "responsivePriority": 2 },
 				{ "data": "download", "responsivePriority": 4 },
 				{ "defaultContent": "" },
 			],
@@ -146,7 +147,7 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
             }, {
-                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'lumdist', 'snra', 'sndec' ],
+                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'lumdist', 'snra', 'sndec', 'spectralink' ],
 				visible: false,
 			}, {
 				className: 'control',
