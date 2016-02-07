@@ -10,7 +10,7 @@
  */
 
 function transient_catalog() {
-	readfile("/var/www/html/sne/sne/catalog.html");
+	readfile("/var/www/html/tde/tde/catalog.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -80,15 +80,15 @@ function transient_catalog() {
 		} );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../sne/catalog.min.json',
+				url: '../../tde/catalog.min.json',
 				dataSrc: ''
 			},
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": "name", "type": "string", "responsivePriority": 1 },
 				{ "data": "aliases[, ]", "type": "string" },
-				{ "data": "discoverdate", "type": "date" },
-				{ "data": "maxdate", "type": "date" },
+				{ "data": "discoverdate[0].value", "type": "date" },
+				{ "data": "maxdate[0].value", "type": "date" },
 				{ "data": "maxappmag[0].value", "type": "nullable" },
 				{ "data": "maxabsmag[0].value", "type": "nullable" },
 				{ "data": "host[, ].value", "type": "string" },
@@ -104,11 +104,11 @@ function transient_catalog() {
 				{ "data": "download", "responsivePriority": 4 },
 				{ "defaultContent": "" },
 			],
-            dom: 'Bflprti',
+            dom: 'Bfrti',
             //colReorder: true,
 			orderMulti: false,
             pagingType: 'simple_numbers',
-            pageLength: 50,
+            pageLength: 250,
 			searchDelay: 300,
 			responsive: {
 				details: {

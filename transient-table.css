@@ -127,6 +127,18 @@ table.dataTable tr.selected td.select-checkbox:after {
 	margin-bottom: 8px;
 }
 
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate,
+.dataTables_wrapper .dataTables_filter {
+	color: #CCC !important;
+}
+
+.dataTables_wrapper label input,
+.dataTables_wrapper label select {
+	margin: 2px 2px 8px 2px !important;
+}
+
 .dataTables_length {
 	clear: left;
 }
@@ -137,6 +149,10 @@ table.dataTable tr.selected td.select-checkbox:after {
 
 #content table {
 	margin: 0!important;
+}
+
+#content div {
+	line-height: 20px !important;
 }
 
 #container {
