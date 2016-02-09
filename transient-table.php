@@ -10,7 +10,7 @@
  */
 
 function transient_catalog() {
-	readfile("/var/www/html/tde/tde/catalog.html");
+	readfile("/var/www/html/gc/gc/catalog.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -80,7 +80,7 @@ function transient_catalog() {
 		} );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../tde/catalog.min.json',
+				url: '../../gc/catalog.min.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -92,12 +92,12 @@ function transient_catalog() {
 				{ "data": "maxappmag[0].value", "type": "nullable" },
 				{ "data": "maxabsmag[0].value", "type": "nullable" },
 				{ "data": "host[, ].value", "type": "string" },
-				{ "data": "snra[, ].value", "type": "string" },
-				{ "data": "sndec[, ].value", "type": "string" },
+				{ "data": "ra[0].value", "type": "string" },
+				{ "data": "dec[0].value", "type": "string" },
 				{ "data": "instruments", "type": "string" },
-				{ "data": "redshift[, ].value", "type": "nullable", "responsivePriority": 5 },
-				{ "data": "hvel[, ].value", "type": "nullable" },
-				{ "data": "lumdist[, ].value", "type": "nullable" },
+				{ "data": "redshift[0].value", "type": "nullable", "responsivePriority": 5 },
+				{ "data": "hvel[0].value", "type": "nullable" },
+				{ "data": "lumdist[0].value", "type": "nullable" },
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
 				{ "data": "photolink", "responsivePriority": 2 },
 				{ "data": "spectralink", "responsivePriority": 2 },
@@ -147,7 +147,7 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
             }, {
-                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'lumdist', 'snra', 'sndec', 'spectralink' ],
+                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'lumdist', 'ra', 'dec', 'spectralink' ],
 				visible: false,
 			}, {
 				className: 'control',
