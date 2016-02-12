@@ -19,7 +19,7 @@ function transient_catalog() {
 		var floatSearchCols = ['redshift', 'photolink', 'spectralink', 'maxappmag', 'maxabsmag', 'hvel', 'lumdist' ];
 		var stringColValDict = {};
 		var stringColInds = [];
-		var stringSearchCols = ['name', 'aliases', 'host', 'instruments', 'claimedtype' ];
+		var stringSearchCols = ['name', 'aliases', 'instruments', 'claimedtype' ];
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
@@ -88,24 +88,16 @@ function transient_catalog() {
 				{ "data": "name", "type": "string", "responsivePriority": 1 },
 				{ "data": "aliases[, ]", "type": "string" },
 				{ "data": "discoverdate[0].value", "type": "date" },
-				{ "data": "maxdate[0].value", "type": "date" },
-				{ "data": "maxappmag[0].value", "type": "nullable" },
-				{ "data": "maxabsmag[0].value", "type": "nullable" },
-				{ "data": "host[, ].value", "type": "string" },
 				{ "data": "ra[0].value", "type": "string" },
 				{ "data": "dec[0].value", "type": "string" },
 				{ "data": "instruments", "type": "string" },
-				{ "data": "redshift[0].value", "type": "nullable", "responsivePriority": 5 },
-				{ "data": "hvel[0].value", "type": "nullable" },
-				{ "data": "lumdist[0].value", "type": "nullable" },
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
-				{ "data": "photolink", "responsivePriority": 2 },
 				{ "data": "spectralink", "responsivePriority": 2 },
 				{ "data": "citations[0].value", "responsivePriority": 2 },
 				{ "data": "download", "responsivePriority": 4 },
-				{ "defaultContent": "" },
+				{ "defaultContent": "" }
 			],
-            dom: 'Bfrti',
+            dom: 'Bflprti',
             //colReorder: true,
 			orderMulti: false,
             pagingType: 'simple_numbers',
@@ -147,7 +139,7 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
             }, {
-                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'lumdist', 'ra', 'dec', 'spectralink' ],
+                targets: [ 'aliases', 'spectralink' ],
 				visible: false,
 			}, {
 				className: 'control',
@@ -157,17 +149,17 @@ function transient_catalog() {
 				targets: [ 'download' ],
 				orderable: false
 			}, {
-				targets: [ 'photolink', 'spectralink' ],
+				targets: [ 'spectralink' ],
 				orderSequence: [ 'desc', 'asc' ],
 			}, {
-				targets: [ 'photolink', 'spectralink', 'maxdate', 'discoverdate' ],
+				targets: [ 'spectralink', 'discoverdate' ],
 				className: 'nowrap'
 			} ],
             select: {
                 style:    'os',
                 selector: 'td:first-child'
             },
-            order: [[ 15, "desc" ]]
+            order: [[ 2, "desc" ]]
 		} );
 		function needAdvanced (str) {
 			var advancedStrs = ['-', 'OR', ',', '<', '>', '='];
