@@ -26,7 +26,7 @@ function transient_catalog() {
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
-			if (classname == 'check' || classname == 'download') return;
+			if (classname == 'check' || classname == 'download' || classname == 'references') return;
 			for (i = 0; i < floatSearchCols.length; i++) {
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
 					floatColValDict[index] = floatSearchCols[i];
@@ -87,20 +87,21 @@ function transient_catalog() {
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": "name", "type": "string", "responsivePriority": 1 },
 				{ "data": "aliases[, ]", "type": "string" },
-				{ "data": "discoverdate", "type": "date" },
-				{ "data": "maxdate", "type": "date" },
-				{ "data": "maxappmag[0].value", "type": "nullable" },
-				{ "data": "maxabsmag[0].value", "type": "nullable" },
+				{ "data": "discoverdate.0.value", "type": "date", "defaultContent": "" },
+				{ "data": "maxdate.0.value", "type": "date", "defaultContent": "" },
+				{ "data": "maxappmag.0.value", "type": "nullable", "defaultContent": "" },
+				{ "data": "maxabsmag.0.value", "type": "nullable", "defaultContent": "" },
 				{ "data": "host[, ].value", "type": "string" },
-				{ "data": "snra[, ].value", "type": "string" },
-				{ "data": "sndec[, ].value", "type": "string" },
-				{ "data": "instruments", "type": "string" },
-				{ "data": "redshift[, ].value", "type": "nullable", "responsivePriority": 5 },
-				{ "data": "hvel[, ].value", "type": "nullable" },
-				{ "data": "lumdist[, ].value", "type": "nullable" },
+				{ "data": "ra.0.value", "type": "string", "defaultContent": "" },
+				{ "data": "dec.0.value", "type": "string", "defaultContent": "" },
+				{ "data": "instruments", "type": "string", "defaultContent": "" },
+				{ "data": "redshift.0.value", "type": "nullable", "defaultContent": "", "responsivePriority": 5 },
+				{ "data": "hvel.0.value", "type": "nullable", "defaultContent": "" },
+				{ "data": "lumdist.0.value", "type": "nullable", "defaultContent": "" },
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
 				{ "data": "photolink", "responsivePriority": 2 },
 				{ "data": "spectralink", "responsivePriority": 2 },
+				{ "data": "references", "responsivePriority": 100, "searchable": false },
 				{ "data": "download", "responsivePriority": 4 },
 				{ "defaultContent": "" },
 			],
@@ -146,7 +147,7 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
             }, {
-                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'lumdist', 'snra', 'sndec' ],
+                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'lumdist', 'ra', 'dec', 'references' ],
 				visible: false,
 			}, {
 				className: 'control',
