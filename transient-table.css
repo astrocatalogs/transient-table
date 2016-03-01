@@ -14,6 +14,38 @@
     text-indent: 100%;
 } 
 
+.hhi {
+	background-image: url('https://sne.space/wp-content/plugins/transient-table/has-host-icon.png');
+    background-size: 22px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-clip: border-box;
+
+    display: inline-block;
+	margin: -2px 0px -6px -1px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    overflow: hidden;
+    text-indent: 100%;
+} 
+
+.nhi {
+	background-image: url('https://sne.space/wp-content/plugins/transient-table/no-host-icon.png');
+    background-size: 22px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-clip: border-box;
+
+    display: inline-block;
+	margin: -2px 0px -6px -1px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    overflow: hidden;
+    text-indent: 100%;
+} 
+
 .lci {
 	background-image: url('https://sne.space/wp-content/plugins/transient-table/light-curve-icon.png');
     background-size: 22px;
