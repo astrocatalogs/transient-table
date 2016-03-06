@@ -80,7 +80,7 @@ function transient_catalog() {
 			}
             jQuery(this).html( '<input class="colsearch" type="text" id="'+classname+'" placeholder="'+title+'" />' );
         } );
-		jQuery.extend( jQuery.fn.dataTable.ext.type.order, {
+		jQuery.extend( jQuery.fn.dataTableExt.oSort, {
 			"non-empty-string-asc": function (str1, str2) {
 				if(isNaN(str1))
 					return 1;
@@ -95,15 +95,22 @@ function transient_catalog() {
 					return -1;
 				return ((str1 < str2) ? 1 : ((str1 > str2) ? -1 : 0));
 			},
-			"non-empty-float-pre": function (a) {
-				var str = String(a).split(',')[0].replace(/<(?:.|\n)*?>/gm, '').trim();
-				if (str == "") return NaN;
-				return parseFloat(String(a).split(',')[0].replace(/<(?:.|\n)*?>/gm, '').trim());
-			},
-			"non-empty-float-asc": function (v1, v2) {
+			"non-empty-float-asc": function (str1, str2) {
+				if(isNaN(str1))
+					return 1;
+				if(isNaN(str2))
+					return -1;
+				var v1 = +str1;
+				var v2 = +str2;
 				return ((v1 < v2) ? -1 : ((v1 > v2) ? 1 : 0));
 			},
-			"non-empty-float-desc": function (v1, v2) {
+			"non-empty-float-desc": function (str1, str2) {
+				if(isNaN(str1))
+					return 1;
+				if(isNaN(str2))
+					return -1;
+				var v1 = +str1;
+				var v2 = +str2;
 				return ((v1 < v2) ? 1 : ((v1 > v2) ? -1 : 0));
 			}
 		} );
@@ -113,26 +120,26 @@ function transient_catalog() {
 				dataSrc: ''
 			},
 			columns: [
-				{ defaultContent: "", responsivePriority: 6 },
-				{ data: "name", type: "string", responsivePriority: 1 },
-				{ data: "aliases[, ]", type: "string" },
-				{ data: "discoverdate.0.value", type: "date", defaultContent: "" },
-				{ data: "maxdate.0.value", type: "date", defaultContent: "" },
-				{ data: "maxappmag.0.value", type: "non-empty-float", defaultContent: "", render: noBlanks },
-				{ data: "maxabsmag.0.value", type: "num", defaultContent: "", render: noBlanks },
-				{ data: "host[, ].value", type: "string" },
-				{ data: "ra.0.value", type: "non-empty-float", defaultContent: "", render: raDec },
-				{ data: "dec.0.value", type: "non-empty-float", defaultContent: "", render: raDec },
-				{ data: "instruments", type: "string", defaultContent: "" },
-				{ data: "redshift.0.value", type: "num", defaultContent: "", responsivePriority: 5 },
-				{ data: "hvel.0.value", type: "num", defaultContent: "" },
-				{ data: "lumdist.0.value", type: "non-empty-float", defaultContent: "" },
-				{ data: "claimedtype[, ].value", type: "string", responsivePriority: 3 },
-				{ data: "photolink", responsivePriority: 2 },
-				{ data: "spectralink", responsivePriority: 2 },
-				{ data: "references", responsivePriority: 100, searchable: false },
-				{ data: "download", responsivePriority: 4 },
-				{ defaultContent: "" },
+				{ "defaultContent": "", "responsivePriority": 6 },
+				{ "data": "name", "type": "string", "responsivePriority": 1 },
+				{ "data": "aliases[, ]", "type": "string" },
+				{ "data": "discoverdate.0.value", "type": "date", "defaultContent": "" },
+				{ "data": "maxdate.0.value", "type": "date", "defaultContent": "" },
+				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanks },
+				{ "data": "maxabsmag.0.value", "type": "num", "defaultContent": "" },
+				{ "data": "host[, ].value", "type": "string" },
+				{ "data": "ra.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDec },
+				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDec },
+				{ "data": "instruments", "type": "string", "defaultContent": "" },
+				{ "data": "redshift.0.value", "type": "num", "defaultContent": "", "responsivePriority": 5 },
+				{ "data": "hvel.0.value", "type": "num", "defaultContent": "" },
+				{ "data": "lumdist.0.value", "type": "num", "defaultContent": "" },
+				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
+				{ "data": "photolink", "responsivePriority": 2 },
+				{ "data": "spectralink", "responsivePriority": 2 },
+				{ "data": "references", "responsivePriority": 100, "searchable": false },
+				{ "data": "download", "responsivePriority": 4 },
+				{ "defaultContent": "" },
 			],
             dom: 'Bflprti',
             //colReorder: true,
