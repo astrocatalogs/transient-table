@@ -23,6 +23,36 @@ function transient_catalog() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
+		function raDec ( data, type, row ) {
+			if ( type === 'sort' ) {
+				if (data === '' || data === null || typeof data !== 'string') return NaN;
+				var str = data.trim();
+				var parts = str.split(':');
+				var value = 0.0;
+				if (parts.length >= 1) {
+					value += Number(parts[0]);
+					var sign = 1.0;
+					if (parts[0][0] == '-') {
+						var sign = -1.0;
+					}
+				}
+				if (parts.length >= 2) {
+					value += sign*Number(parts[1])/60.;
+				}
+				if (parts.length >= 3) {
+					value += sign*Number(parts[2])/3600.;
+				}
+				return String(value);
+			}
+			return data;
+		}
+		function noBlanks ( data, type, row ) {
+			if ( type === 'sort' ) {
+				if (data === '' || data === null || typeof data !== 'string') return NaN;
+				return String(data).split(',')[0].replace(/<(?:.|\n)*?>/gm, '').trim();
+			}
+			return data;
+		}
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
@@ -51,31 +81,37 @@ function transient_catalog() {
             jQuery(this).html( '<input class="colsearch" type="text" id="'+classname+'" placeholder="'+title+'" />' );
         } );
 		jQuery.extend( jQuery.fn.dataTableExt.oSort, {
-			'nullable-pre': function(a) {
-				var str = String(a).split(',')[0];
-				if (str === '' || str === null) return NaN;
-				return parseFloat(str);
-			},
-			'nullable-str-pre': function(a) {
-				var str = String(a).split(',')[0];
-				if (str === '' || str === null) return NaN;
-				return str;
-			},
-			'nullable-str-asc': function(a,b) {
-				if (a == '' || a == null)
+			"non-empty-string-asc": function (str1, str2) {
+				if(isNaN(str1))
 					return 1;
-				else if (b == '' || b == null)
+				if(isNaN(str2))
 					return -1;
-				else
-					return a.localeCompare(b);
+				return ((str1 < str2) ? -1 : ((str1 > str2) ? 1 : 0));
 			},
-			'nullable-str-desc': function(a,b) {
-				if (a == '' || a == null)
+			"non-empty-string-desc": function (str1, str2) {
+				if(isNaN(str1))
 					return 1;
-				else if (b == '' || b == null)
+				if(isNaN(str2))
 					return -1;
-				else
-					return b.localeCompare(a);
+				return ((str1 < str2) ? 1 : ((str1 > str2) ? -1 : 0));
+			},
+			"non-empty-float-asc": function (str1, str2) {
+				if(isNaN(str1))
+					return 1;
+				if(isNaN(str2))
+					return -1;
+				var v1 = +str1;
+				var v2 = +str2;
+				return ((v1 < v2) ? -1 : ((v1 > v2) ? 1 : 0));
+			},
+			"non-empty-float-desc": function (str1, str2) {
+				if(isNaN(str1))
+					return 1;
+				if(isNaN(str2))
+					return -1;
+				var v1 = +str1;
+				var v2 = +str2;
+				return ((v1 < v2) ? 1 : ((v1 > v2) ? -1 : 0));
 			}
 		} );
 		var table = jQuery('#example').DataTable( {
@@ -89,15 +125,15 @@ function transient_catalog() {
 				{ "data": "aliases[, ]", "type": "string" },
 				{ "data": "discoverdate.0.value", "type": "date", "defaultContent": "" },
 				{ "data": "maxdate.0.value", "type": "date", "defaultContent": "" },
-				{ "data": "maxappmag.0.value", "type": "nullable", "defaultContent": "" },
-				{ "data": "maxabsmag.0.value", "type": "nullable", "defaultContent": "" },
+				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanks },
+				{ "data": "maxabsmag.0.value", "type": "num", "defaultContent": "", "render": noBlanks },
 				{ "data": "host[, ].value", "type": "string" },
-				{ "data": "ra.0.value", "type": "string", "defaultContent": "" },
-				{ "data": "dec.0.value", "type": "string", "defaultContent": "" },
+				{ "data": "ra.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDec },
+				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDec },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
-				{ "data": "redshift.0.value", "type": "nullable", "defaultContent": "", "responsivePriority": 5 },
-				{ "data": "hvel.0.value", "type": "nullable", "defaultContent": "" },
-				{ "data": "lumdist.0.value", "type": "nullable", "defaultContent": "" },
+				{ "data": "redshift.0.value", "type": "num", "defaultContent": "", "responsivePriority": 5 },
+				{ "data": "hvel.0.value", "type": "num", "defaultContent": "" },
+				{ "data": "lumdist.0.value", "type": "num", "defaultContent": "" },
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
 				{ "data": "photolink", "responsivePriority": 2 },
 				{ "data": "spectralink", "responsivePriority": 2 },
@@ -147,7 +183,7 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
             }, {
-                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'lumdist', 'ra', 'dec', 'references' ],
+                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'references', 'instruments' ],
 				visible: false,
 			}, {
 				className: 'control',
@@ -188,8 +224,18 @@ function transient_catalog() {
             } );
         } );
 		function compDates ( date1, date2, includeSame ) {
-			var d1 = new Date(date1);
+			var d1;
+			var d1split = date1.split('/');
+			if (d1split.length == 1) {
+				d1 = new Date(date1 + '/12/31');
+			} else if (d1split.length == 2) {
+				var daysInMonth = new Date(d1split[0], d1split[1], 0).getDate();
+				d1 = new Date(date1 + '/' + String(daysInMonth));
+			} else {
+				d1 = new Date(date1);
+			}
 			var d2 = new Date(date2);
+
 			if (includeSame) {
 				return d1.getTime() <= d2.getTime();
 			} else {
@@ -200,16 +246,31 @@ function transient_catalog() {
 			var idObj = document.getElementById(id);
 			if ( idObj === null ) return true;
 			var idString = idObj.value;
+			if ( idString === '' ) return true;
 			var splitString = idString.split(/(,|OR)+/);
 			var splitData = data.split(/(,|OR)+/);
 			for ( var d = 0; d < splitData.length; d++ ) {
 				var cData = splitData[d].trim();
 				for ( var i = 0; i < splitString.length; i++ ) {
+					if ( splitString[i].indexOf('-') !== -1 )
+					{
+						var splitRange = splitString[i].split('-');
+						var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
+						var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
+						if (minStr !== '') {
+							if (!( (minStr !== '' && compDates(cData, minStr, true)) ||
+								   (maxStr !== '' && compDates(maxStr, cData, true)) || cData === '' )) return true;
+						}
+					}
 					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
+					if ( idStr === "" || idStr === NaN || idStr === '-' ) {
+						if (i === 0) return true;
+					}
 					if ( idStr === "" || idStr === NaN ) {
 						if (i === 0) return true;
 					}
 					else {
+						if (cData === '') return false;
 						if ( splitString[i].indexOf('<=') !== -1 )
 						{
 							if ( compDates(cData, idStr, true) ) return true;
@@ -245,6 +306,7 @@ function transient_catalog() {
 			var idObj = document.getElementById(id);
 			if ( idObj === null ) return true;
 			var idString = idObj.value;
+			if ( idString === '' ) return true;
 			var splitString = idString.split(/(,|OR)+/);
 			var splitData = data.split(/(,|OR)+/);
 			for ( var d = 0; d < splitData.length; d++ ) {
@@ -272,6 +334,7 @@ function transient_catalog() {
 			var idObj = document.getElementById(id);
 			if ( idObj === null ) return true;
 			var idString = idObj.value;
+			if ( idString === '' ) return true;
 			var splitString = idString.split(/(,|OR)+/);
 			var splitData = data.split(/(,|OR)+/);
 			for ( var d = 0; d < splitData.length; d++ ) {
