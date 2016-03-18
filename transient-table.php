@@ -16,10 +16,13 @@ function transient_catalog() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = ['redshift', 'photolink', 'spectralink', 'maxappmag', 'maxabsmag', 'hvel', 'lumdist' ];
+		var floatSearchCols = ['redshift', 'photolink', 'spectralink', 'maxappmag', 'maxabsmag', 'hvel', 'lumdist'];
 		var stringColValDict = {};
 		var stringColInds = [];
-		var stringSearchCols = ['name', 'aliases', 'host', 'instruments', 'claimedtype' ];
+		var stringSearchCols = ['name', 'aliases', 'host', 'instruments', 'claimedtype'];
+		var raDecColValDict = {};
+		var raDecColInds = [];
+		var raDecSearchCols = ['ra', 'dec'];
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
@@ -78,6 +81,13 @@ function transient_catalog() {
 					break;
 				}
 			}
+			for (i = 0; i < raDecSearchCols.length; i++) {
+				if (jQuery(this).hasClass(raDecSearchCols[i])) {
+					raDecColValDict[index] = raDecSearchCols[i];
+					raDecColInds.push(index);
+					break;
+				}
+			}
             jQuery(this).html( '<input class="colsearch" type="text" id="'+classname+'" placeholder="'+title+'" />' );
         } );
 		jQuery.extend( jQuery.fn.dataTableExt.oSort, {
@@ -127,7 +137,7 @@ function transient_catalog() {
 				{ "data": "maxdate.0.value", "type": "date", "defaultContent": "" },
 				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanks },
 				{ "data": "maxabsmag.0.value", "type": "num", "defaultContent": "" },
-				{ "data": "host[, ].value", "type": "string" },
+				{ "data": "host[, ].value", "type": "html", "width": "20%" },
 				{ "data": "ra.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDec },
 				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDec },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
@@ -135,13 +145,13 @@ function transient_catalog() {
 				{ "data": "hvel.0.value", "type": "num", "defaultContent": "" },
 				{ "data": "lumdist.0.value", "type": "num", "defaultContent": "" },
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
-				{ "data": "photolink", "responsivePriority": 2 },
-				{ "data": "spectralink", "responsivePriority": 2 },
+				{ "data": "photolink", "responsivePriority": 2, "width": "7%" },
+				{ "data": "spectralink", "responsivePriority": 2, "width": "5%" },
 				{ "data": "references", "responsivePriority": 100, "searchable": false },
 				{ "data": "download", "responsivePriority": 4 },
 				{ "defaultContent": "" },
 			],
-            dom: 'Bflprti',
+            dom: 'Bflprtip',
             //colReorder: true,
 			orderMulti: false,
             pagingType: 'simple_numbers',
@@ -183,7 +193,7 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
             }, {
-                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'references', 'instruments' ],
+                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'references', 'instruments', 'lumdist' ],
 				visible: false,
 			}, {
 				className: 'control',
@@ -196,7 +206,7 @@ function transient_catalog() {
 				targets: [ 'photolink', 'spectralink' ],
 				orderSequence: [ 'desc', 'asc' ],
 			}, {
-				targets: [ 'photolink', 'spectralink', 'maxdate', 'discoverdate' ],
+				targets: [ 'photolink', 'spectralink', 'maxdate', 'discoverdate', 'download' ],
 				className: 'nowrap'
 			} ],
             select: {
@@ -212,10 +222,17 @@ function transient_catalog() {
         table.columns().every( function ( index ) {
             var that = this;
 
-            jQuery( 'input', that.footer() ).keyup( function () {
+            jQuery( 'input', that.footer() ).keyup( function (e) {
+				var code = (e.keyCode || e.which);
+
+				// do nothing if it's an arrow key
+				if(code == 37 || code == 38 || code == 39 || code == 40) {
+					return;
+				}
 				if (( floatColInds.indexOf(index) === -1 ) &&
 				    ( stringColInds.indexOf(index) === -1 ) &&
-					( dateColInds.indexOf(index) === -1 ) ) {
+					( dateColInds.indexOf(index) === -1 ) &&
+					( raDecColInds.indexOf(index) === -1 ) ) {
 					if ( that.search() !== this.value ) {
 						that.search( this.value );
 					}
@@ -240,6 +257,56 @@ function transient_catalog() {
 				return d1.getTime() <= d2.getTime();
 			} else {
 				return d1.getTime() < d2.getTime();
+			}
+		}
+		function compRaDecs ( radec1inp, radec2inp, includeSame ) {
+			var rd1, rd2;
+			var sign1, sign2;
+			if (radec1inp.length > 0) {
+				if (radec1inp[0] == '+') {
+					radec1 = radec1inp.slice(1,-1);
+					sign1 = 1.0;
+				} else if (radec1inp[0] == '-') {
+					radec1 = radec1inp.slice(1,-1);
+					sign1 = -1.0;
+				} else {
+					radec1 = radec1inp;
+					sign1 = 1.0;
+				}
+			}
+			if (radec2inp.length > 0) {
+				if (radec2inp[0] == '+') {
+					radec2 = radec2inp.slice(1,-1);
+					sign2 = 1.0;
+				} else if (radec2inp[0] == '-') {
+					radec2 = radec2inp.slice(1,-1);
+					sign2 = -1.0;
+				} else {
+					radec2 = radec2inp;
+					sign2 = 1.0;
+				}
+			}
+			var rd1split = radec1.split(':');
+			var rd2split = radec2.split(':');
+			if (rd1split.length == 1) {
+				rd1 = parseFloat(rd1split[0]);
+			} else if (rd1split.length == 2) {
+				rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60.;
+			} else {
+				rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60. + parseFloat(rd1split[2])/3600.;
+			}
+			if (rd2split.length == 1) {
+				rd2 = parseFloat(rd2split[0]);
+			} else if (rd2split.length == 2) {
+				rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60.;
+			} else {
+				rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60. + parseFloat(rd2split[2])/3600.;
+			}
+
+			if (includeSame) {
+				return sign1*rd1 <= sign2*rd2;
+			} else {
+				return sign1*rd1 < sign2*rd2;
 			}
 		}
 		function advancedDateFilter ( data, id ) {
@@ -286,6 +353,66 @@ function transient_catalog() {
 						else if ( splitString[i].indexOf('>') !== -1 )
 						{
 							if ( compDates(idStr, cData, false) ) return true;
+						}
+						else
+						{
+							if ( idStr.indexOf('"') !== -1 ) {
+								idStr = String(idStr.replace(/"/g, '').trim());
+								if ( cData === idStr || (idStr === "" && i === 0) ) return true;
+							}
+							else {
+								if ( cData.indexOf(idStr) !== -1 ) return true;
+							}
+						}
+					}
+				}
+			}
+			return false;
+		}
+		function advancedRaDecFilter ( data, id ) {
+			var idObj = document.getElementById(id);
+			if ( idObj === null ) return true;
+			var idString = idObj.value;
+			if ( idString === '' ) return true;
+			var splitString = idString.split(/(,|OR)+/);
+			var splitData = data.split(/(,|OR)+/);
+			for ( var d = 0; d < splitData.length; d++ ) {
+				var cData = splitData[d].trim();
+				for ( var i = 0; i < splitString.length; i++ ) {
+					if ( splitString[i].indexOf('-') !== -1 )
+					{
+						var splitRange = splitString[i].split('-');
+						var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
+						var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
+						if (minStr !== '') {
+							if (!( (minStr !== '' && compRaDecs(cData, minStr, true)) ||
+								   (maxStr !== '' && compRaDecs(maxStr, cData, true)) || cData === '' )) return true;
+						}
+					}
+					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
+					if ( idStr === "" || idStr === NaN || idStr === '-' ) {
+						if (i === 0) return true;
+					}
+					if ( idStr === "" || idStr === NaN ) {
+						if (i === 0) return true;
+					}
+					else {
+						if (cData === '') return false;
+						if ( splitString[i].indexOf('<=') !== -1 )
+						{
+							if ( compRaDecs(cData, idStr, true) ) return true;
+						}
+						else if ( splitString[i].indexOf('<') !== -1 )
+						{
+							if ( compRaDecs(cData, idStr, false) ) return true;
+						}
+						else if ( splitString[i].indexOf('>=') !== -1 )
+						{
+							if ( compRaDecs(idStr, cData, true) ) return true;
+						}
+						else if ( splitString[i].indexOf('>') !== -1 )
+						{
+							if ( compRaDecs(idStr, cData, false) ) return true;
 						}
 						else
 						{
@@ -395,12 +522,12 @@ function transient_catalog() {
 				{
 					if ( floatColInds.indexOf(i) !== -1 ) {
 						if ( !advancedFloatFilter( aData[i], floatColValDict[i] ) ) return false;
-					}
-					if ( stringColInds.indexOf(i) !== -1 ) {
+					} else if ( stringColInds.indexOf(i) !== -1 ) {
 						if ( !advancedStringFilter( aData[i], stringColValDict[i] ) ) return false;
-					}
-					if ( dateColInds.indexOf(i) !== -1 ) {
+					} else if ( dateColInds.indexOf(i) !== -1 ) {
 						if ( !advancedDateFilter( aData[i], dateColValDict[i] ) ) return false;
+					} else if ( raDecColInds.indexOf(i) !== -1 ) {
+						if ( !advancedRaDecFilter( aData[i], raDecColValDict[i] ) ) return false;
 					}
 				}
 				return true;
