@@ -26,7 +26,15 @@ function transient_catalog() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
-		function raDec ( data, type, row ) {
+		function dateRender ( data, type, row ) {
+			if ( type === 'sort' ) {
+				if (data === '' || data === null || typeof data !== 'string') return NaN;
+				var d = new Date(data)
+				return d.getTime();
+			}
+			return data;
+		}
+		function raDecRender ( data, type, row ) {
 			if ( type === 'sort' ) {
 				if (data === '' || data === null || typeof data !== 'string') return NaN;
 				var str = data.trim();
@@ -147,13 +155,13 @@ function transient_catalog() {
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": "name", "type": "string", "responsivePriority": 1 },
 				{ "data": "aliases[, ]", "type": "string" },
-				{ "data": "discoverdate.0.value", "type": "date", "defaultContent": "" },
-				{ "data": "maxdate.0.value", "type": "date", "defaultContent": "" },
+				{ "data": "discoverdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender },
+				{ "data": "maxdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender },
 				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "maxabsmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "host[, ].value", "type": "html", "width": "20%" },
-				{ "data": "ra.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDec },
-				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDec },
+				{ "data": "ra.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDecRender },
+				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDecRender },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": "redshift.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender, "responsivePriority": 5 },
 				{ "data": "hvel.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
