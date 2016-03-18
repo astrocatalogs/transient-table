@@ -45,16 +45,26 @@ function transient_catalog() {
 				if (parts.length >= 3) {
 					value += sign*Number(parts[2])/3600.;
 				}
-				return String(value);
+				return value;
 			}
 			return data;
 		}
-		function noBlanks ( data, type, row ) {
+		function noBlanksNumRender ( data, type, row ) {
+			if ( type === 'sort' ) {
+				if (data === '' || data === null || typeof data !== 'string') return NaN;
+				return parseFloat(String(data).split(',')[0].replace(/<(?:.|\n)*?>/gm, '').trim());
+			}
+			return data;
+		}
+		function noBlanksStrRender ( data, type, row ) {
 			if ( type === 'sort' ) {
 				if (data === '' || data === null || typeof data !== 'string') return NaN;
 				return String(data).split(',')[0].replace(/<(?:.|\n)*?>/gm, '').trim();
 			}
 			return data;
+		}
+		function myIsNaN ( val ) {
+			return (val != val);
 		}
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
@@ -92,6 +102,8 @@ function transient_catalog() {
         } );
 		jQuery.extend( jQuery.fn.dataTableExt.oSort, {
 			"non-empty-string-asc": function (str1, str2) {
+				if(isNaN(str1) && isNaN(str2))
+					return 0;
 				if(isNaN(str1))
 					return 1;
 				if(isNaN(str2))
@@ -99,28 +111,30 @@ function transient_catalog() {
 				return ((str1 < str2) ? -1 : ((str1 > str2) ? 1 : 0));
 			},
 			"non-empty-string-desc": function (str1, str2) {
+				if(isNaN(str1) && isNaN(str2))
+					return 0;
 				if(isNaN(str1))
 					return 1;
 				if(isNaN(str2))
 					return -1;
 				return ((str1 < str2) ? 1 : ((str1 > str2) ? -1 : 0));
 			},
-			"non-empty-float-asc": function (str1, str2) {
-				if(isNaN(str1))
+			"non-empty-float-asc": function (v1, v2) {
+				if(isNaN(v1) && isNaN(v2))
+					return 0;
+				if(isNaN(v1))
 					return 1;
-				if(isNaN(str2))
+				if(isNaN(v2))
 					return -1;
-				var v1 = +str1;
-				var v2 = +str2;
 				return ((v1 < v2) ? -1 : ((v1 > v2) ? 1 : 0));
 			},
-			"non-empty-float-desc": function (str1, str2) {
-				if(isNaN(str1))
+			"non-empty-float-desc": function (v1, v2) {
+				if(isNaN(v1) && isNaN(v2))
+					return 0;
+				if(isNaN(v1))
 					return 1;
-				if(isNaN(str2))
+				if(isNaN(v2))
 					return -1;
-				var v1 = +str1;
-				var v2 = +str2;
 				return ((v1 < v2) ? 1 : ((v1 > v2) ? -1 : 0));
 			}
 		} );
@@ -135,15 +149,15 @@ function transient_catalog() {
 				{ "data": "aliases[, ]", "type": "string" },
 				{ "data": "discoverdate.0.value", "type": "date", "defaultContent": "" },
 				{ "data": "maxdate.0.value", "type": "date", "defaultContent": "" },
-				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanks },
-				{ "data": "maxabsmag.0.value", "type": "num", "defaultContent": "" },
+				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
+				{ "data": "maxabsmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "host[, ].value", "type": "html", "width": "20%" },
 				{ "data": "ra.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDec },
 				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDec },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
-				{ "data": "redshift.0.value", "type": "num", "defaultContent": "", "responsivePriority": 5 },
-				{ "data": "hvel.0.value", "type": "num", "defaultContent": "" },
-				{ "data": "lumdist.0.value", "type": "num", "defaultContent": "" },
+				{ "data": "redshift.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender, "responsivePriority": 5 },
+				{ "data": "hvel.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
+				{ "data": "lumdist.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
 				{ "data": "photolink", "responsivePriority": 2, "width": "7%" },
 				{ "data": "spectralink", "responsivePriority": 2, "width": "5%" },
@@ -193,7 +207,7 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
             }, {
-                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'references', 'instruments', 'lumdist' ],
+                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'references', 'instruments' ],
 				visible: false,
 			}, {
 				className: 'control',
