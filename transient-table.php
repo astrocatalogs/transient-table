@@ -215,7 +215,7 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
             }, {
-                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'references', 'instruments' ],
+                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'references', 'instruments', 'lumdist' ],
 				visible: false,
 			}, {
 				className: 'control',
