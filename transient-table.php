@@ -169,7 +169,7 @@ function transient_catalog() {
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
 				{ "data": "photolink", "responsivePriority": 2, "width": "7%" },
 				{ "data": "spectralink", "responsivePriority": 2, "width": "5%" },
-				{ "data": "references", "responsivePriority": 100, "searchable": false },
+				{ "data": "references", "type": "html", "responsivePriority": 100, "searchable": false },
 				{ "data": "download", "responsivePriority": 4 },
 				{ "defaultContent": "" },
 			],
