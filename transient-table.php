@@ -16,7 +16,7 @@ function transient_catalog() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = ['redshift', 'photolink', 'spectralink', 'maxappmag', 'maxabsmag', 'hvel', 'lumdist'];
+		var floatSearchCols = ['redshift', 'photolink', 'spectralink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist'];
 		var stringColValDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['name', 'aliases', 'host', 'instruments', 'claimedtype'];
@@ -164,7 +164,7 @@ function transient_catalog() {
 				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDecRender },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": "redshift.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender, "responsivePriority": 5 },
-				{ "data": "hvel.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
+				{ "data": "velocity.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "lumdist.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
 				{ "data": "photolink", "responsivePriority": 2, "width": "7%" },
@@ -215,7 +215,7 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
             }, {
-                targets: [ 'aliases', 'maxdate', 'hvel', 'maxabsmag', 'references', 'instruments', 'lumdist' ],
+                targets: [ 'aliases', 'maxdate', 'velocity', 'maxabsmag', 'references', 'instruments', 'lumdist' ],
 				visible: false,
 			}, {
 				className: 'control',
@@ -562,10 +562,12 @@ function transient_catalog() {
 
 function transient_table_scripts() {
     //wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.js", array('jquery') );
-	wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__) );
+	if (is_front_page()) {
+		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__) );
+		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
+		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('transient-table') );
+	}
 	//wp_enqueue_style( 'datatables-css', 'https://cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.css', array('transient-table') );
-    wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
-	wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('transient-table') );
 }
 
 add_action( 'wp_enqueue_scripts', 'transient_table_scripts' );

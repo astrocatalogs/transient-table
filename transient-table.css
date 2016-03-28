@@ -149,9 +149,10 @@ table.dataTable td.select-checkbox:before, table.dataTable td.select-checkbox:af
 }
 
 input.colsearch {
+	color: #222 !important;
     line-height: 18px !important;
     font-size: 12px !important;
-    width: 100%;
+    width: 100% !important;
 }
 
 table.dataTable tr.selected td.select-checkbox:after {
