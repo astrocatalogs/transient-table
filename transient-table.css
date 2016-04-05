@@ -113,6 +113,26 @@
 	margin-left: 80px;
 }
 
+.tips-code {
+    font: 11pt Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;
+    color: #52595d;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    -moz-background-clip: padding;
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    padding: 0px 3px;
+    display: inline-block;
+    margin: 0px;
+	//font-family: times;
+	font-style: normal;
+	//background-color: white;
+	white-space: nowrap;
+}
+
 #example tr td {
     border-right: 1px solid #777!important;
     color: #000!important;
