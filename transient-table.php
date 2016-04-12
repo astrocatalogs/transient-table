@@ -77,7 +77,13 @@ function transient_catalog() {
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
-			if (classname == 'check' || classname == 'download' || classname == 'references') return;
+			if (classname == 'aliases') {
+				jQuery(this).remove();
+			}
+			if (['check', 'download', 'references'].indexOf(classname) >= 0) {
+				jQuery(this).html( '' );
+			}
+			if (['check', 'aliases', 'download', 'references'].indexOf(classname) >= 0) return;
 			for (i = 0; i < floatSearchCols.length; i++) {
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
 					floatColValDict[index] = floatSearchCols[i];
@@ -105,6 +111,9 @@ function transient_catalog() {
 					raDecColInds.push(index);
 					break;
 				}
+			}
+			if (classname == 'name') {
+				jQuery(this).attr('colspan', 2);
 			}
             jQuery(this).html( '<input class="colsearch" type="text" id="'+classname+'" placeholder="'+title+'" />' );
         } );
@@ -153,15 +162,19 @@ function transient_catalog() {
 			},
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
-				{ "data": "name", "type": "string", "responsivePriority": 1 },
+				{ "data": {
+					"_": "name",
+					"filter": "aliases[, ]"
+				  },
+				  "type": "string", "responsivePriority": 1 },
 				{ "data": "aliases[, ]", "type": "string" },
 				{ "data": "discoverdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender, "responsivePriority": 2 },
 				{ "data": "maxdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender },
 				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "maxabsmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "host[, ].value", "type": "html", "width": "20%" },
-				{ "data": "ra.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDecRender },
-				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "render": raDecRender },
+				{ "data": "ra.0.value", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10, "render": raDecRender },
+				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10, "render": raDecRender },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": "redshift.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender, "responsivePriority": 5 },
 				{ "data": "velocity.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
@@ -511,8 +524,6 @@ function transient_catalog() {
 			if ( idObj === null ) return true;
 			var idString = idObj.value;
 			if ( idString === '' ) return true;
-			var isNot = (idString.indexOf('!') !== -1 || idString.indexOf('NOT') !== -1)
-			idString = idString.replace(/!/g, '');
 			var splitString = idString.split(/(?:,|OR)+/);
 			var splitData = data.split(/(?:,|OR)+/);
 			for ( var d = 0; d < splitData.length; d++ ) {
@@ -531,41 +542,51 @@ function transient_catalog() {
 						}
 					}
 					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
+					var isNot = (idStr.indexOf('!') !== -1 || idStr.indexOf('NOT') !== -1)
+					idStr = idStr.replace(/!/g, '');
 					if ( idStr === "" || idStr === NaN || idStr === '-' ) {
-						if (i === 0) return !isNot;
+						if (i === 0) return true;
 					}
 					else {
 						idVal = idStr*1.0;
 						if ( splitString[i].indexOf('<=') !== -1 )
 						{
-							if ( idVal >= cVal ) return !isNot;
+							if ( idVal >= cVal ) return true;
 						}
 						else if ( splitString[i].indexOf('<') !== -1 )
 						{
-							if ( idVal > cVal ) return !isNot;
+							if ( idVal > cVal ) return true;
 						}
 						else if ( splitString[i].indexOf('>=') !== -1 )
 						{
-							if ( idVal <= cVal ) return !isNot;
+							if ( idVal <= cVal ) return true;
 						}
 						else if ( splitString[i].indexOf('>') !== -1 )
 						{
-							if ( idVal < cVal ) return !isNot;
+							if ( idVal < cVal ) return true;
 						}
 						else
 						{
 							if ( idStr.indexOf('"') !== -1 ) {
 								idStr = String(idStr.replace(/"/g, '').trim());
-								if ( cData === idStr ) return !isNot;
+								if ( isNot ) {
+									return ( cData !== idStr );
+								} else {
+									if ( cData === idStr ) return true;
+								}
 							}
 							else {
-								if ( cData.indexOf(idStr) !== -1 ) return !isNot;
+								if ( isNot ) {
+									return ( cData.indexOf(idStr) === -1 );
+								} else {
+									if ( cData.indexOf(idStr) !== -1 ) return true;
+								}
 							}
 						}
 					}
 				}
 			}
-			return isNot;
+			return false;
 		}
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex ) {
