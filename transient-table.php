@@ -71,6 +71,50 @@ function transient_catalog() {
 			}
 			return data;
 		}
+		function eventLinked ( row, type, val, meta ) {
+			return "<a href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'>" + row.name + "</a>";
+		}
+		function photLinked ( row, type, val, meta ) {
+			if (!row.photolink) return '';
+			return "<a class='lci' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> " + row.photolink; 
+		}
+		function specLinked ( row, type, val, meta ) {
+			if (!row.spectralink) return '';
+			return "<a class='sci' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> " + row.spectralink;
+		}
+		function hostLinked ( row, type, val, meta ) {
+			if (!row.host) return '';
+			var host = "<a class='hhi' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> ";
+			for (var i = 0; i < row.host.length; i++) {
+				if (i != 0) host += ', ';
+				host += row.host[i]['value'];
+			}
+			return host;
+		}
+		function dataLinked ( row, type, val, meta ) {
+			var fileeventname = row.name.replace('/','_');
+			var datalink = "<a class='dci' title='Download Data' href='https://sne.space/sne/" + fileeventname + ".json' download></a>"
+			if (row.download == 'e') {
+				return (datalink + "<a class='eci' title='Edit Data' href='https://github.com/astrocatalogs/sne-internal/edit/master/"
+					+ fileeventname + ".json' target='_blank'></a>")
+			} else {
+				return (datalink + "<a class='eci' title='Edit Data' onclick='eSN(\"" + row.name + "\",\"" + fileeventname + "\")'></a>") 
+			}
+		}
+		function refLinked ( row, type, val, meta ) {
+			if (!row.references) return '';
+			var references = row.references.split(',');
+			var refstr = '';
+			for (var i = 0; i < Math.min(references.length, 4); i++) {
+				if (i != 0) refstr += "<br>";
+				refstr += "<a href='http://adsabs.harvard.edu/abs/" + references[i] + "' target='_blank'>" + references[i] + "</a>";
+			}
+			if (references.length >= 5) {
+				var fileeventname = row.name.replace('/','_');
+				refstr += "<br><a href='sne/" + fileeventname + "/'>(See full list)</a>";
+			}
+			return refstr;
+		}
 		function myIsNaN ( val ) {
 			return (val != val);
 		}
@@ -163,16 +207,16 @@ function transient_catalog() {
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": {
-					"_": "name",
+					"_": eventLinked,
 					"filter": "aliases[, ]"
 				  },
-				  "type": "string", "responsivePriority": 1 },
+				  "name": "name", "type": "string", "defaultContent": "", "responsivePriority": 1 },
 				{ "data": "aliases[, ]", "type": "string" },
 				{ "data": "discoverdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender, "responsivePriority": 2 },
 				{ "data": "maxdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender },
 				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "maxabsmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
-				{ "data": "host[, ].value", "type": "html", "width": "20%" },
+				{ "data": hostLinked, "type": "html", "width": "20%" },
 				{ "data": "ra.0.value", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10, "render": raDecRender },
 				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10, "render": raDecRender },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
@@ -180,10 +224,10 @@ function transient_catalog() {
 				{ "data": "velocity.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "lumdist.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
-				{ "data": "photolink", "responsivePriority": 2 },
-				{ "data": "spectralink", "responsivePriority": 2 },
-				{ "data": "references", "type": "html", "searchable": false },
-				{ "data": "download", "responsivePriority": 4 },
+				{ "data": photLinked, "responsivePriority": 2 },
+				{ "data": specLinked, "responsivePriority": 2 },
+				{ "data": refLinked, "type": "html", "searchable": false },
+				{ "data": dataLinked, "responsivePriority": 4 },
 				{ "defaultContent": "" },
 			],
             dom: 'Bflprtip',
