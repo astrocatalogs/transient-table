@@ -74,6 +74,10 @@ function transient_catalog() {
 		function eventLinked ( row, type, val, meta ) {
 			return "<a href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'>" + row.name + "</a>";
 		}
+		function eventAliases ( row, type, val, meta ) {
+			if (!row.aliases) return '';
+			return row.aliases.join(', ');
+		}
 		function photLinked ( row, type, val, meta ) {
 			if (!row.photolink) return '';
 			return "<a class='lci' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> " + row.photolink; 
@@ -208,9 +212,9 @@ function transient_catalog() {
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": {
 					"_": eventLinked,
-					"filter": "aliases[, ]"
+					"filter": eventAliases
 				  },
-				  "name": "name", "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				  "type": "string", "defaultContent": "", "responsivePriority": 1 },
 				{ "data": "aliases[, ]", "type": "string" },
 				{ "data": "discoverdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender, "responsivePriority": 2 },
 				{ "data": "maxdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender },
@@ -265,7 +269,7 @@ function transient_catalog() {
                         modifier: { selected: true },
                         columns: ':visible:not(:first-child):not(:last-child):not(:nth-last-child(2))'
                     }
-                }
+				}
             ],
             columnDefs: [ {
                 targets: 0,
