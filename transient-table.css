@@ -94,6 +94,38 @@
     text-indent: 100%;
 } 
 
+.rci {
+	background-image: url('https://sne.space/wp-content/plugins/transient-table/radio-icon.png');
+    background-size: 22px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-clip: border-box;
+
+    display: inline-block;
+	margin: -2px 0px -6px -1px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    overflow: hidden;
+    text-indent: 100%;
+} 
+
+.xci {
+	background-image: url('https://sne.space/wp-content/plugins/transient-table/xray-icon.png');
+    background-size: 22px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-clip: border-box;
+
+    display: inline-block;
+	margin: -2px 0px -6px -1px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    overflow: hidden;
+    text-indent: 100%;
+} 
+
 .tips-ico {
 	float: left;
     width: 64px;
