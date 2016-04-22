@@ -16,7 +16,7 @@ function transient_catalog() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = ['redshift', 'photolink', 'spectralink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist'];
+		var floatSearchCols = ['redshift', 'photolink', 'spectralink', 'radiolink', 'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist'];
 		var stringColValDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['name', 'aliases', 'host', 'instruments', 'claimedtype'];
@@ -85,6 +85,14 @@ function transient_catalog() {
 		function specLinked ( row, type, val, meta ) {
 			if (!row.spectralink) return '';
 			return "<a class='sci' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> " + row.spectralink;
+		}
+		function radioLinked ( row, type, val, meta ) {
+			if (!row.radiolink) return '';
+			return "<a class='rci' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> " + row.radiolink; 
+		}
+		function xrayLinked ( row, type, val, meta ) {
+			if (!row.xraylink) return '';
+			return "<a class='xci' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> " + row.xraylink; 
 		}
 		function hostLinked ( row, type, val, meta ) {
 			if (!row.host) return '';
@@ -276,10 +284,10 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
 			}, {
-                targets: [ 'aliases', 'maxdate', 'velocity', 'maxabsmag', 'references', 'instruments', 'lumdist' ],
+                targets: [ 'aliases', 'maxdate', 'velocity', 'maxabsmag', 'references', 'instruments', 'lumdist', 'radiolink', 'xraylink' ],
 				visible: false
 			}, {
-				targets: [ 'download', 'spectralink', 'photolink' ],
+				targets: [ 'download', 'spectralink', 'photolink', 'radiolink', 'xraylink' ],
 				className: 'nowrap not-mobile'
 			}, {
 				className: 'control',
@@ -290,7 +298,7 @@ function transient_catalog() {
 				targets: [ 'download' ],
 				orderable: false
 			}, {
-				targets: [ 'photolink', 'spectralink' ],
+				targets: [ 'photolink', 'spectralink', 'radiolink', 'xraylink' ],
 				orderSequence: [ 'desc', 'asc' ]
 			}, {
 				targets: [ 'maxdate', 'discoverdate' ],
