@@ -238,6 +238,8 @@ function transient_catalog() {
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
 				{ "data": photLinked, "responsivePriority": 2 },
 				{ "data": specLinked, "responsivePriority": 2 },
+				{ "data": radioLinked, "responsivePriority": 2 },
+				{ "data": xrayLinked, "responsivePriority": 2 },
 				{ "data": refLinked, "type": "html", "searchable": false },
 				{ "data": dataLinked, "responsivePriority": 4 },
 				{ "defaultContent": "" },
