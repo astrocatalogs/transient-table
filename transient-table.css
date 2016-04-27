@@ -203,8 +203,10 @@ table.dataTable td.select-checkbox:before, table.dataTable td.select-checkbox:af
 input.colsearch {
 	color: #222 !important;
     line-height: 18px !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     width: 100% !important;
+	padding-left: 0px !important;
+	padding-right: 10px !important;
 }
 
 table.dataTable tr.selected td.select-checkbox:after {
@@ -246,4 +248,13 @@ table.dataTable tr.selected td.select-checkbox:after {
 
 .nowrap {
 	white-space: nowrap;
+}
+
+input[type="search"].colsearch {
+    -webkit-appearance: textfield;
+	box-sizing: content-box;
+}
+
+input[type="search"].colsearch:hover {
+	background-color: #fff;
 }

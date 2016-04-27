@@ -136,10 +136,10 @@ function transient_catalog() {
 			if (classname == 'aliases') {
 				jQuery(this).remove();
 			}
-			if (['check', 'download', 'references'].indexOf(classname) >= 0) {
+			if (['check', 'download', 'references', 'responsive'].indexOf(classname) >= 0) {
 				jQuery(this).html( '' );
 			}
-			if (['check', 'aliases', 'download', 'references'].indexOf(classname) >= 0) return;
+			if (['check', 'aliases', 'download', 'references', 'responsive'].indexOf(classname) >= 0) return;
 			for (i = 0; i < floatSearchCols.length; i++) {
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
 					floatColValDict[index] = floatSearchCols[i];
@@ -171,7 +171,7 @@ function transient_catalog() {
 			if (classname == 'name') {
 				jQuery(this).attr('colspan', 2);
 			}
-            jQuery(this).html( '<input class="colsearch" type="text" id="'+classname+'" placeholder="'+title+'" />' );
+            jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
 		jQuery.extend( jQuery.fn.dataTableExt.oSort, {
 			"non-empty-string-asc": function (str1, str2) {
@@ -219,16 +219,20 @@ function transient_catalog() {
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": {
-					"_": eventLinked,
-					"filter": eventAliases
-				  },
-				  "type": "string", "defaultContent": "", "responsivePriority": 1 },
-				{ "data": "aliases[, ]", "type": "string" },
+					"display": eventLinked,
+					"filter": eventAliases,
+					"sort": "name"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": "aliases[, ]", "type": "string", "width": "20%" },
 				{ "data": "discoverdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender, "responsivePriority": 2 },
 				{ "data": "maxdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender },
 				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "maxabsmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
-				{ "data": hostLinked, "type": "html", "width": "20%" },
+				{ "data": {
+					"display": hostLinked,
+					"filter": "host[, ].value",
+					"sort": "host[, ].value"
+				  }, "type": "string", "defaultContent": "", "width": "20%" },
 				{ "data": "ra.0.value", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10, "render": raDecRender },
 				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10, "render": raDecRender },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
@@ -236,12 +240,28 @@ function transient_catalog() {
 				{ "data": "velocity.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "lumdist.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
-				{ "data": photLinked, "responsivePriority": 2 },
-				{ "data": specLinked, "responsivePriority": 2 },
-				{ "data": radioLinked, "responsivePriority": 2 },
-				{ "data": xrayLinked, "responsivePriority": 2 },
+				{ "data": {
+					"display": photLinked,
+					"filter": "photolink",
+					"sort": "photolink"
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
+				{ "data": {
+					"display": specLinked,
+					"filter": "spectralink",
+					"sort": "spectralink"
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
+				{ "data": {
+					"display": specLinked,
+					"filter": "radiolink",
+					"sort": "radiolink"
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
+				{ "data": {
+					"display": specLinked,
+					"filter": "xraylink",
+					"sort": "xraylink"
+				  }, "type": "number", "defaultContent": "", "responsivePriority": 2 },
 				{ "data": refLinked, "type": "html", "searchable": false },
-				{ "data": dataLinked, "responsivePriority": 4 },
+				{ "data": dataLinked, "responsivePriority": 4, "searchable": false },
 				{ "defaultContent": "" },
 			],
             dom: 'Bflprtip',
@@ -249,7 +269,7 @@ function transient_catalog() {
 			orderMulti: false,
             pagingType: 'simple_numbers',
             pageLength: 50,
-			searchDelay: 300,
+			searchDelay: 400,
 			responsive: {
 				details: {
 					type: 'column',
@@ -313,19 +333,13 @@ function transient_catalog() {
             order: [[ 15, "desc" ]]
 		} );
 		function needAdvanced (str) {
-			var advancedStrs = ['-', 'OR', ',', '<', '>', '='];
+			var advancedStrs = ['!', 'NOT', '-', 'OR', ',', '<', '>', '='];
 			return (advancedStrs.some(function(v) { return str === v; }));
 		}
         table.columns().every( function ( index ) {
             var that = this;
 
-            jQuery( 'input', that.footer() ).keyup( function (e) {
-				var code = (e.keyCode || e.which);
-
-				// do nothing if it's an arrow key
-				if(code == 37 || code == 38 || code == 39 || code == 40) {
-					return;
-				}
+            jQuery( 'input', that.footer() ).on( 'input', function () {
 				if (( floatColInds.indexOf(index) === -1 ) &&
 				    ( stringColInds.indexOf(index) === -1 ) &&
 					( dateColInds.indexOf(index) === -1 ) &&
@@ -545,15 +559,15 @@ function transient_catalog() {
 			var idString = idObj.value;
 			if ( idString === '' ) return true;
 			var splitString = idString.split(/(?:,|OR)+/);
-			var splitData = data.split(/(?:,|OR)+/);
+			var splitData = data.split(',');
 			for ( var d = 0; d < splitData.length; d++ ) {
-				var cData = String(splitData[d]).trim();
+				var cData = splitData[d].trim();
 				for ( var i = 0; i < splitString.length; i++ ) {
 					var idStr = splitString[i].trim().toUpperCase();
 					var isNot = (idStr.indexOf('!') !== -1 || idStr.indexOf('NOT') !== -1)
 					idStr = idStr.replace(/!/g, '');
 					if ( idStr === "" || idStr === NaN ) {
-						if (i === 0) return true;
+						if (i === 0) return !isNot;
 					}
 					else {
 						var lowData = cData.toUpperCase();
@@ -669,14 +683,24 @@ function transient_catalog() {
 }
 
 function transient_table_scripts() {
-    //wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.js", array('jquery') );
 	if (is_front_page()) {
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__) );
 		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__) );
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
 		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('transient-table') );
+		#wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.js", array('jquery') );
+		#wp_enqueue_style( 'datatables-css', "https://cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.css", array('transient-table') );
+		#wp_enqueue_script( 'datatables-js', "https://nightly.datatables.net/js/jquery.dataTables.min.js", array('jquery') );
+		#wp_enqueue_style( 'datatables-css', "https://nightly.datatables.net/css/jquery.dataTables.min.css", array('transient-table') );
+		#wp_enqueue_script( 'datatables-buttons-js', "https://nightly.datatables.net/buttons/js/dataTables.buttons.min.js", array('datatables-js') );
+		#wp_enqueue_style( 'datatables-buttons-css', "https://nightly.datatables.net/buttons/css/buttons.dataTables.min.css", array('datatables-css') );
+		#wp_enqueue_script( 'datatables-colvis-js', "https://nightly.datatables.net/buttons/js/buttons.colVis.min.js", array('datatables-js') );
+		#wp_enqueue_script( 'datatables-html5-js', "https://nightly.datatables.net/buttons/js/buttons.html5.min.js", array('datatables-js') );
+		#wp_enqueue_script( 'datatables-responsive-js', "https://nightly.datatables.net/responsive/js/dataTables.responsive.min.js", array('datatables-js') );
+		#wp_enqueue_style( 'datatables-responsive-css', "https://nightly.datatables.net/responsive/css/responsive.dataTables.min.css", array('datatables-css') );
+		#wp_enqueue_script( 'datatables-select-js', "https://nightly.datatables.net/select/js/dataTables.select.min.js", array('datatables-js') );
+		#wp_enqueue_style( 'datatables-select-css', "https://nightly.datatables.net/select/css/select.dataTables.min.css", array('datatables-css') );
 	}
-	//wp_enqueue_style( 'datatables-css', 'https://cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.css', array('transient-table') );
 }
 
 add_action( 'wp_enqueue_scripts', 'transient_table_scripts' );
