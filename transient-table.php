@@ -16,7 +16,7 @@ function transient_catalog() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = ['redshift', 'photolink', 'spectralink', 'radiolink', 'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist'];
+		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink', 'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist'];
 		var stringColValDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['name', 'aliases', 'host', 'instruments', 'claimedtype'];
@@ -26,37 +26,6 @@ function transient_catalog() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
-		function dateRender ( data, type, row ) {
-			if ( type === 'sort' ) {
-				if (data === '' || data === null || typeof data !== 'string') return NaN;
-				var d = new Date(data)
-				return d.getTime();
-			}
-			return data;
-		}
-		function raDecRender ( data, type, row ) {
-			if ( type === 'sort' ) {
-				if (data === '' || data === null || typeof data !== 'string') return NaN;
-				var str = data.trim();
-				var parts = str.split(':');
-				var value = 0.0;
-				if (parts.length >= 1) {
-					value += Number(parts[0]);
-					var sign = 1.0;
-					if (parts[0][0] == '-') {
-						var sign = -1.0;
-					}
-				}
-				if (parts.length >= 2) {
-					value += sign*Number(parts[1])/60.;
-				}
-				if (parts.length >= 3) {
-					value += sign*Number(parts[2])/3600.;
-				}
-				return value;
-			}
-			return data;
-		}
 		function noBlanksNumRender ( data, type, row ) {
 			if ( type === 'sort' ) {
 				if (data === '' || data === null || typeof data !== 'string') return NaN;
@@ -72,11 +41,47 @@ function transient_catalog() {
 			return data;
 		}
 		function eventLinked ( row, type, val, meta ) {
-			return "<a href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'>" + row.name + "</a>";
+			if (row.aliases.length > 1) {
+				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace('/','_') +
+					"/' target='_blank'>" + row.name + "</a><span class='tooltiptext'>" + row.aliases.slice(1).join(', ') + "</span></div>";
+			} else {
+				return "<a href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'>" + row.name + "</a>";
+			}
+		}
+		function typeLinked ( row, type, val, meta ) {
+			if (!row.claimedtype) return '';
+			if (row.claimedtype.length > 1) {
+				var altTypes = '';
+				for (var i = 1; i < row.claimedtype.length; i++) {
+					if (i != 1) altTypes += ', ';
+					altTypes += row.claimedtype[i]['value'];
+				}
+				return "<div class='tooltip'>" + row.claimedtype[0]['value'] + "</a><span class='tooltiptext'>" + altTypes + "</span></div>";
+			} else if (row.claimedtype[0]) {
+				return row.claimedtype[0]['value'];
+			}
+			return '';
 		}
 		function eventAliases ( row, type, val, meta ) {
 			if (!row.aliases) return '';
 			return row.aliases.join(', ');
+		}
+		function eventAliasesOnly ( row, type, val, meta ) {
+			if (!row.aliases) return '';
+			if (row.aliases.length > 1) {
+				return row.aliases.slice(1).join(', ');
+			} else return '';
+		}
+		function ebvValue ( row, type, val, meta ) {
+			if (!row.ebv) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			return row.ebv[0]['value'];
+		}
+		function ebvLinked ( row, type, val, meta ) {
+			if (!row.ebv) return '';
+			return row.ebv[0]['value']; 
 		}
 		function photLinked ( row, type, val, meta ) {
 			if (!row.photolink) return '';
@@ -94,14 +99,180 @@ function transient_catalog() {
 			if (!row.xraylink) return '';
 			return "<a class='xci' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> " + row.xraylink; 
 		}
+		function redshiftValue ( row, type, val, meta ) {
+			if (!row.redshift) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = parseFloat(row.redshift[0]['value']);
+			return data;
+		}
+		function velocityValue ( row, type, val, meta ) {
+			if (!row.velocity) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = parseFloat(row.velocity[0]['value']);
+			return data;
+		}
+		function lumdistValue ( row, type, val, meta ) {
+			if (!row.lumdist) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = parseFloat(row.lumdist[0]['value']);
+			return data;
+		}
+		function redshiftLinked ( row, type, val, meta ) {
+			if (!row.redshift) return '';
+			var data = row.redshift[0]['value'];
+			if (row.redshift[0]['kind']) {
+				var kind = row.redshift[0]['kind'];
+				return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + kind + "</span></div>";
+			}
+			return data;
+		}
+		function velocityLinked ( row, type, val, meta ) {
+			if (!row.velocity) return '';
+			var data = row.velocity[0]['value'];
+			if (row.velocity[0]['kind']) {
+				var kind = row.velocity[0]['kind'];
+				return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + kind + "</span></div>";
+			}
+			return data;
+		}
+		function lumdistLinked ( row, type, val, meta ) {
+			if (!row.lumdist) return '';
+			var data = row.lumdist[0]['value'];
+			if (row.lumdist[0]['kind']) {
+				var kind = row.lumdist[0]['kind'];
+				return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + kind + "</span></div>";
+			}
+			return data;
+		}
+		function raToDegrees ( data ) {
+			var str = data.trim();
+			var parts = str.split(':');
+			var value = 0.0;
+			if (parts.length >= 1) {
+				value += 360./24.*Number(parts[0]);
+				var sign = 1.0;
+				if (parts[0][0] == '-') {
+					var sign = -1.0;
+				}
+			}
+			if (parts.length >= 2) {
+				value += sign*Number(parts[1])/60.;
+			}
+			if (parts.length >= 3) {
+				value += sign*Number(parts[2])/3600.;
+			}
+			return value;
+		}
+		function decToDegrees ( data ) {
+			var str = data.trim();
+			var parts = str.split(':');
+			var value = 0.0;
+			if (parts.length >= 1) {
+				value += Number(parts[0]);
+				var sign = 1.0;
+				if (parts[0][0] == '-') {
+					var sign = -1.0;
+				}
+			}
+			if (parts.length >= 2) {
+				value += sign*Number(parts[1])/60.;
+			}
+			if (parts.length >= 3) {
+				value += sign*Number(parts[2])/3600.;
+			}
+			return value;
+		}
+		function raValue ( row, type, val, meta ) {
+			if (!row.ra) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = row.ra[0]['value'];
+			return raToDegrees(data);
+		}
+		function decValue ( row, type, val, meta ) {
+			if (!row.dec) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = row.dec[0]['value'];
+			return decToDegrees(data);
+		}
+		function raLinked ( row, type, val, meta ) {
+			if (!row.ra) return '';
+			var data = row.ra[0]['value'];
+			var degrees = raToDegrees(data).toFixed(5);
+			return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + degrees + "&deg;</span></div>";
+			//return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + degrees + "&deg;" +
+			//	hammerMap(String(meta.row), row.ra[0]['value'], row.dec[0]['value']) + "</span></div>";
+		}
+		function decLinked ( row, type, val, meta ) {
+			if (!row.dec) return '';
+			var data = row.dec[0]['value'];
+			var degrees = decToDegrees(data).toFixed(5);
+			return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + degrees + "&deg;</span></div>";
+		}
+		function hammerMap ( id, ra, dec ) {
+			var html = "<canvas id='hammer-" + id + "' width='100' height='50'></canvas>"
+			//var canvas = document.getElementById('hammer-' + id);
+			//var context = canvas.getContext('2d');
+			//context.beginPath();
+			//context.moveTo(0, 0);
+			//context.lineTo(100, 50);
+			//context.stroke();
+			return html;
+		}
+		Date.prototype.getJulian = function() {
+			return Math.round((this / 86400000) - (this.getTimezoneOffset()/1440) + 2440587.5, 0.1);
+		}
+		function maxDateValue ( row, type, val, meta ) {
+			if (!row.maxdate) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var mydate = new Date(row.maxdate[0]['value']);
+			return mydate.getTime();
+		}
+		function discoverDateValue ( row, type, val, meta ) {
+			if (!row.discoverdate) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var mydate = new Date(row.discoverdate[0]['value']);
+			return mydate.getTime();
+		}
+		function maxDateLinked ( row, type, val, meta ) {
+			if (!row.maxdate) return '';
+			var mydate = new Date(row.maxdate[0]['value']);
+			var mjd = String(mydate.getJulian() - 2400000.5);
+			return "<div class='tooltip'>" + row.maxdate[0]['value'] + "<span class='tooltiptext'>MJD: " + mjd + "</span></div>";
+		}
+		function discoverDateLinked ( row, type, val, meta ) {
+			if (!row.discoverdate) return '';
+			mydate = new Date(row.discoverdate[0]['value']);
+			mjd = String(mydate.getJulian() - 2400000.5);
+			return "<div class='tooltip'>" + row.discoverdate[0]['value'] + "<span class='tooltiptext'>MJD: " + mjd + "</span></div>";
+		}
 		function hostLinked ( row, type, val, meta ) {
 			if (!row.host) return '';
 			var host = "<a class='hhi' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> ";
-			for (var i = 0; i < row.host.length; i++) {
-				if (i != 0) host += ', ';
-				host += row.host[i]['value'];
+			var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0]['value'] + "&submit=SIMBAD+search' target='_blank'>" + row.host[0]['value'] + "</a>"; 
+			if (row.host.length > 1) {
+				var hostAliases = '';
+				for (var i = 1; i < row.host.length; i++) {
+					if (i != 1) hostAliases += ', ';
+					hostAliases += row.host[i]['value'];
+				}
+				return "<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'>" + hostAliases + "</span></div>";
+			} else {
+				return (host + mainHost);
 			}
-			return host;
 		}
 		function dataLinked ( row, type, val, meta ) {
 			var fileeventname = row.name.replace('/','_');
@@ -221,46 +392,89 @@ function transient_catalog() {
 				{ "data": {
 					"display": eventLinked,
 					"filter": eventAliases,
-					"sort": "name"
-				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
-				{ "data": "aliases[, ]", "type": "string", "width": "20%" },
-				{ "data": "discoverdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender, "responsivePriority": 2 },
-				{ "data": "maxdate.0.value", "type": "non-empty-float", "defaultContent": "", "render": dateRender },
+					"_": "name"
+				  }, "name": "name", "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"_": eventAliases,
+					"display": eventAliasesOnly,
+				  }, "type": "string" },
+				{ "data": {
+					"display": discoverDateLinked,
+					"filter": "discoverdate.0.value",
+					"sort": discoverDateValue,
+					"_": "discoverdate[, ].value"
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2 },
+				{ "data": {
+					"display": maxDateLinked,
+					"filter": "maxdate.0.value",
+					"sort": maxDateValue,
+					"_": "maxdate[, ].value"
+				  }, "type": "non-empty-float", "defaultContent": "" },
 				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "maxabsmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": {
 					"display": hostLinked,
-					"filter": "host[, ].value",
-					"sort": "host[, ].value"
-				  }, "type": "string", "defaultContent": "", "width": "20%" },
-				{ "data": "ra.0.value", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10, "render": raDecRender },
-				{ "data": "dec.0.value", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10, "render": raDecRender },
+					"_": "host[, ].value",
+				  }, "type": "string", "defaultContent": "" },
+				{ "data": {
+					"display": raLinked,
+					"filter": raValue,
+					"sort": raValue,
+					"_": "ra[, ].value"
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				{ "data": {
+					"display": decLinked,
+					"filter": decValue,
+					"sort": decValue,
+					"_": "dec[, ].value"
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
-				{ "data": "redshift.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender, "responsivePriority": 5 },
-				{ "data": "velocity.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
-				{ "data": "lumdist.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
-				{ "data": "claimedtype[, ].value", "type": "string", "responsivePriority": 3 },
+				{ "data": {
+					"display": redshiftLinked,
+					"filter": redshiftValue,
+					"sort": redshiftValue,
+					"_": "redshift[, ].value"
+				  }, "type": "non-empty-float", "defaultContent": "" },
+				{ "data": {
+					"display": velocityLinked,
+					"filter": velocityValue,
+					"sort": velocityValue,
+					"_": "velocity[, ].value"
+				  }, "type": "non-empty-float", "defaultContent": "" },
+				{ "data": {
+					"display": lumdistLinked,
+					"filter": lumdistValue,
+					"sort": lumdistValue,
+					"_": "lumdist[, ].value"
+				  }, "type": "non-empty-float", "defaultContent": "" },
+				{ "data": {
+					"display": typeLinked,
+					"_": "claimedtype[, ].value"
+				  }, "defaultContent": "", "type": "string", "responsivePriority": 3 },
+				{ "data": {
+					"display": ebvLinked,
+					"_": ebvValue
+				  }, "name": "ebv", "type": "non-empty-float", "defaultContent": "" },
 				{ "data": {
 					"display": photLinked,
-					"filter": "photolink",
-					"sort": "photolink"
+					"_": "photolink"
 				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
 				{ "data": {
 					"display": specLinked,
-					"filter": "spectralink",
-					"sort": "spectralink"
+					"_": "spectralink"
 				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
 				{ "data": {
-					"display": specLinked,
-					"filter": "radiolink",
-					"sort": "radiolink"
+					"display": radioLinked,
+					"_": "radiolink"
 				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
 				{ "data": {
-					"display": specLinked,
-					"filter": "xraylink",
-					"sort": "xraylink"
-				  }, "type": "number", "defaultContent": "", "responsivePriority": 2 },
-				{ "data": refLinked, "type": "html", "searchable": false },
+					"display": xrayLinked,
+					"_": "xraylink",
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
+				{ "data": {
+					"display": refLinked,
+					"_": "references"
+				  }, "type": "html", "searchable": false },
 				{ "data": dataLinked, "responsivePriority": 4, "searchable": false },
 				{ "defaultContent": "" },
 			],
@@ -297,7 +511,8 @@ function transient_catalog() {
                     text: 'Export selected to CSV',
                     exportOptions: {
                         modifier: { selected: true },
-                        columns: ':visible:not(:first-child):not(:last-child):not(:nth-last-child(2))'
+                        columns: ':visible:not(:first-child):not(:last-child):not(:nth-last-child(2))',
+						orthogonal: 'export'
                     }
 				}
             ],
@@ -306,10 +521,11 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
 			}, {
-                targets: [ 'aliases', 'maxdate', 'velocity', 'maxabsmag', 'references', 'instruments', 'lumdist', 'radiolink', 'xraylink' ],
+                targets: [ 'aliases', 'maxdate', 'velocity', 'maxabsmag',
+					'references', 'instruments', 'ebv', 'lumdist', 'radiolink', 'xraylink' ],
 				visible: false
 			}, {
-				targets: [ 'download', 'spectralink', 'photolink', 'radiolink', 'xraylink' ],
+				targets: [ 'download', 'spectralink', 'photolink', 'host' ],
 				className: 'nowrap not-mobile'
 			}, {
 				className: 'control',
@@ -323,14 +539,14 @@ function transient_catalog() {
 				targets: [ 'photolink', 'spectralink', 'radiolink', 'xraylink' ],
 				orderSequence: [ 'desc', 'asc' ]
 			}, {
-				targets: [ 'maxdate', 'discoverdate' ],
+				targets: [ 'maxdate', 'discoverdate', 'radiolink', 'xraylink' ],
 				className: 'nowrap'
 			} ],
             select: {
                 style:    'os',
                 selector: 'td:first-child'
             },
-            order: [[ 15, "desc" ]]
+            order: [[ 16, "desc" ]]
 		} );
 		function needAdvanced (str) {
 			var advancedStrs = ['!', 'NOT', '-', 'OR', ',', '<', '>', '='];
