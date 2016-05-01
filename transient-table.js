@@ -16,7 +16,7 @@ function eSN(name, filename) {
 
 function markSame(name1, name2, edit) {
 	var filename = name1.replace("/", "_") + '.json';
-	if (edit) {
+	if (edit === "true") {
 		var win = window.open('https://github.com/astrocatalogs/sne-internal/edit/master/' +
 			encodeURIComponent(filename), '_blank')
 	} else {
@@ -39,7 +39,7 @@ function markSame(name1, name2, edit) {
 
 function markDiff(name1, name2, edit) {
 	var filename = name1.replace("/", "_") + '.json';
-	if (edit) {
+	if (edit === "true") {
 		var win = window.open('https://github.com/astrocatalogs/sne-internal/edit/master/' +
 			encodeURIComponent(filename), '_blank')
 	} else {
@@ -57,5 +57,19 @@ function markDiff(name1, name2, edit) {
 		var win = window.open('https://github.com/astrocatalogs/sne-internal/new/master/?filename=' +
 			encodeURIComponent(filename) + '&value=' + value + '&message=' + instructions, '_blank')
 	}
+	win.focus();
+}
+
+function googleNames(name1, name2) {
+	var sname1 = name1;
+	var sname2 = name2;
+	
+	if (sname1.startsWith('SN')) {
+		sname1 = sname1.replace('SN', '');
+	}
+	if (sname2.startsWith('SN')) {
+		sname2 = sname2.replace('SN', '');
+	}
+	var win = window.open('https://www.google.com/#q=' + encodeURIComponent(sname1 + " " + sname2), '_blank')
 	win.focus();
 }

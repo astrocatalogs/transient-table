@@ -9,6 +9,422 @@
  * License: GPL2
  */
 
+function datatables_functions() {
+?>
+	<script>
+	function goToBibEvent( bibcode ){
+		var ddl = document.getElementById( bibcode );
+		var selectedVal = ddl.options[ddl.selectedIndex].value;
+
+		window.open('https://sne.space/sne/' + selectedVal + '/', '_blank');
+	}
+	function noBlanksNumRender ( data, type, row ) {
+		if ( type === 'sort' ) {
+			if (data === '' || data === null || typeof data !== 'string') return NaN;
+			return parseFloat(String(data).split(',')[0].replace(/<(?:.|\n)*?>/gm, '').trim());
+		}
+		return data;
+	}
+	function noBlanksStrRender ( data, type, row ) {
+		if ( type === 'sort' ) {
+			if (data === '' || data === null || typeof data !== 'string') return NaN;
+			return String(data).split(',')[0].replace(/<(?:.|\n)*?>/gm, '').trim();
+		}
+		return data;
+	}
+	function raToDegrees ( data ) {
+		var str = data.trim();
+		var parts = str.split(':');
+		var value = 0.0;
+		if (parts.length >= 1) {
+			value += 360./24.*Number(parts[0]);
+			var sign = 1.0;
+			if (parts[0][0] == '-') {
+				var sign = -1.0;
+			}
+		}
+		if (parts.length >= 2) {
+			value += sign*Number(parts[1])/60.;
+		}
+		if (parts.length >= 3) {
+			value += sign*Number(parts[2])/3600.;
+		}
+		return value;
+	}
+	function decToDegrees ( data ) {
+		var str = data.trim();
+		var parts = str.split(':');
+		var value = 0.0;
+		if (parts.length >= 1) {
+			value += Number(parts[0]);
+			var sign = 1.0;
+			if (parts[0][0] == '-') {
+				var sign = -1.0;
+			}
+		}
+		if (parts.length >= 2) {
+			value += sign*Number(parts[1])/60.;
+		}
+		if (parts.length >= 3) {
+			value += sign*Number(parts[2])/3600.;
+		}
+		return value;
+	}
+	jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+		"non-empty-string-asc": function (str1, str2) {
+			if(isNaN(str1) && isNaN(str2))
+				return 0;
+			if(isNaN(str1))
+				return 1;
+			if(isNaN(str2))
+				return -1;
+			return ((str1 < str2) ? -1 : ((str1 > str2) ? 1 : 0));
+		},
+		"non-empty-string-desc": function (str1, str2) {
+			if(isNaN(str1) && isNaN(str2))
+				return 0;
+			if(isNaN(str1))
+				return 1;
+			if(isNaN(str2))
+				return -1;
+			return ((str1 < str2) ? 1 : ((str1 > str2) ? -1 : 0));
+		},
+		"non-empty-float-asc": function (v1, v2) {
+			if(isNaN(v1) && isNaN(v2))
+				return 0;
+			if(isNaN(v1))
+				return 1;
+			if(isNaN(v2))
+				return -1;
+			return ((v1 < v2) ? -1 : ((v1 > v2) ? 1 : 0));
+		},
+		"non-empty-float-desc": function (v1, v2) {
+			if(isNaN(v1) && isNaN(v2))
+				return 0;
+			if(isNaN(v1))
+				return 1;
+			if(isNaN(v2))
+				return -1;
+			return ((v1 < v2) ? 1 : ((v1 > v2) ? -1 : 0));
+		}
+	} );
+	function compDates ( date1, date2, includeSame ) {
+		var d1;
+		var d1split = date1.split('/');
+		if (d1split.length == 1) {
+			d1 = new Date(date1 + '/12/31');
+		} else if (d1split.length == 2) {
+			var daysInMonth = new Date(d1split[0], d1split[1], 0).getDate();
+			d1 = new Date(date1 + '/' + String(daysInMonth));
+		} else {
+			d1 = new Date(date1);
+		}
+		var d2;
+		var d2split = date2.split('/');
+		if (d2split.length == 1) {
+			d2 = new Date(date2 + '/12/31');
+		} else if (d2split.length == 2) {
+			var daysInMonth = new Date(d2split[0], d2split[1], 0).getDate();
+			d2 = new Date(date2 + '/' + String(daysInMonth));
+		} else {
+			d2 = new Date(date2);
+		}
+
+		if (includeSame) {
+			return d1.getTime() <= d2.getTime();
+		} else {
+			return d1.getTime() < d2.getTime();
+		}
+	}
+	function compRaDecs ( radec1inp, radec2inp, includeSame ) {
+		var rd1, rd2;
+		var sign1, sign2;
+		if (radec1inp.length > 0) {
+			if (radec1inp[0] == '+') {
+				radec1 = radec1inp.slice(1,-1);
+				sign1 = 1.0;
+			} else if (radec1inp[0] == '-') {
+				radec1 = radec1inp.slice(1,-1);
+				sign1 = -1.0;
+			} else {
+				radec1 = radec1inp;
+				sign1 = 1.0;
+			}
+		}
+		if (radec2inp.length > 0) {
+			if (radec2inp[0] == '+') {
+				radec2 = radec2inp.slice(1,-1);
+				sign2 = 1.0;
+			} else if (radec2inp[0] == '-') {
+				radec2 = radec2inp.slice(1,-1);
+				sign2 = -1.0;
+			} else {
+				radec2 = radec2inp;
+				sign2 = 1.0;
+			}
+		}
+		var rd1split = radec1.split(':');
+		var rd2split = radec2.split(':');
+		if (rd1split.length == 1) {
+			rd1 = parseFloat(rd1split[0]);
+		} else if (rd1split.length == 2) {
+			rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60.;
+		} else {
+			rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60. + parseFloat(rd1split[2])/3600.;
+		}
+		if (rd2split.length == 1) {
+			rd2 = parseFloat(rd2split[0]);
+		} else if (rd2split.length == 2) {
+			rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60.;
+		} else {
+			rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60. + parseFloat(rd2split[2])/3600.;
+		}
+
+		if (includeSame) {
+			return sign1*rd1 <= sign2*rd2;
+		} else {
+			return sign1*rd1 < sign2*rd2;
+		}
+	}
+	function advancedDateFilter ( data, id ) {
+		var idObj = document.getElementById(id);
+		if ( idObj === null ) return true;
+		var idString = idObj.value;
+		if ( idString === '' ) return true;
+		var isNot = (idString.indexOf('!') !== -1 || idString.indexOf('NOT') !== -1)
+		idString = idString.replace(/!/g, '');
+		var splitString = idString.split(/(?:,|OR)+/);
+		var splitData = data.split(/(?:,|OR)+/);
+		for ( var d = 0; d < splitData.length; d++ ) {
+			var cData = splitData[d].trim();
+			for ( var i = 0; i < splitString.length; i++ ) {
+				if ( splitString[i].indexOf('-') !== -1 )
+				{
+					var splitRange = splitString[i].split('-');
+					var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
+					var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
+					if (minStr !== '') {
+						if (!( (minStr !== '' && compDates(cData, minStr, true)) ||
+							   (maxStr !== '' && compDates(maxStr, cData, true)) || cData === '' )) return !isNot;
+					}
+				}
+				var idStr = splitString[i].replace(/[<=>]/g, '').trim();
+				if ( idStr === "" || idStr === NaN || idStr === '-' ) {
+					if (i === 0) return !isNot;
+				}
+				if ( idStr === "" || idStr === NaN ) {
+					if (i === 0) return !isNot;
+				}
+				else {
+					//if (cData === '') return false;
+					if ( splitString[i].indexOf('<=') !== -1 )
+					{
+						if ( compDates(cData, idStr, true) ) return !isNot;
+					}
+					else if ( splitString[i].indexOf('<') !== -1 )
+					{
+						if ( compDates(cData, idStr, false) ) return !isNot;
+					}
+					else if ( splitString[i].indexOf('>=') !== -1 )
+					{
+						if ( compDates(idStr, cData, true) ) return !isNot;
+					}
+					else if ( splitString[i].indexOf('>') !== -1 )
+					{
+						if ( compDates(idStr, cData, false) ) return !isNot;
+					}
+					else
+					{
+						if ( idStr.indexOf('"') !== -1 ) {
+							idStr = String(idStr.replace(/"/g, '').trim());
+							if ( cData === idStr ) return !isNot;
+						}
+						else {
+							if ( cData.indexOf(idStr) !== -1 ) return !isNot;
+						}
+					}
+				}
+			}
+		}
+		return isNot;
+	}
+	function advancedRaDecFilter ( data, id ) {
+		var idObj = document.getElementById(id);
+		if ( idObj === null ) return true;
+		var idString = idObj.value;
+		if ( idString === '' ) return true;
+		var isNot = (idString.indexOf('!') !== -1 || idString.indexOf('NOT') !== -1)
+		idString = idString.replace(/!/g, '');
+		var splitString = idString.split(/(?:,|OR)+/);
+		var splitData = data.split(/(?:,|OR)+/);
+		for ( var d = 0; d < splitData.length; d++ ) {
+			var cData = splitData[d].trim();
+			for ( var i = 0; i < splitString.length; i++ ) {
+				if ( splitString[i].indexOf('-') !== -1 )
+				{
+					var splitRange = splitString[i].split('-');
+					var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
+					var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
+					if (minStr !== '') {
+						if (!( (minStr !== '' && compRaDecs(cData, minStr, true)) ||
+							   (maxStr !== '' && compRaDecs(maxStr, cData, true)) || cData === '' )) return !isNot;
+					}
+				}
+				var idStr = splitString[i].replace(/[<=>]/g, '').trim();
+				if ( idStr === "" || idStr === NaN || idStr === '-' ) {
+					if (i === 0) return !isNot;
+				}
+				if ( idStr === "" || idStr === NaN ) {
+					if (i === 0) return !isNot;
+				}
+				else {
+					//if (cData === '') return false;
+					if ( splitString[i].indexOf('<=') !== -1 )
+					{
+						if ( compRaDecs(cData, idStr, true) ) return !isNot;
+					}
+					else if ( splitString[i].indexOf('<') !== -1 )
+					{
+						if ( compRaDecs(cData, idStr, false) ) return !isNot;
+					}
+					else if ( splitString[i].indexOf('>=') !== -1 )
+					{
+						if ( compRaDecs(idStr, cData, true) ) return !isNot;
+					}
+					else if ( splitString[i].indexOf('>') !== -1 )
+					{
+						if ( compRaDecs(idStr, cData, false) ) return !isNot;
+					}
+					else
+					{
+						if ( idStr.indexOf('"') !== -1 ) {
+							idStr = String(idStr.replace(/"/g, '').trim());
+							if ( cData === idStr ) return !isNot;
+						}
+						else {
+							if ( cData.indexOf(idStr) !== -1 ) return !isNot;
+						}
+					}
+				}
+			}
+		}
+		return isNot;
+	}
+	function advancedStringFilter ( data, id ) {
+		var idObj = document.getElementById(id);
+		if ( idObj === null ) return true;
+		var idString = idObj.value;
+		if ( idString === '' ) return true;
+		var splitString = idString.split(/(?:,|OR)+/);
+		var splitData = data.split(',');
+		for ( var d = 0; d < splitData.length; d++ ) {
+			var cData = splitData[d].trim();
+			for ( var i = 0; i < splitString.length; i++ ) {
+				var idStr = splitString[i].trim().toUpperCase();
+				var isNot = (idStr.indexOf('!') !== -1 || idStr.indexOf('NOT') !== -1)
+				idStr = idStr.replace(/!/g, '');
+				if ( idStr === "" || idStr === NaN ) {
+					if (i === 0) return !isNot;
+				}
+				else {
+					var lowData = cData.toUpperCase();
+					if ( idStr.indexOf('"') !== -1 ) {
+						idStr = idStr.replace(/"/g, '');
+						if ( isNot ) {
+							return ( lowData !== idStr );
+						} else {
+							if ( lowData === idStr ) return true;
+						}
+					}
+					else {
+						if ( isNot ) {
+							return ( lowData.indexOf(idStr) === -1 );
+						} else {
+							if ( lowData.indexOf(idStr) !== -1 ) return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+	function advancedFloatFilter ( data, id ) {
+		var idObj = document.getElementById(id);
+		if ( idObj === null ) return true;
+		var idString = idObj.value;
+		if ( idString === '' ) return true;
+		var splitString = idString.split(/(?:,|OR)+/);
+		var splitData = data.split(/(?:,|OR)+/);
+		for ( var d = 0; d < splitData.length; d++ ) {
+			var cData = splitData[d].trim();
+			var cVal = cData*1.0;
+			for ( var i = 0; i < splitString.length; i++ ) {
+				if ( splitString[i].indexOf('-') !== -1 )
+				{
+					var splitRange = splitString[i].split('-');
+					var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
+					var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
+					var minVal = minStr*1.0;
+					var maxVal = maxStr*1.0;
+					if (minStr !== '') {
+						if (!( (minStr !== '' && cVal < minVal) || (maxStr !== '' && cVal > maxVal) )) return !isNot;
+					}
+				}
+				var idStr = splitString[i].replace(/[<=>]/g, '').trim();
+				var isNot = (idStr.indexOf('!') !== -1 || idStr.indexOf('NOT') !== -1)
+				idStr = idStr.replace(/!/g, '');
+				if ( idStr === "" || idStr === NaN || idStr === '-' ) {
+					if (i === 0) return true;
+				}
+				else {
+					idVal = idStr*1.0;
+					if ( splitString[i].indexOf('<=') !== -1 )
+					{
+						if ( idVal >= cVal ) return true;
+					}
+					else if ( splitString[i].indexOf('<') !== -1 )
+					{
+						if ( idVal > cVal ) return true;
+					}
+					else if ( splitString[i].indexOf('>=') !== -1 )
+					{
+						if ( idVal <= cVal ) return true;
+					}
+					else if ( splitString[i].indexOf('>') !== -1 )
+					{
+						if ( idVal < cVal ) return true;
+					}
+					else
+					{
+						if ( idStr.indexOf('"') !== -1 ) {
+							idStr = String(idStr.replace(/"/g, '').trim());
+							if ( isNot ) {
+								return ( cData !== idStr );
+							} else {
+								if ( cData === idStr ) return true;
+							}
+						}
+						else {
+							if ( isNot ) {
+								return ( cData.indexOf(idStr) === -1 );
+							} else {
+								if ( cData.indexOf(idStr) !== -1 ) return true;
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+	function needAdvanced (str) {
+		var advancedStrs = ['!', 'NOT', '-', 'OR', ',', '<', '>', '='];
+		return (advancedStrs.some(function(v) { return str === v; }));
+	}
+	</script>
+<?php
+}
+
 function transient_catalog() {
 	readfile("/var/www/html/sne/sne/catalog.html");
 ?>
@@ -26,26 +442,12 @@ function transient_catalog() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
-		function noBlanksNumRender ( data, type, row ) {
-			if ( type === 'sort' ) {
-				if (data === '' || data === null || typeof data !== 'string') return NaN;
-				return parseFloat(String(data).split(',')[0].replace(/<(?:.|\n)*?>/gm, '').trim());
-			}
-			return data;
-		}
-		function noBlanksStrRender ( data, type, row ) {
-			if ( type === 'sort' ) {
-				if (data === '' || data === null || typeof data !== 'string') return NaN;
-				return String(data).split(',')[0].replace(/<(?:.|\n)*?>/gm, '').trim();
-			}
-			return data;
-		}
 		function eventLinked ( row, type, val, meta ) {
 			if (row.aliases.length > 1) {
-				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace('/','_') +
+				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
 					"/' target='_blank'>" + row.name + "</a><span class='tooltiptext'>" + row.aliases.slice(1).join(', ') + "</span></div>";
 			} else {
-				return "<a href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'>" + row.name + "</a>";
+				return "<a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'>" + row.name + "</a>";
 			}
 		}
 		function typeLinked ( row, type, val, meta ) {
@@ -85,19 +487,19 @@ function transient_catalog() {
 		}
 		function photLinked ( row, type, val, meta ) {
 			if (!row.photolink) return '';
-			return "<a class='lci' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> " + row.photolink; 
+			return "<a class='lci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.photolink; 
 		}
 		function specLinked ( row, type, val, meta ) {
 			if (!row.spectralink) return '';
-			return "<a class='sci' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> " + row.spectralink;
+			return "<a class='sci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.spectralink;
 		}
 		function radioLinked ( row, type, val, meta ) {
 			if (!row.radiolink) return '';
-			return "<a class='rci' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> " + row.radiolink; 
+			return "<a class='rci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.radiolink; 
 		}
 		function xrayLinked ( row, type, val, meta ) {
 			if (!row.xraylink) return '';
-			return "<a class='xci' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> " + row.xraylink; 
+			return "<a class='xci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.xraylink; 
 		}
 		function redshiftValue ( row, type, val, meta ) {
 			if (!row.redshift) {
@@ -149,44 +551,6 @@ function transient_catalog() {
 				return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + kind + "</span></div>";
 			}
 			return data;
-		}
-		function raToDegrees ( data ) {
-			var str = data.trim();
-			var parts = str.split(':');
-			var value = 0.0;
-			if (parts.length >= 1) {
-				value += 360./24.*Number(parts[0]);
-				var sign = 1.0;
-				if (parts[0][0] == '-') {
-					var sign = -1.0;
-				}
-			}
-			if (parts.length >= 2) {
-				value += sign*Number(parts[1])/60.;
-			}
-			if (parts.length >= 3) {
-				value += sign*Number(parts[2])/3600.;
-			}
-			return value;
-		}
-		function decToDegrees ( data ) {
-			var str = data.trim();
-			var parts = str.split(':');
-			var value = 0.0;
-			if (parts.length >= 1) {
-				value += Number(parts[0]);
-				var sign = 1.0;
-				if (parts[0][0] == '-') {
-					var sign = -1.0;
-				}
-			}
-			if (parts.length >= 2) {
-				value += sign*Number(parts[1])/60.;
-			}
-			if (parts.length >= 3) {
-				value += sign*Number(parts[2])/3600.;
-			}
-			return value;
 		}
 		function raValue ( row, type, val, meta ) {
 			if (!row.ra) {
@@ -261,7 +625,7 @@ function transient_catalog() {
 		}
 		function hostLinked ( row, type, val, meta ) {
 			if (!row.host) return '';
-			var host = "<a class='hhi' href='https://sne.space/sne/" + row.name.replace('/','_') + "/' target='_blank'></a> ";
+			var host = "<a class='hhi' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> ";
 			var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0]['value'] + "&submit=SIMBAD+search' target='_blank'>" + row.host[0]['value'] + "</a>"; 
 			if (row.host.length > 1) {
 				var hostAliases = '';
@@ -275,7 +639,7 @@ function transient_catalog() {
 			}
 		}
 		function dataLinked ( row, type, val, meta ) {
-			var fileeventname = row.name.replace('/','_');
+			var fileeventname = row.name.replace(/\//g,'_');
 			var datalink = "<a class='dci' title='Download Data' href='https://sne.space/sne/" + fileeventname + ".json' download></a>"
 			if (row.download == 'e') {
 				return (datalink + "<a class='eci' title='Edit Data' href='https://github.com/astrocatalogs/sne-internal/edit/master/"
@@ -293,7 +657,7 @@ function transient_catalog() {
 				refstr += "<a href='http://adsabs.harvard.edu/abs/" + references[i] + "' target='_blank'>" + references[i] + "</a>";
 			}
 			if (references.length >= 5) {
-				var fileeventname = row.name.replace('/','_');
+				var fileeventname = row.name.replace(/\//g,'_');
 				refstr += "<br><a href='sne/" + fileeventname + "/'>(See full list)</a>";
 			}
 			return refstr;
@@ -341,44 +705,6 @@ function transient_catalog() {
 			}
             jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
-		jQuery.extend( jQuery.fn.dataTableExt.oSort, {
-			"non-empty-string-asc": function (str1, str2) {
-				if(isNaN(str1) && isNaN(str2))
-					return 0;
-				if(isNaN(str1))
-					return 1;
-				if(isNaN(str2))
-					return -1;
-				return ((str1 < str2) ? -1 : ((str1 > str2) ? 1 : 0));
-			},
-			"non-empty-string-desc": function (str1, str2) {
-				if(isNaN(str1) && isNaN(str2))
-					return 0;
-				if(isNaN(str1))
-					return 1;
-				if(isNaN(str2))
-					return -1;
-				return ((str1 < str2) ? 1 : ((str1 > str2) ? -1 : 0));
-			},
-			"non-empty-float-asc": function (v1, v2) {
-				if(isNaN(v1) && isNaN(v2))
-					return 0;
-				if(isNaN(v1))
-					return 1;
-				if(isNaN(v2))
-					return -1;
-				return ((v1 < v2) ? -1 : ((v1 > v2) ? 1 : 0));
-			},
-			"non-empty-float-desc": function (v1, v2) {
-				if(isNaN(v1) && isNaN(v2))
-					return 0;
-				if(isNaN(v1))
-					return 1;
-				if(isNaN(v2))
-					return -1;
-				return ((v1 < v2) ? 1 : ((v1 > v2) ? -1 : 0));
-			}
-		} );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
 				url: '../../sne/catalog.min.json',
@@ -545,10 +871,6 @@ function transient_catalog() {
             },
             order: [[ 16, "desc" ]]
 		} );
-		function needAdvanced (str) {
-			var advancedStrs = ['!', 'NOT', '-', 'OR', ',', '<', '>', '='];
-			return (advancedStrs.some(function(v) { return str === v; }));
-		}
         table.columns().every( function ( index ) {
             var that = this;
 
@@ -564,315 +886,6 @@ function transient_catalog() {
 				that.draw();
             } );
         } );
-		function compDates ( date1, date2, includeSame ) {
-			var d1;
-			var d1split = date1.split('/');
-			if (d1split.length == 1) {
-				d1 = new Date(date1 + '/12/31');
-			} else if (d1split.length == 2) {
-				var daysInMonth = new Date(d1split[0], d1split[1], 0).getDate();
-				d1 = new Date(date1 + '/' + String(daysInMonth));
-			} else {
-				d1 = new Date(date1);
-			}
-			var d2;
-			var d2split = date2.split('/');
-			if (d2split.length == 1) {
-				d2 = new Date(date2 + '/12/31');
-			} else if (d2split.length == 2) {
-				var daysInMonth = new Date(d2split[0], d2split[1], 0).getDate();
-				d2 = new Date(date2 + '/' + String(daysInMonth));
-			} else {
-				d2 = new Date(date2);
-			}
-
-			if (includeSame) {
-				return d1.getTime() <= d2.getTime();
-			} else {
-				return d1.getTime() < d2.getTime();
-			}
-		}
-		function compRaDecs ( radec1inp, radec2inp, includeSame ) {
-			var rd1, rd2;
-			var sign1, sign2;
-			if (radec1inp.length > 0) {
-				if (radec1inp[0] == '+') {
-					radec1 = radec1inp.slice(1,-1);
-					sign1 = 1.0;
-				} else if (radec1inp[0] == '-') {
-					radec1 = radec1inp.slice(1,-1);
-					sign1 = -1.0;
-				} else {
-					radec1 = radec1inp;
-					sign1 = 1.0;
-				}
-			}
-			if (radec2inp.length > 0) {
-				if (radec2inp[0] == '+') {
-					radec2 = radec2inp.slice(1,-1);
-					sign2 = 1.0;
-				} else if (radec2inp[0] == '-') {
-					radec2 = radec2inp.slice(1,-1);
-					sign2 = -1.0;
-				} else {
-					radec2 = radec2inp;
-					sign2 = 1.0;
-				}
-			}
-			var rd1split = radec1.split(':');
-			var rd2split = radec2.split(':');
-			if (rd1split.length == 1) {
-				rd1 = parseFloat(rd1split[0]);
-			} else if (rd1split.length == 2) {
-				rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60.;
-			} else {
-				rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60. + parseFloat(rd1split[2])/3600.;
-			}
-			if (rd2split.length == 1) {
-				rd2 = parseFloat(rd2split[0]);
-			} else if (rd2split.length == 2) {
-				rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60.;
-			} else {
-				rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60. + parseFloat(rd2split[2])/3600.;
-			}
-
-			if (includeSame) {
-				return sign1*rd1 <= sign2*rd2;
-			} else {
-				return sign1*rd1 < sign2*rd2;
-			}
-		}
-		function advancedDateFilter ( data, id ) {
-			var idObj = document.getElementById(id);
-			if ( idObj === null ) return true;
-			var idString = idObj.value;
-			if ( idString === '' ) return true;
-			var isNot = (idString.indexOf('!') !== -1 || idString.indexOf('NOT') !== -1)
-			idString = idString.replace(/!/g, '');
-			var splitString = idString.split(/(?:,|OR)+/);
-			var splitData = data.split(/(?:,|OR)+/);
-			for ( var d = 0; d < splitData.length; d++ ) {
-				var cData = splitData[d].trim();
-				for ( var i = 0; i < splitString.length; i++ ) {
-					if ( splitString[i].indexOf('-') !== -1 )
-					{
-						var splitRange = splitString[i].split('-');
-						var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
-						var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
-						if (minStr !== '') {
-							if (!( (minStr !== '' && compDates(cData, minStr, true)) ||
-								   (maxStr !== '' && compDates(maxStr, cData, true)) || cData === '' )) return !isNot;
-						}
-					}
-					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
-					if ( idStr === "" || idStr === NaN || idStr === '-' ) {
-						if (i === 0) return !isNot;
-					}
-					if ( idStr === "" || idStr === NaN ) {
-						if (i === 0) return !isNot;
-					}
-					else {
-						//if (cData === '') return false;
-						if ( splitString[i].indexOf('<=') !== -1 )
-						{
-							if ( compDates(cData, idStr, true) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('<') !== -1 )
-						{
-							if ( compDates(cData, idStr, false) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('>=') !== -1 )
-						{
-							if ( compDates(idStr, cData, true) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('>') !== -1 )
-						{
-							if ( compDates(idStr, cData, false) ) return !isNot;
-						}
-						else
-						{
-							if ( idStr.indexOf('"') !== -1 ) {
-								idStr = String(idStr.replace(/"/g, '').trim());
-								if ( cData === idStr ) return !isNot;
-							}
-							else {
-								if ( cData.indexOf(idStr) !== -1 ) return !isNot;
-							}
-						}
-					}
-				}
-			}
-			return isNot;
-		}
-		function advancedRaDecFilter ( data, id ) {
-			var idObj = document.getElementById(id);
-			if ( idObj === null ) return true;
-			var idString = idObj.value;
-			if ( idString === '' ) return true;
-			var isNot = (idString.indexOf('!') !== -1 || idString.indexOf('NOT') !== -1)
-			idString = idString.replace(/!/g, '');
-			var splitString = idString.split(/(?:,|OR)+/);
-			var splitData = data.split(/(?:,|OR)+/);
-			for ( var d = 0; d < splitData.length; d++ ) {
-				var cData = splitData[d].trim();
-				for ( var i = 0; i < splitString.length; i++ ) {
-					if ( splitString[i].indexOf('-') !== -1 )
-					{
-						var splitRange = splitString[i].split('-');
-						var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
-						var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
-						if (minStr !== '') {
-							if (!( (minStr !== '' && compRaDecs(cData, minStr, true)) ||
-								   (maxStr !== '' && compRaDecs(maxStr, cData, true)) || cData === '' )) return !isNot;
-						}
-					}
-					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
-					if ( idStr === "" || idStr === NaN || idStr === '-' ) {
-						if (i === 0) return !isNot;
-					}
-					if ( idStr === "" || idStr === NaN ) {
-						if (i === 0) return !isNot;
-					}
-					else {
-						//if (cData === '') return false;
-						if ( splitString[i].indexOf('<=') !== -1 )
-						{
-							if ( compRaDecs(cData, idStr, true) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('<') !== -1 )
-						{
-							if ( compRaDecs(cData, idStr, false) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('>=') !== -1 )
-						{
-							if ( compRaDecs(idStr, cData, true) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('>') !== -1 )
-						{
-							if ( compRaDecs(idStr, cData, false) ) return !isNot;
-						}
-						else
-						{
-							if ( idStr.indexOf('"') !== -1 ) {
-								idStr = String(idStr.replace(/"/g, '').trim());
-								if ( cData === idStr ) return !isNot;
-							}
-							else {
-								if ( cData.indexOf(idStr) !== -1 ) return !isNot;
-							}
-						}
-					}
-				}
-			}
-			return isNot;
-		}
-		function advancedStringFilter ( data, id ) {
-			var idObj = document.getElementById(id);
-			if ( idObj === null ) return true;
-			var idString = idObj.value;
-			if ( idString === '' ) return true;
-			var splitString = idString.split(/(?:,|OR)+/);
-			var splitData = data.split(',');
-			for ( var d = 0; d < splitData.length; d++ ) {
-				var cData = splitData[d].trim();
-				for ( var i = 0; i < splitString.length; i++ ) {
-					var idStr = splitString[i].trim().toUpperCase();
-					var isNot = (idStr.indexOf('!') !== -1 || idStr.indexOf('NOT') !== -1)
-					idStr = idStr.replace(/!/g, '');
-					if ( idStr === "" || idStr === NaN ) {
-						if (i === 0) return !isNot;
-					}
-					else {
-						var lowData = cData.toUpperCase();
-						if ( idStr.indexOf('"') !== -1 ) {
-							idStr = idStr.replace(/"/g, '');
-							if ( isNot ) {
-								return ( lowData !== idStr );
-							} else {
-								if ( lowData === idStr ) return true;
-							}
-						}
-						else {
-							if ( isNot ) {
-								return ( lowData.indexOf(idStr) === -1 );
-							} else {
-								if ( lowData.indexOf(idStr) !== -1 ) return true;
-							}
-						}
-					}
-				}
-			}
-			return false;
-		}
-		function advancedFloatFilter ( data, id ) {
-			var idObj = document.getElementById(id);
-			if ( idObj === null ) return true;
-			var idString = idObj.value;
-			if ( idString === '' ) return true;
-			var splitString = idString.split(/(?:,|OR)+/);
-			var splitData = data.split(/(?:,|OR)+/);
-			for ( var d = 0; d < splitData.length; d++ ) {
-				var cData = splitData[d].trim();
-				var cVal = cData*1.0;
-				for ( var i = 0; i < splitString.length; i++ ) {
-					if ( splitString[i].indexOf('-') !== -1 )
-					{
-						var splitRange = splitString[i].split('-');
-						var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
-						var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
-						var minVal = minStr*1.0;
-						var maxVal = maxStr*1.0;
-						if (minStr !== '') {
-							if (!( (minStr !== '' && cVal < minVal) || (maxStr !== '' && cVal > maxVal) )) return !isNot;
-						}
-					}
-					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
-					var isNot = (idStr.indexOf('!') !== -1 || idStr.indexOf('NOT') !== -1)
-					idStr = idStr.replace(/!/g, '');
-					if ( idStr === "" || idStr === NaN || idStr === '-' ) {
-						if (i === 0) return true;
-					}
-					else {
-						idVal = idStr*1.0;
-						if ( splitString[i].indexOf('<=') !== -1 )
-						{
-							if ( idVal >= cVal ) return true;
-						}
-						else if ( splitString[i].indexOf('<') !== -1 )
-						{
-							if ( idVal > cVal ) return true;
-						}
-						else if ( splitString[i].indexOf('>=') !== -1 )
-						{
-							if ( idVal <= cVal ) return true;
-						}
-						else if ( splitString[i].indexOf('>') !== -1 )
-						{
-							if ( idVal < cVal ) return true;
-						}
-						else
-						{
-							if ( idStr.indexOf('"') !== -1 ) {
-								idStr = String(idStr.replace(/"/g, '').trim());
-								if ( isNot ) {
-									return ( cData !== idStr );
-								} else {
-									if ( cData === idStr ) return true;
-								}
-							}
-							else {
-								if ( isNot ) {
-									return ( cData.indexOf(idStr) === -1 );
-								} else {
-									if ( cData.indexOf(idStr) !== -1 ) return true;
-								}
-							}
-						}
-					}
-				}
-			}
-			return false;
-		}
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex ) {
 				for ( var i = 0; i < aData.length; i++ )
@@ -912,25 +925,21 @@ function duplicate_table() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ ];
-		function noBlanksNumRender ( data, type, row ) {
-			if ( type === 'sort' ) {
-				if (data === '' || data === null || typeof data !== 'string') return NaN;
-				return parseFloat(String(data).split(',')[0].replace(/<(?:.|\n)*?>/gm, '').trim());
-			}
-			return data;
-		}
-		function noBlanksStrRender ( data, type, row ) {
-			if ( type === 'sort' ) {
-				if (data === '' || data === null || typeof data !== 'string') return NaN;
-				return String(data).split(',')[0].replace(/<(?:.|\n)*?>/gm, '').trim();
-			}
-			return data;
-		}
 		function name1Linked ( row, type, val, meta ) {
-			return "<a href='https://sne.space/sne/" + row.name1.replace('/','_') + "/' target='_blank'>" + row.name1 + "</a>";
+			if (row.aliases1.length > 1) {
+				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name1.replace(/\//g,'_') +
+					"/' target='_blank'>" + row.name1 + "</a><span class='tooltiptext'>" + row.aliases1.slice(1).join(', ') + "</span></div>";
+			} else {
+				return "<a href='https://sne.space/sne/" + row.name1.replace(/\//g,'_') + "/' target='_blank'>" + row.name1 + "</a>";
+			}
 		}
 		function name2Linked ( row, type, val, meta ) {
-			return "<a href='https://sne.space/sne/" + row.name2.replace('/','_') + "/' target='_blank'>" + row.name2 + "</a>";
+			if (row.aliases2.length > 1) {
+				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name2.replace(/\//g,'_') +
+					"/' target='_blank'>" + row.name2 + "</a><span class='tooltiptext'>" + row.aliases2.slice(1).join(', ') + "</span></div>";
+			} else {
+				return "<a href='https://sne.space/sne/" + row.name2.replace(/\//g,'_') + "/' target='_blank'>" + row.name2 + "</a>";
+			}
 		}
 		function distDegValue ( row, type, val, meta ) {
 			if (!row.distdeg) {
@@ -946,11 +955,14 @@ function duplicate_table() {
 			}
 			return (parseFloat(row.diffyear)*365.25).toFixed(3);
 		}
+		function performGoogleSearch ( row, type, val, meta ) {
+			return "<button class='googleit' type='button' onclick='googleNames(\"" + row.name1 + "\",\"" + row.name2 + "\")'>Google both names</button>"
+		}
 		function markAsDuplicate ( row, type, val, meta ) {
-			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\")'>These are the same event</button>"
+			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\")'>These are the same</button>"
 		}
 		function markAsDistinct ( row, type, val, meta ) {
-			return "<button class='diffevent' type='button' onclick='markDiff(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\")'>These are different events</button>"
+			return "<button class='diffevent' type='button' onclick='markDiff(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\")'>These are different</button>"
 		}
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
@@ -958,10 +970,10 @@ function duplicate_table() {
 			if (classname == 'aliases') {
 				jQuery(this).remove();
 			}
-			if (['check', 'aredupes', 'notdupes', 'responsive'].indexOf(classname) >= 0) {
+			if (['check', 'google', 'aredupes', 'notdupes', 'responsive'].indexOf(classname) >= 0) {
 				jQuery(this).html( '' );
 			}
-			if (['check', 'notdupes', 'references', 'responsive'].indexOf(classname) >= 0) return;
+			if (['check', 'google', 'aredupes', 'notdupes', 'responsive'].indexOf(classname) >= 0) return;
 			for (i = 0; i < floatSearchCols.length; i++) {
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
 					floatColValDict[index] = floatSearchCols[i];
@@ -995,44 +1007,6 @@ function duplicate_table() {
 			}
             jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
-		jQuery.extend( jQuery.fn.dataTableExt.oSort, {
-			"non-empty-string-asc": function (str1, str2) {
-				if(isNaN(str1) && isNaN(str2))
-					return 0;
-				if(isNaN(str1))
-					return 1;
-				if(isNaN(str2))
-					return -1;
-				return ((str1 < str2) ? -1 : ((str1 > str2) ? 1 : 0));
-			},
-			"non-empty-string-desc": function (str1, str2) {
-				if(isNaN(str1) && isNaN(str2))
-					return 0;
-				if(isNaN(str1))
-					return 1;
-				if(isNaN(str2))
-					return -1;
-				return ((str1 < str2) ? 1 : ((str1 > str2) ? -1 : 0));
-			},
-			"non-empty-float-asc": function (v1, v2) {
-				if(isNaN(v1) && isNaN(v2))
-					return 0;
-				if(isNaN(v1))
-					return 1;
-				if(isNaN(v2))
-					return -1;
-				return ((v1 < v2) ? -1 : ((v1 > v2) ? 1 : 0));
-			},
-			"non-empty-float-desc": function (v1, v2) {
-				if(isNaN(v1) && isNaN(v2))
-					return 0;
-				if(isNaN(v1))
-					return 1;
-				if(isNaN(v2))
-					return -1;
-				return ((v1 < v2) ? 1 : ((v1 > v2) ? -1 : 0));
-			}
-		} );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
 				url: '../../sne/dupes.json',
@@ -1086,6 +1060,7 @@ function duplicate_table() {
 					//"sort": decValue,
 					"_": diffYearValue,
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5 },
+				{ "data": performGoogleSearch, "responsivePriority": 4, "searchable": false },
 				{ "data": markAsDuplicate, "responsivePriority": 4, "searchable": false },
 				{ "data": markAsDistinct, "responsivePriority": 4, "searchable": false },
 				{ "defaultContent": "" },
@@ -1116,14 +1091,14 @@ function duplicate_table() {
                 'selectNone',
                 {
                     extend: 'colvis',
-                    columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2)):not(:nth-last-child(3))'
+                    columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2)):not(:nth-last-child(3)):not(:nth-last-child(4))'
                 },
                 {
                     extend: 'csv',
                     text: 'Export selected to CSV',
                     exportOptions: {
                         modifier: { selected: true },
-                        columns: ':visible:not(:first-child):not(:last-child):not(:nth-last-child(2))',
+                        columns: ':visible:not(:first-child):not(:last-child):not(:nth-last-child(2)):not(:nth-last-child(3)):not(:nth-last-child(4))',
 						orthogonal: 'export'
                     }
 				}
@@ -1133,25 +1108,16 @@ function duplicate_table() {
                 orderable: false,
                 className: 'select-checkbox'
 			}, {
-                targets: [ ],
+                targets: [ 'ra1', 'dec1', 'ra2', 'dec2' ],
 				visible: false
-			}, {
-				targets: [ ],
-				className: 'nowrap not-mobile'
 			}, {
 				className: 'control',
 				orderable: false,
 				width: "2%",
 				targets: -1
 			}, {
-				targets: [ 'aredupes', 'notdupes' ],
+				targets: [ 'google', 'aredupes', 'notdupes' ],
 				orderable: false
-			}, {
-				targets: [ 'photolink', 'spectralink', 'radiolink', 'xraylink' ],
-				orderSequence: [ 'desc', 'asc' ]
-			}, {
-				targets: [ 'maxdate', 'discoverdate', 'radiolink', 'xraylink' ],
-				className: 'nowrap'
 			} ],
             select: {
                 style:    'os',
@@ -1159,10 +1125,6 @@ function duplicate_table() {
             },
             order: [[ 7, "asc" ], [8, "asc"]]
 		} );
-		function needAdvanced (str) {
-			var advancedStrs = ['!', 'NOT', '-', 'OR', ',', '<', '>', '='];
-			return (advancedStrs.some(function(v) { return str === v; }));
-		}
         table.columns().every( function ( index ) {
             var that = this;
 
@@ -1178,315 +1140,223 @@ function duplicate_table() {
 				that.draw();
             } );
         } );
-		function compDates ( date1, date2, includeSame ) {
-			var d1;
-			var d1split = date1.split('/');
-			if (d1split.length == 1) {
-				d1 = new Date(date1 + '/12/31');
-			} else if (d1split.length == 2) {
-				var daysInMonth = new Date(d1split[0], d1split[1], 0).getDate();
-				d1 = new Date(date1 + '/' + String(daysInMonth));
-			} else {
-				d1 = new Date(date1);
+		jQuery.fn.dataTable.ext.search.push(
+			function( oSettings, aData, iDataIndex ) {
+				for ( var i = 0; i < aData.length; i++ )
+				{
+					if ( floatColInds.indexOf(i) !== -1 ) {
+						if ( !advancedFloatFilter( aData[i], floatColValDict[i] ) ) return false;
+					} else if ( stringColInds.indexOf(i) !== -1 ) {
+						if ( !advancedStringFilter( aData[i], stringColValDict[i] ) ) return false;
+					} else if ( dateColInds.indexOf(i) !== -1 ) {
+						if ( !advancedDateFilter( aData[i], dateColValDict[i] ) ) return false;
+					} else if ( raDecColInds.indexOf(i) !== -1 ) {
+						if ( !advancedRaDecFilter( aData[i], raDecColValDict[i] ) ) return false;
+					}
+				}
+				return true;
 			}
-			var d2;
-			var d2split = date2.split('/');
-			if (d2split.length == 1) {
-				d2 = new Date(date2 + '/12/31');
-			} else if (d2split.length == 2) {
-				var daysInMonth = new Date(d2split[0], d2split[1], 0).getDate();
-				d2 = new Date(date2 + '/' + String(daysInMonth));
-			} else {
-				d2 = new Date(date2);
-			}
+		);
+	} );
+	</script>
+<?php
+}
 
-			if (includeSame) {
-				return d1.getTime() <= d2.getTime();
-			} else {
-				return d1.getTime() < d2.getTime();
+function bibliography() {
+	readfile("/var/www/html/sne/sne/biblio.html");
+?>
+	<script>
+	jQuery(document).ready(function() {
+		var floatColValDict = {};
+		var floatColInds = [];
+		var floatSearchCols = ['photocount', 'spectracount', 'metacount'];
+		var stringColValDict = {};
+		var stringColInds = [];
+		var stringSearchCols = ['bibcode', 'events', 'types'];
+		var raDecColValDict = {};
+		var raDecColInds = [];
+		var raDecSearchCols = [ ];
+		var dateColValDict = {};
+		var dateColInds = [];
+		var dateSearchCols = [ ];
+        jQuery('#example tfoot th').each( function ( index ) {
+			var title = jQuery(this).text();
+			var classname = jQuery(this).attr('class').split(' ')[0];
+			if (['check', 'responsive'].indexOf(classname) >= 0) {
+				jQuery(this).html( '' );
 			}
+			if (['check', 'responsive'].indexOf(classname) >= 0) return;
+			for (i = 0; i < floatSearchCols.length; i++) {
+				if (jQuery(this).hasClass(floatSearchCols[i])) {
+					floatColValDict[index] = floatSearchCols[i];
+					floatColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < stringSearchCols.length; i++) {
+				if (jQuery(this).hasClass(stringSearchCols[i])) {
+					stringColValDict[index] = stringSearchCols[i];
+					stringColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < dateSearchCols.length; i++) {
+				if (jQuery(this).hasClass(dateSearchCols[i])) {
+					dateColValDict[index] = dateSearchCols[i];
+					dateColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < raDecSearchCols.length; i++) {
+				if (jQuery(this).hasClass(raDecSearchCols[i])) {
+					raDecColValDict[index] = raDecSearchCols[i];
+					raDecColInds.push(index);
+					break;
+				}
+			}
+            jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
+        } );
+		function bibcodeLinked ( row, type, val, meta ) {
+			var html = '';
+			if (row.authors) {
+				html += row.authors + '<br>';
+			}
+			return html + "<a href='http://adsabs.harvard.edu/abs/" + row.bibcode + "'>" + row.bibcode + "</a>";
 		}
-		function compRaDecs ( radec1inp, radec2inp, includeSame ) {
-			var rd1, rd2;
-			var sign1, sign2;
-			if (radec1inp.length > 0) {
-				if (radec1inp[0] == '+') {
-					radec1 = radec1inp.slice(1,-1);
-					sign1 = 1.0;
-				} else if (radec1inp[0] == '-') {
-					radec1 = radec1inp.slice(1,-1);
-					sign1 = -1.0;
-				} else {
-					radec1 = radec1inp;
-					sign1 = 1.0;
+		function eventsDropdown ( row, type, val, meta ) {
+			var html = String(row.events.length) + ' SNe: ';
+			if (row.events.length == 1) {
+				html += "<a href='https://sne.space/sne/" + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
+			} else if (row.events.length <= 30) {
+				for (i = 0; i < row.events.length; i++) {
+					if (i != 0) html += ', ';
+					html += "<a href='https://sne.space/sne/" + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
 				}
-			}
-			if (radec2inp.length > 0) {
-				if (radec2inp[0] == '+') {
-					radec2 = radec2inp.slice(1,-1);
-					sign2 = 1.0;
-				} else if (radec2inp[0] == '-') {
-					radec2 = radec2inp.slice(1,-1);
-					sign2 = -1.0;
-				} else {
-					radec2 = radec2inp;
-					sign2 = 1.0;
+				html += '</select>';
+				return html;
+			} else {
+				html += ('<br><select id="' + row.bibcode.replace(/\./g, '_') +
+					'" size="3>"');
+				for (i = 0; i < row.events.length; i++) {
+					html += '<option value=' + row.events[i] + '>' + row.events[i] + '</option>';
 				}
+				html += '</select><br><a class="dt-button" ';
+				html += 'onclick="goToBibEvent(\'' + row.bibcode.replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';
+				return html;
+			} 
+			return html;
+		}
+		function eventsDropdownType ( row, type, val, meta ) {
+			if (type == "sort") {
+				return "num";
 			}
-			var rd1split = radec1.split(':');
-			var rd2split = radec2.split(':');
-			if (rd1split.length == 1) {
-				rd1 = parseFloat(rd1split[0]);
-			} else if (rd1split.length == 2) {
-				rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60.;
-			} else {
-				rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60. + parseFloat(rd1split[2])/3600.;
-			}
-			if (rd2split.length == 1) {
-				rd2 = parseFloat(rd2split[0]);
-			} else if (rd2split.length == 2) {
-				rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60.;
-			} else {
-				rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60. + parseFloat(rd2split[2])/3600.;
-			}
+			return "string";
+		}
+		function eventsCount ( row, type, val, meta ) {
+			return row.events.length;
+		}
+		var table = jQuery('#example').DataTable( {
+			ajax: {
+				url: '../../sne/biblio.json',
+				dataSrc: ''
+			},
+			columns: [
+				{ "defaultContent": "", "responsivePriority": 6 },
+				{ "data": {
+					"display": bibcodeLinked,
+					"_": "bibcode"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"display": eventsDropdown,
+					"sort": eventsCount,
+					"_": "events[, ]"
+				  }, "type": eventsDropdownType, "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"_": "types[, ]"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"_": "photocount"
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"_": "spectracount"
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"_": "metacount"
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 1 },
+				{ "defaultContent": "" },
+			],
+            dom: 'Bflprtip',
+            //colReorder: true,
+			orderMulti: false,
+            pagingType: 'simple_numbers',
+            pageLength: 50,
+			searchDelay: 400,
+			responsive: {
+				details: {
+					type: 'column',
+					target: -1
+				}
+			},
+            select: true,
+            lengthMenu: [ [10, 50, 250], [10, 50, 250] ],
+            deferRender: true,
+            autoWidth: false,
+            buttons: [
+                {
+                    action: function ( e, dt, button, config ) {
+                        table.rows( { filter: 'applied' } ).select();
+                    },
+                    text: 'Select all'
+                },
+                'selectNone',
+                {
+                    extend: 'colvis',
+                    columns: ':not(:first-child):not(:last-child)'
+                },
+                {
+                    extend: 'csv',
+                    text: 'Export selected to CSV',
+                    exportOptions: {
+                        modifier: { selected: true },
+                        columns: ':visible:not(:first-child):not(:last-child)',
+						orthogonal: 'export'
+                    }
+				}
+            ],
+            columnDefs: [ {
+                targets: 0,
+                orderable: false,
+                className: 'select-checkbox'
+			}, {
+				targets: [ 'events', 'photocount', 'spectracount', 'metacount' ],
+				orderSequence: [ 'desc', 'asc' ]
+			}, {
+				className: 'control',
+				orderable: false,
+				width: "2%",
+				targets: -1
+			} ],
+            select: {
+                style:    'os',
+                selector: 'td:first-child'
+            },
+            order: [[ 5, "desc" ]]
+		} );
+        table.columns().every( function ( index ) {
+            var that = this;
 
-			if (includeSame) {
-				return sign1*rd1 <= sign2*rd2;
-			} else {
-				return sign1*rd1 < sign2*rd2;
-			}
-		}
-		function advancedDateFilter ( data, id ) {
-			var idObj = document.getElementById(id);
-			if ( idObj === null ) return true;
-			var idString = idObj.value;
-			if ( idString === '' ) return true;
-			var isNot = (idString.indexOf('!') !== -1 || idString.indexOf('NOT') !== -1)
-			idString = idString.replace(/!/g, '');
-			var splitString = idString.split(/(?:,|OR)+/);
-			var splitData = data.split(/(?:,|OR)+/);
-			for ( var d = 0; d < splitData.length; d++ ) {
-				var cData = splitData[d].trim();
-				for ( var i = 0; i < splitString.length; i++ ) {
-					if ( splitString[i].indexOf('-') !== -1 )
-					{
-						var splitRange = splitString[i].split('-');
-						var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
-						var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
-						if (minStr !== '') {
-							if (!( (minStr !== '' && compDates(cData, minStr, true)) ||
-								   (maxStr !== '' && compDates(maxStr, cData, true)) || cData === '' )) return !isNot;
-						}
-					}
-					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
-					if ( idStr === "" || idStr === NaN || idStr === '-' ) {
-						if (i === 0) return !isNot;
-					}
-					if ( idStr === "" || idStr === NaN ) {
-						if (i === 0) return !isNot;
-					}
-					else {
-						//if (cData === '') return false;
-						if ( splitString[i].indexOf('<=') !== -1 )
-						{
-							if ( compDates(cData, idStr, true) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('<') !== -1 )
-						{
-							if ( compDates(cData, idStr, false) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('>=') !== -1 )
-						{
-							if ( compDates(idStr, cData, true) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('>') !== -1 )
-						{
-							if ( compDates(idStr, cData, false) ) return !isNot;
-						}
-						else
-						{
-							if ( idStr.indexOf('"') !== -1 ) {
-								idStr = String(idStr.replace(/"/g, '').trim());
-								if ( cData === idStr ) return !isNot;
-							}
-							else {
-								if ( cData.indexOf(idStr) !== -1 ) return !isNot;
-							}
-						}
+            jQuery( 'input', that.footer() ).on( 'input', function () {
+				if (( floatColInds.indexOf(index) === -1 ) &&
+				    ( stringColInds.indexOf(index) === -1 ) &&
+					( dateColInds.indexOf(index) === -1 ) &&
+					( raDecColInds.indexOf(index) === -1 ) ) {
+					if ( that.search() !== this.value ) {
+						that.search( this.value );
 					}
 				}
-			}
-			return isNot;
-		}
-		function advancedRaDecFilter ( data, id ) {
-			var idObj = document.getElementById(id);
-			if ( idObj === null ) return true;
-			var idString = idObj.value;
-			if ( idString === '' ) return true;
-			var isNot = (idString.indexOf('!') !== -1 || idString.indexOf('NOT') !== -1)
-			idString = idString.replace(/!/g, '');
-			var splitString = idString.split(/(?:,|OR)+/);
-			var splitData = data.split(/(?:,|OR)+/);
-			for ( var d = 0; d < splitData.length; d++ ) {
-				var cData = splitData[d].trim();
-				for ( var i = 0; i < splitString.length; i++ ) {
-					if ( splitString[i].indexOf('-') !== -1 )
-					{
-						var splitRange = splitString[i].split('-');
-						var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
-						var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
-						if (minStr !== '') {
-							if (!( (minStr !== '' && compRaDecs(cData, minStr, true)) ||
-								   (maxStr !== '' && compRaDecs(maxStr, cData, true)) || cData === '' )) return !isNot;
-						}
-					}
-					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
-					if ( idStr === "" || idStr === NaN || idStr === '-' ) {
-						if (i === 0) return !isNot;
-					}
-					if ( idStr === "" || idStr === NaN ) {
-						if (i === 0) return !isNot;
-					}
-					else {
-						//if (cData === '') return false;
-						if ( splitString[i].indexOf('<=') !== -1 )
-						{
-							if ( compRaDecs(cData, idStr, true) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('<') !== -1 )
-						{
-							if ( compRaDecs(cData, idStr, false) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('>=') !== -1 )
-						{
-							if ( compRaDecs(idStr, cData, true) ) return !isNot;
-						}
-						else if ( splitString[i].indexOf('>') !== -1 )
-						{
-							if ( compRaDecs(idStr, cData, false) ) return !isNot;
-						}
-						else
-						{
-							if ( idStr.indexOf('"') !== -1 ) {
-								idStr = String(idStr.replace(/"/g, '').trim());
-								if ( cData === idStr ) return !isNot;
-							}
-							else {
-								if ( cData.indexOf(idStr) !== -1 ) return !isNot;
-							}
-						}
-					}
-				}
-			}
-			return isNot;
-		}
-		function advancedStringFilter ( data, id ) {
-			var idObj = document.getElementById(id);
-			if ( idObj === null ) return true;
-			var idString = idObj.value;
-			if ( idString === '' ) return true;
-			var splitString = idString.split(/(?:,|OR)+/);
-			var splitData = data.split(',');
-			for ( var d = 0; d < splitData.length; d++ ) {
-				var cData = splitData[d].trim();
-				for ( var i = 0; i < splitString.length; i++ ) {
-					var idStr = splitString[i].trim().toUpperCase();
-					var isNot = (idStr.indexOf('!') !== -1 || idStr.indexOf('NOT') !== -1)
-					idStr = idStr.replace(/!/g, '');
-					if ( idStr === "" || idStr === NaN ) {
-						if (i === 0) return !isNot;
-					}
-					else {
-						var lowData = cData.toUpperCase();
-						if ( idStr.indexOf('"') !== -1 ) {
-							idStr = idStr.replace(/"/g, '');
-							if ( isNot ) {
-								return ( lowData !== idStr );
-							} else {
-								if ( lowData === idStr ) return true;
-							}
-						}
-						else {
-							if ( isNot ) {
-								return ( lowData.indexOf(idStr) === -1 );
-							} else {
-								if ( lowData.indexOf(idStr) !== -1 ) return true;
-							}
-						}
-					}
-				}
-			}
-			return false;
-		}
-		function advancedFloatFilter ( data, id ) {
-			var idObj = document.getElementById(id);
-			if ( idObj === null ) return true;
-			var idString = idObj.value;
-			if ( idString === '' ) return true;
-			var splitString = idString.split(/(?:,|OR)+/);
-			var splitData = data.split(/(?:,|OR)+/);
-			for ( var d = 0; d < splitData.length; d++ ) {
-				var cData = splitData[d].trim();
-				var cVal = cData*1.0;
-				for ( var i = 0; i < splitString.length; i++ ) {
-					if ( splitString[i].indexOf('-') !== -1 )
-					{
-						var splitRange = splitString[i].split('-');
-						var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
-						var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
-						var minVal = minStr*1.0;
-						var maxVal = maxStr*1.0;
-						if (minStr !== '') {
-							if (!( (minStr !== '' && cVal < minVal) || (maxStr !== '' && cVal > maxVal) )) return !isNot;
-						}
-					}
-					var idStr = splitString[i].replace(/[<=>]/g, '').trim();
-					var isNot = (idStr.indexOf('!') !== -1 || idStr.indexOf('NOT') !== -1)
-					idStr = idStr.replace(/!/g, '');
-					if ( idStr === "" || idStr === NaN || idStr === '-' ) {
-						if (i === 0) return true;
-					}
-					else {
-						idVal = idStr*1.0;
-						if ( splitString[i].indexOf('<=') !== -1 )
-						{
-							if ( idVal >= cVal ) return true;
-						}
-						else if ( splitString[i].indexOf('<') !== -1 )
-						{
-							if ( idVal > cVal ) return true;
-						}
-						else if ( splitString[i].indexOf('>=') !== -1 )
-						{
-							if ( idVal <= cVal ) return true;
-						}
-						else if ( splitString[i].indexOf('>') !== -1 )
-						{
-							if ( idVal < cVal ) return true;
-						}
-						else
-						{
-							if ( idStr.indexOf('"') !== -1 ) {
-								idStr = String(idStr.replace(/"/g, '').trim());
-								if ( isNot ) {
-									return ( cData !== idStr );
-								} else {
-									if ( cData === idStr ) return true;
-								}
-							}
-							else {
-								if ( isNot ) {
-									return ( cData.indexOf(idStr) === -1 );
-								} else {
-									if ( cData.indexOf(idStr) !== -1 ) return true;
-								}
-							}
-						}
-					}
-				}
-			}
-			return false;
-		}
+				that.draw();
+            } );
+        } );
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex ) {
 				for ( var i = 0; i < aData.length; i++ )
@@ -1510,7 +1380,7 @@ function duplicate_table() {
 }
 
 function transient_table_scripts() {
-	if (is_front_page() || is_page('find-duplicates')) {
+	if (is_front_page() || is_page('find-duplicates') || is_page('bibliography')) {
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__) );
 		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__) );
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
