@@ -933,6 +933,10 @@ function duplicate_table() {
 				return "<a href='https://sne.space/sne/" + row.name1.replace(/\//g,'_') + "/' target='_blank'>" + row.name1 + "</a>";
 			}
 		}
+		function name1Aliases ( row, type, val, meta ) {
+			if (!row.aliases1) return '';
+			return row.aliases1.join(', ');
+		}
 		function name2Linked ( row, type, val, meta ) {
 			if (row.aliases2.length > 1) {
 				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name2.replace(/\//g,'_') +
@@ -940,6 +944,10 @@ function duplicate_table() {
 			} else {
 				return "<a href='https://sne.space/sne/" + row.name2.replace(/\//g,'_') + "/' target='_blank'>" + row.name2 + "</a>";
 			}
+		}
+		function name2Aliases ( row, type, val, meta ) {
+			if (!row.aliases2) return '';
+			return row.aliases2.join(', ');
 		}
 		function distDegValue ( row, type, val, meta ) {
 			if (!row.distdeg) {
@@ -1002,9 +1010,6 @@ function duplicate_table() {
 					break;
 				}
 			}
-			if (classname == 'name') {
-				jQuery(this).attr('colspan', 2);
-			}
             jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
 		var table = jQuery('#example').DataTable( {
@@ -1016,12 +1021,12 @@ function duplicate_table() {
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": {
 					"display": name1Linked,
-					//"filter": eventAliases,
+					"filter": name1Aliases,
 					"_": "name1"
 				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
 				{ "data": {
 					"display": name2Linked,
-					//"filter": eventAliases,
+					"filter": name2Aliases,
 					"_": "name2"
 				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
 				{ "data": {
@@ -1246,6 +1251,16 @@ function bibliography() {
 			} 
 			return html;
 		}
+		function allAuthors ( row, type, val, meta ) {
+			var html = '';
+			console.log(row);
+			if (!row.allauthors) return '';
+			for (i = 0; i < row.allauthors.length; i++) {
+				if (i > 0) html += ', ';
+				html += row.allauthors[i];
+			}
+			return html;
+		}
 		function eventsDropdownType ( row, type, val, meta ) {
 			if (type == "sort") {
 				return "num";
@@ -1267,22 +1282,26 @@ function bibliography() {
 					"_": "bibcode"
 				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
 				{ "data": {
+					//"display": allAuthors,
+					"_": "allauthors[; ]"
+				  }, "type": "string", "defaultContent": "" },
+				{ "data": {
 					"display": eventsDropdown,
 					"sort": eventsCount,
 					"_": "events[, ]"
-				  }, "type": eventsDropdownType, "defaultContent": "", "responsivePriority": 1 },
+				  }, "type": eventsDropdownType, "defaultContent": "", "responsivePriority": 2 },
 				{ "data": {
 					"_": "types[, ]"
-				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 2 },
 				{ "data": {
 					"_": "photocount"
-				  }, "type": "num", "defaultContent": "", "responsivePriority": 1 },
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
 				{ "data": {
 					"_": "spectracount"
-				  }, "type": "num", "defaultContent": "", "responsivePriority": 1 },
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
 				{ "data": {
 					"_": "metacount"
-				  }, "type": "num", "defaultContent": "", "responsivePriority": 1 },
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
 				{ "defaultContent": "" },
 			],
             dom: 'Bflprtip',
@@ -1328,6 +1347,9 @@ function bibliography() {
                 orderable: false,
                 className: 'select-checkbox'
 			}, {
+                targets: [ 'allauthors' ],
+				visible: false
+			}, {
 				targets: [ 'events', 'photocount', 'spectracount', 'metacount' ],
 				orderSequence: [ 'desc', 'asc' ]
 			}, {
@@ -1340,7 +1362,7 @@ function bibliography() {
                 style:    'os',
                 selector: 'td:first-child'
             },
-            order: [[ 5, "desc" ]]
+            order: [[ 6, "desc" ]]
 		} );
         table.columns().every( function ( index ) {
             var that = this;
@@ -1379,8 +1401,207 @@ function bibliography() {
 <?php
 }
 
+function conflict_table() {
+	readfile("/var/www/html/sne/sne/conflicts.html");
+?>
+	<script>
+	jQuery(document).ready(function() {
+		var floatColValDict = {};
+		var floatColInds = [];
+		var floatSearchCols = [];
+		var stringColValDict = {};
+		var stringColInds = [];
+		var stringSearchCols = ['name'];
+		var raDecColValDict = {};
+		var raDecColInds = [];
+		var raDecSearchCols = [];
+		var dateColValDict = {};
+		var dateColInds = [];
+		var dateSearchCols = [];
+		function nameLinked ( row, type, val, meta ) {
+			if (row.aliases.length > 1) {
+				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
+					"/' target='_blank'>" + row.name + "</a><span class='tooltiptext'>" + row.aliases.slice(1).join(', ') + "</span></div>";
+			} else {
+				return "<a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'>" + row.name + "</a>";
+			}
+		}
+		function nameAliases ( row, type, val, meta ) {
+			if (!row.aliases) return '';
+			return row.aliases.join(', ');
+		}
+		function actionButtons ( row, type, val, meta ) {
+			var html = '';
+			var typeStr = '';
+			for (i = 0; i < row.values.length; i++) {
+				if (i > 0) html += ' ';
+				if (row.type === 'ra') {
+					typeStr = 'R.A.';
+				} else if (row.type === 'dec') {
+					typeStr = 'Dec.';
+				} else if (row.type === 'redshift') {
+					typeStr = '<i>z</i>';
+				}
+				html += "<button class='markerror' type='button' onclick='markError(\"" +
+					row.name + "\", \"" + row.type + "\", \"" + row.sources[i].idtype +
+					"\", \"" + row.sources[i].id + "\", \"" + row.edit + "\")'>" + typeStr + " =<br>" +
+					String(row.values[i]) + "<br>is an error</button>"
+			}
+			return html;
+		}
+        jQuery('#example tfoot th').each( function ( index ) {
+			var title = jQuery(this).text();
+			var classname = jQuery(this).attr('class').split(' ')[0];
+			if (['check', 'actions', 'responsive'].indexOf(classname) >= 0) {
+				jQuery(this).html( '' );
+			}
+			if (['check', 'actions', 'responsive'].indexOf(classname) >= 0) return;
+			for (i = 0; i < floatSearchCols.length; i++) {
+				if (jQuery(this).hasClass(floatSearchCols[i])) {
+					floatColValDict[index] = floatSearchCols[i];
+					floatColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < stringSearchCols.length; i++) {
+				if (jQuery(this).hasClass(stringSearchCols[i])) {
+					stringColValDict[index] = stringSearchCols[i];
+					stringColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < dateSearchCols.length; i++) {
+				if (jQuery(this).hasClass(dateSearchCols[i])) {
+					dateColValDict[index] = dateSearchCols[i];
+					dateColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < raDecSearchCols.length; i++) {
+				if (jQuery(this).hasClass(raDecSearchCols[i])) {
+					raDecColValDict[index] = raDecSearchCols[i];
+					raDecColInds.push(index);
+					break;
+				}
+			}
+            jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
+        } );
+		var table = jQuery('#example').DataTable( {
+			ajax: {
+				url: '../../sne/conflicts.json',
+				dataSrc: ''
+			},
+			columns: [
+				{ "defaultContent": "", "responsivePriority": 6 },
+				{ "data": {
+					"display": nameLinked,
+					"filter": nameAliases,
+					"_": "name"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"_": "type"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"_": "difference"
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 5 },
+				{ "data": actionButtons, "responsivePriority": 4, "searchable": false },
+				{ "defaultContent": "" },
+			],
+            dom: 'Bflprtip',
+            //colReorder: true,
+			orderMulti: false,
+            pagingType: 'simple_numbers',
+            pageLength: 50,
+			searchDelay: 400,
+			responsive: {
+				details: {
+					type: 'column',
+					target: -1
+				}
+			},
+            select: true,
+            lengthMenu: [ [10, 50, 250], [10, 50, 250] ],
+            deferRender: true,
+            autoWidth: false,
+            buttons: [
+                {
+                    action: function ( e, dt, button, config ) {
+                        table.rows( { filter: 'applied' } ).select();
+                    },
+                    text: 'Select all'
+                },
+                'selectNone',
+                {
+                    extend: 'colvis',
+                    columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2))'
+                },
+                {
+                    extend: 'csv',
+                    text: 'Export selected to CSV',
+                    exportOptions: {
+                        modifier: { selected: true },
+                        columns: ':visible:not(:first-child):not(:last-child):not(:nth-last-child(2))',
+						orthogonal: 'export'
+                    }
+				}
+            ],
+            columnDefs: [ {
+                targets: 0,
+                orderable: false,
+                className: 'select-checkbox'
+			}, {
+				className: 'control',
+				orderable: false,
+				width: "2%",
+				targets: -1
+			}, {
+				targets: [ 'actions' ],
+				orderable: false
+			} ],
+            select: {
+                style:    'os',
+                selector: 'td:first-child'
+            },
+            order: [[ 3, "desc" ]]
+		} );
+        table.columns().every( function ( index ) {
+            var that = this;
+
+            jQuery( 'input', that.footer() ).on( 'input', function () {
+				if (( floatColInds.indexOf(index) === -1 ) &&
+				    ( stringColInds.indexOf(index) === -1 ) &&
+					( dateColInds.indexOf(index) === -1 ) &&
+					( raDecColInds.indexOf(index) === -1 ) ) {
+					if ( that.search() !== this.value ) {
+						that.search( this.value );
+					}
+				}
+				that.draw();
+            } );
+        } );
+		jQuery.fn.dataTable.ext.search.push(
+			function( oSettings, aData, iDataIndex ) {
+				for ( var i = 0; i < aData.length; i++ )
+				{
+					if ( floatColInds.indexOf(i) !== -1 ) {
+						if ( !advancedFloatFilter( aData[i], floatColValDict[i] ) ) return false;
+					} else if ( stringColInds.indexOf(i) !== -1 ) {
+						if ( !advancedStringFilter( aData[i], stringColValDict[i] ) ) return false;
+					} else if ( dateColInds.indexOf(i) !== -1 ) {
+						if ( !advancedDateFilter( aData[i], dateColValDict[i] ) ) return false;
+					} else if ( raDecColInds.indexOf(i) !== -1 ) {
+						if ( !advancedRaDecFilter( aData[i], raDecColValDict[i] ) ) return false;
+					}
+				}
+				return true;
+			}
+		);
+	} );
+	</script>
+<?php
+}
 function transient_table_scripts() {
-	if (is_front_page() || is_page('find-duplicates') || is_page('bibliography')) {
+	if (is_front_page() || is_page('find-duplicates') || is_page('bibliography') || is_page('find-conflicts')) {
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__) );
 		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__) );
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
