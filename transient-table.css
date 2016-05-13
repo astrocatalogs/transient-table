@@ -298,8 +298,23 @@ input[type="search"].colsearch:hover {
     z-index: 1;
 }
 
+.tooltip .tooltiptextbot {
+    visibility: hidden;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px;
+    border-radius: 6px;
+	text-decoration: none;
+    position: absolute;
+	white-space: nowrap;
+	right: 0%;
+	bottom: 102%;
+    z-index: 1;
+}
+
 /* Show the tooltip text when you mouse over the tooltip container */
-.tooltip:hover .tooltiptext {
+.tooltip:hover .tooltiptext, .tooltip:hover .tooltiptextbot {
     visibility: visible;
 }
 
@@ -358,6 +373,7 @@ input[type="search"].colsearch:hover {
 	display:inline-block;
 	cursor:pointer;
 	color:#000000;
+	margin-top: 2px;
 	text-decoration:none;
 	text-shadow:0px 1px 0px #aade7c;
 }
@@ -396,6 +412,7 @@ input[type="search"].colsearch:hover {
 	display:inline-block;
 	cursor:pointer;
 	color:#ffffff;
+	margin-top: 2px;
 	text-decoration:none;
 	text-shadow:0px 1px 0px #b23e35;
 }
@@ -433,6 +450,7 @@ input[type="search"].colsearch:hover {
 	display:inline-block;
 	cursor:pointer;
 	color:#333333;
+	margin-top: 2px;
 	text-decoration:none;
 	text-shadow:0px -1px 0px #ffee66;
 }

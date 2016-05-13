@@ -12,6 +12,34 @@
 function datatables_functions() {
 ?>
 	<script>
+	function getAliases (row) {
+		var aliases = [];
+		for (i = 0; i < row.alias.length; i++) {
+			aliases.push(row.alias[i].value);
+		}
+		return aliases;
+	}
+	function eventLinked ( row, type, val, meta ) {
+		if (row.alias.length > 1) {
+			var aliases = getAliases(row);
+			return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
+				"/' target='_blank'>" + row.name + "</a><span class='tooltiptext'>" + aliases.slice(1).join(', ') + "</span></div>";
+		} else {
+			return "<a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'>" + row.name + "</a>";
+		}
+	}
+	function eventAliases ( row, type, val, meta ) {
+		if (!row.alias) return '';
+		var aliases = getAliases(row);
+		return aliases.join(', ');
+	}
+	function eventAliasesOnly ( row, type, val, meta ) {
+		if (!row.alias) return '';
+		if (row.alias.length > 1) {
+			var aliases = getAliases(row);
+			return aliases.slice(1).join(', ');
+		} else return '';
+	}
 	function goToBibEvent( bibcode ){
 		var ddl = document.getElementById( bibcode );
 		var selectedVal = ddl.options[ddl.selectedIndex].value;
@@ -435,21 +463,13 @@ function transient_catalog() {
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink', 'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist'];
 		var stringColValDict = {};
 		var stringColInds = [];
-		var stringSearchCols = ['name', 'aliases', 'host', 'instruments', 'claimedtype'];
+		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype'];
 		var raDecColValDict = {};
 		var raDecColInds = [];
 		var raDecSearchCols = ['ra', 'dec'];
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
-		function eventLinked ( row, type, val, meta ) {
-			if (row.aliases.length > 1) {
-				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
-					"/' target='_blank'>" + row.name + "</a><span class='tooltiptext'>" + row.aliases.slice(1).join(', ') + "</span></div>";
-			} else {
-				return "<a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'>" + row.name + "</a>";
-			}
-		}
 		function typeLinked ( row, type, val, meta ) {
 			if (!row.claimedtype) return '';
 			if (row.claimedtype.length > 1) {
@@ -464,16 +484,6 @@ function transient_catalog() {
 			}
 			return '';
 		}
-		function eventAliases ( row, type, val, meta ) {
-			if (!row.aliases) return '';
-			return row.aliases.join(', ');
-		}
-		function eventAliasesOnly ( row, type, val, meta ) {
-			if (!row.aliases) return '';
-			if (row.aliases.length > 1) {
-				return row.aliases.slice(1).join(', ');
-			} else return '';
-		}
 		function ebvValue ( row, type, val, meta ) {
 			if (!row.ebv) {
 				if (type === 'sort') return NaN;
@@ -485,13 +495,41 @@ function transient_catalog() {
 			if (!row.ebv) return '';
 			return row.ebv[0]['value']; 
 		}
-		function photLinked ( row, type, val, meta ) {
+		function photoLinked ( row, type, val, meta ) {
 			if (!row.photolink) return '';
+			if (row.photolink.indexOf(',') !== -1) {
+				var photosplit = row.photolink.split(',');
+				return "<div class='tooltip'><a class='lci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
+					"/' target='_blank'></a> " + photosplit[0] + "<span class='tooltiptext'>Detected epochs: " + photosplit[1] + " – " + photosplit[2] + "</span></div>"; 
+			}
 			return "<a class='lci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.photolink; 
 		}
-		function specLinked ( row, type, val, meta ) {
+		function photoValue ( row, type, val, meta ) {
+			if (!row.photolink) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var photosplit = row.photolink.split(',');
+			var data = parseFloat(photosplit[0]);
+			return data;
+		}
+		function spectraLinked ( row, type, val, meta ) {
 			if (!row.spectralink) return '';
-			return "<a class='sci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.spectralink;
+			if (row.spectralink.indexOf(',') !== -1) {
+				var spectrasplit = row.spectralink.split(',');
+				return "<div class='tooltip'><a class='sci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
+					"/' target='_blank'></a> " + spectrasplit[0] + "<span class='tooltiptext'>Epochs: " + spectrasplit[1] + " – " + spectrasplit[2] + "</span></div>"; 
+			}
+			return "<a class='sci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.spectralink; 
+		}
+		function spectraValue ( row, type, val, meta ) {
+			if (!row.spectralink) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var spectrasplit = row.spectralink.split(',');
+			var data = parseFloat(spectrasplit[0]);
+			return data;
 		}
 		function radioLinked ( row, type, val, meta ) {
 			if (!row.radiolink) return '';
@@ -528,6 +566,13 @@ function transient_catalog() {
 		function redshiftLinked ( row, type, val, meta ) {
 			if (!row.redshift) return '';
 			var data = row.redshift[0]['value'];
+			var maxdiff = 0.0;
+			for (i = 1; i < row.redshift.length; i++) {
+				maxdiff = Math.max(Math.abs(parseFloat(data) - row.redshift[i]['value']), maxdiff);
+			}
+			if (maxdiff / parseFloat(data) > 0.1) {
+				data = '<em>' + data + '</em>';
+			}
 			if (row.redshift[0]['kind']) {
 				var kind = row.redshift[0]['kind'];
 				return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + kind + "</span></div>";
@@ -665,13 +710,13 @@ function transient_catalog() {
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
-			if (classname == 'aliases') {
+			if (classname == 'alias') {
 				jQuery(this).remove();
 			}
 			if (['check', 'download', 'references', 'responsive'].indexOf(classname) >= 0) {
 				jQuery(this).html( '' );
 			}
-			if (['check', 'aliases', 'download', 'references', 'responsive'].indexOf(classname) >= 0) return;
+			if (['check', 'alias', 'download', 'references', 'responsive'].indexOf(classname) >= 0) return;
 			for (i = 0; i < floatSearchCols.length; i++) {
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
 					floatColValDict[index] = floatSearchCols[i];
@@ -738,16 +783,16 @@ function transient_catalog() {
 				{ "data": {
 					"display": hostLinked,
 					"_": "host[, ].value",
-				  }, "type": "string", "defaultContent": "" },
+				  }, "type": "string", "defaultContent": "", "width":"14%" },
 				{ "data": {
 					"display": raLinked,
-					"filter": raValue,
+					"filter": "ra.0.value",
 					"sort": raValue,
 					"_": "ra[, ].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"display": decLinked,
-					"filter": decValue,
+					"filter": "dec.0.value",
 					"sort": decValue,
 					"_": "dec[, ].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
@@ -779,17 +824,17 @@ function transient_catalog() {
 					"_": ebvValue
 				  }, "name": "ebv", "type": "non-empty-float", "defaultContent": "" },
 				{ "data": {
-					"display": photLinked,
-					"_": "photolink"
-				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
+					"display": photoLinked,
+					"_": photoValue
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"6%" },
 				{ "data": {
-					"display": specLinked,
-					"_": "spectralink"
-				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
+					"display": spectraLinked,
+					"_": spectraValue
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"5%" },
 				{ "data": {
 					"display": radioLinked,
 					"_": "radiolink"
-				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 2, "width":"4%" },
 				{ "data": {
 					"display": xrayLinked,
 					"_": "xraylink",
@@ -844,11 +889,11 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
 			}, {
-                targets: [ 'aliases', 'maxdate', 'velocity', 'maxabsmag',
-					'references', 'instruments', 'ebv', 'lumdist', 'radiolink', 'xraylink' ],
+                targets: [ 'alias', 'maxdate', 'velocity', 'maxabsmag',
+					'references', 'instruments', 'ebv', 'lumdist', 'xraylink' ],
 				visible: false
 			}, {
-				targets: [ 'download', 'spectralink', 'photolink', 'host' ],
+				targets: [ 'download', 'spectralink', 'photolink', 'radiolink' ],
 				className: 'nowrap not-mobile'
 			}, {
 				className: 'control',
@@ -862,7 +907,7 @@ function transient_catalog() {
 				targets: [ 'photolink', 'spectralink', 'radiolink', 'xraylink' ],
 				orderSequence: [ 'desc', 'asc' ]
 			}, {
-				targets: [ 'maxdate', 'discoverdate', 'radiolink', 'xraylink' ],
+				targets: [ 'maxdate', 'discoverdate', 'xraylink' ],
 				className: 'nowrap'
 			} ],
             select: {
@@ -1408,44 +1453,39 @@ function conflict_table() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = [];
+		var floatSearchCols = ['difference'];
 		var stringColValDict = {};
 		var stringColInds = [];
-		var stringSearchCols = ['name'];
+		var stringSearchCols = ['name', 'quantity'];
 		var raDecColValDict = {};
 		var raDecColInds = [];
 		var raDecSearchCols = [];
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [];
-		function nameLinked ( row, type, val, meta ) {
-			if (row.aliases.length > 1) {
-				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
-					"/' target='_blank'>" + row.name + "</a><span class='tooltiptext'>" + row.aliases.slice(1).join(', ') + "</span></div>";
-			} else {
-				return "<a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'>" + row.name + "</a>";
-			}
-		}
-		function nameAliases ( row, type, val, meta ) {
-			if (!row.aliases) return '';
-			return row.aliases.join(', ');
-		}
 		function actionButtons ( row, type, val, meta ) {
 			var html = '';
-			var typeStr = '';
+			var quantityStr = '';
 			for (i = 0; i < row.values.length; i++) {
 				if (i > 0) html += ' ';
-				if (row.type === 'ra') {
-					typeStr = 'R.A.';
-				} else if (row.type === 'dec') {
-					typeStr = 'Dec.';
-				} else if (row.type === 'redshift') {
-					typeStr = '<i>z</i>';
+				if (row.quantity === 'ra') {
+					quantityStr = 'R.A.';
+				} else if (row.quantity === 'dec') {
+					quantityStr = 'Dec.';
+				} else if (row.quantity === 'redshift') {
+					quantityStr = '<i>z</i>';
 				}
-				html += "<button class='markerror' type='button' onclick='markError(\"" +
-					row.name + "\", \"" + row.type + "\", \"" + row.sources[i].idtype +
-					"\", \"" + row.sources[i].id + "\", \"" + row.edit + "\")'>" + typeStr + " =<br>" +
-					String(row.values[i]) + "<br>is an error</button>"
+				html += "<div class='tooltip'><button class='markerror' type='button' onclick='markError(\"" +
+					row.name + "\", \"" + row.quantity + "\", \"" + row.sources[i].idtype +
+					"\", \"" + row.sources[i].id + "\", \"" + row.edit + "\")'>" + quantityStr + " =<br>" +
+					String(row.values[i]) + "<br>is erroneous</button><span class='tooltiptextbot'>" + row.sources[i].id + "</span></div>";
+			}
+			var aliases = getAliases(row);
+			for (i = 1; i < aliases.length; i++) {
+				html += ' ';
+				html += "<button class='diffevent' type='button' onclick='markDiff(\"" +
+					row.name + "\", \"" + aliases[i] + "\", \"" + row.edit + "\")'>Alias<br>" +
+					aliases[i] + "<br>is a different SN</button>";
 			}
 			return html;
 		}
@@ -1494,12 +1534,12 @@ function conflict_table() {
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": {
-					"display": nameLinked,
-					"filter": nameAliases,
+					"display": eventLinked,
+					"filter": eventAliases,
 					"_": "name"
 				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
 				{ "data": {
-					"_": "type"
+					"_": "quantity"
 				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
 				{ "data": {
 					"_": "difference"
