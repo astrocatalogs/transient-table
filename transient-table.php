@@ -23,7 +23,7 @@ function datatables_functions() {
 		if (row.alias.length > 1) {
 			var aliases = getAliases(row);
 			return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
-				"/' target='_blank'>" + row.name + "</a><span class='tooltiptext'>" + aliases.slice(1).join(', ') + "</span></div>";
+				"/' target='_blank'>" + row.name + "</a><span class='tooltiptext'> " + aliases.slice(1).join(', ') + "</span></div>";
 		} else {
 			return "<a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'>" + row.name + "</a>";
 		}
@@ -45,6 +45,42 @@ function datatables_functions() {
 		var selectedVal = ddl.options[ddl.selectedIndex].value;
 
 		window.open('https://sne.space/sne/' + selectedVal + '/', '_blank');
+	}
+	function nameSwitcher ( data, type, row ) {
+		if ( type === 'display' ) {
+			var idObj = document.getElementById("name");
+			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase();
+			var idObjTxt = idObj.value.toUpperCase();
+			var txts = Array(filterTxt, idObjTxt);
+			for (var t = 0; t < txts.length; t++) {
+				var txt = txts[t];
+				if (txt !== "") {
+					if (row.alias.length > 1) {
+						var aliases = getAliases(row);
+						var primaryname = row.name;
+						for (var a = 0; a < aliases.length; a++) {
+							if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
+								primaryname = aliases[a];
+								break;
+							}
+						}
+						var otheraliases = Array();
+						for (var a = 0; a < aliases.length; a++) {
+							if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
+								continue;
+							}
+							otheraliases.push(aliases[a]);
+						}
+						return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
+							"/' target='_blank'>" + primaryname + "</a><span class='tooltiptext'> " + otheraliases.join(', ') + "</span></div>";
+					} else {
+						return "<a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'>" + row.name + "</a>";
+					}
+				}
+			}
+			return data;
+		}
+		return data;
 	}
 	function noBlanksNumRender ( data, type, row ) {
 		if ( type === 'sort' ) {
@@ -454,7 +490,7 @@ function datatables_functions() {
 }
 
 function transient_catalog() {
-	readfile("/var/www/html/sne/sne/catalog.html");
+	readfile("/var/www/html/sne/sne/table-templates/catalog.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -478,7 +514,7 @@ function transient_catalog() {
 					if (i != 1) altTypes += ', ';
 					altTypes += row.claimedtype[i]['value'];
 				}
-				return "<div class='tooltip'>" + row.claimedtype[0]['value'] + "</a><span class='tooltiptext'>" + altTypes + "</span></div>";
+				return "<div class='tooltip'>" + row.claimedtype[0]['value'] + "</a><span class='tooltiptext'> " + altTypes + "</span></div>";
 			} else if (row.claimedtype[0]) {
 				return row.claimedtype[0]['value'];
 			}
@@ -500,7 +536,7 @@ function transient_catalog() {
 			if (row.photolink.indexOf(',') !== -1) {
 				var photosplit = row.photolink.split(',');
 				return "<div class='tooltip'><a class='lci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
-					"/' target='_blank'></a> " + photosplit[0] + "<span class='tooltiptext'>Detected epochs: " + photosplit[1] + " – " + photosplit[2] + "</span></div>"; 
+					"/' target='_blank'></a> " + photosplit[0] + "<span class='tooltiptext'> Detected epochs: " + photosplit[1] + " – " + photosplit[2] + "</span></div>"; 
 			}
 			return "<a class='lci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.photolink; 
 		}
@@ -518,7 +554,7 @@ function transient_catalog() {
 			if (row.spectralink.indexOf(',') !== -1) {
 				var spectrasplit = row.spectralink.split(',');
 				return "<div class='tooltip'><a class='sci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
-					"/' target='_blank'></a> " + spectrasplit[0] + "<span class='tooltiptext'>Epochs: " + spectrasplit[1] + " – " + spectrasplit[2] + "</span></div>"; 
+					"/' target='_blank'></a> " + spectrasplit[0] + "<span class='tooltiptext'> Epochs: " + spectrasplit[1] + " – " + spectrasplit[2] + "</span></div>"; 
 			}
 			return "<a class='sci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.spectralink; 
 		}
@@ -575,7 +611,7 @@ function transient_catalog() {
 			}
 			if (row.redshift[0]['kind']) {
 				var kind = row.redshift[0]['kind'];
-				return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + kind + "</span></div>";
+				return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + kind + "</span></div>";
 			}
 			return data;
 		}
@@ -584,7 +620,7 @@ function transient_catalog() {
 			var data = row.velocity[0]['value'];
 			if (row.velocity[0]['kind']) {
 				var kind = row.velocity[0]['kind'];
-				return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + kind + "</span></div>";
+				return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + kind + "</span></div>";
 			}
 			return data;
 		}
@@ -593,7 +629,7 @@ function transient_catalog() {
 			var data = row.lumdist[0]['value'];
 			if (row.lumdist[0]['kind']) {
 				var kind = row.lumdist[0]['kind'];
-				return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + kind + "</span></div>";
+				return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + kind + "</span></div>";
 			}
 			return data;
 		}
@@ -617,7 +653,7 @@ function transient_catalog() {
 			if (!row.ra) return '';
 			var data = row.ra[0]['value'];
 			var degrees = raToDegrees(data).toFixed(5);
-			return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + degrees + "&deg;</span></div>";
+			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
 			//return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + degrees + "&deg;" +
 			//	hammerMap(String(meta.row), row.ra[0]['value'], row.dec[0]['value']) + "</span></div>";
 		}
@@ -625,7 +661,7 @@ function transient_catalog() {
 			if (!row.dec) return '';
 			var data = row.dec[0]['value'];
 			var degrees = decToDegrees(data).toFixed(5);
-			return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + degrees + "&deg;</span></div>";
+			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
 		}
 		function hammerMap ( id, ra, dec ) {
 			var html = "<canvas id='hammer-" + id + "' width='100' height='50'></canvas>"
@@ -660,13 +696,13 @@ function transient_catalog() {
 			if (!row.maxdate) return '';
 			var mydate = new Date(row.maxdate[0]['value']);
 			var mjd = String(mydate.getJulian() - 2400000.5);
-			return "<div class='tooltip'>" + row.maxdate[0]['value'] + "<span class='tooltiptext'>MJD: " + mjd + "</span></div>";
+			return "<div class='tooltip'>" + row.maxdate[0]['value'] + "<span class='tooltiptext'> MJD: " + mjd + "</span></div>";
 		}
 		function discoverDateLinked ( row, type, val, meta ) {
 			if (!row.discoverdate) return '';
 			mydate = new Date(row.discoverdate[0]['value']);
 			mjd = String(mydate.getJulian() - 2400000.5);
-			return "<div class='tooltip'>" + row.discoverdate[0]['value'] + "<span class='tooltiptext'>MJD: " + mjd + "</span></div>";
+			return "<div class='tooltip'>" + row.discoverdate[0]['value'] + "<span class='tooltiptext'> MJD: " + mjd + "</span></div>";
 		}
 		function hostLinked ( row, type, val, meta ) {
 			if (!row.host) return '';
@@ -678,7 +714,7 @@ function transient_catalog() {
 					if (i != 1) hostAliases += ', ';
 					hostAliases += row.host[i]['value'];
 				}
-				return "<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'>" + hostAliases + "</span></div>";
+				return "<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'> " + hostAliases + "</span></div>";
 			} else {
 				return (host + mainHost);
 			}
@@ -761,7 +797,7 @@ function transient_catalog() {
 					"display": eventLinked,
 					"filter": eventAliases,
 					"_": "name"
-				  }, "name": "name", "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				  }, "name": "name", "type": "string", "defaultContent": "", "responsivePriority": 1, "render": nameSwitcher },
 				{ "data": {
 					"_": eventAliases,
 					"display": eventAliasesOnly,
@@ -920,15 +956,17 @@ function transient_catalog() {
             var that = this;
 
             jQuery( 'input', that.footer() ).on( 'input', function () {
+				if (index == 2) return; //Ignore aliases column
 				if (( floatColInds.indexOf(index) === -1 ) &&
 				    ( stringColInds.indexOf(index) === -1 ) &&
 					( dateColInds.indexOf(index) === -1 ) &&
 					( raDecColInds.indexOf(index) === -1 ) ) {
 					if ( that.search() !== this.value ) {
-						that.search( this.value );
+						that.search( this.value )
 					}
 				}
-				that.draw();
+				that.draw()
+					.rows({page:'current'}).invalidate();
             } );
         } );
 		jQuery.fn.dataTable.ext.search.push(
@@ -954,7 +992,7 @@ function transient_catalog() {
 }
 
 function duplicate_table() {
-	readfile("/var/www/html/sne/sne/duplicates.html");
+	readfile("/var/www/html/sne/sne/table-templates/duplicates.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -973,7 +1011,7 @@ function duplicate_table() {
 		function name1Linked ( row, type, val, meta ) {
 			if (row.aliases1.length > 1) {
 				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name1.replace(/\//g,'_') +
-					"/' target='_blank'>" + row.name1 + "</a><span class='tooltiptext'>" + row.aliases1.slice(1).join(', ') + "</span></div>";
+					"/' target='_blank'>" + row.name1 + "</a><span class='tooltiptext'> " + row.aliases1.slice(1).join(', ') + "</span></div>";
 			} else {
 				return "<a href='https://sne.space/sne/" + row.name1.replace(/\//g,'_') + "/' target='_blank'>" + row.name1 + "</a>";
 			}
@@ -985,7 +1023,7 @@ function duplicate_table() {
 		function name2Linked ( row, type, val, meta ) {
 			if (row.aliases2.length > 1) {
 				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name2.replace(/\//g,'_') +
-					"/' target='_blank'>" + row.name2 + "</a><span class='tooltiptext'>" + row.aliases2.slice(1).join(', ') + "</span></div>";
+					"/' target='_blank'>" + row.name2 + "</a><span class='tooltiptext'> " + row.aliases2.slice(1).join(', ') + "</span></div>";
 			} else {
 				return "<a href='https://sne.space/sne/" + row.name2.replace(/\//g,'_') + "/' target='_blank'>" + row.name2 + "</a>";
 			}
@@ -1213,7 +1251,7 @@ function duplicate_table() {
 }
 
 function bibliography() {
-	readfile("/var/www/html/sne/sne/biblio.html");
+	readfile("/var/www/html/sne/sne/table-templates/biblio.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -1447,7 +1485,7 @@ function bibliography() {
 }
 
 function conflict_table() {
-	readfile("/var/www/html/sne/sne/conflicts.html");
+	readfile("/var/www/html/sne/sne/table-templates/conflicts.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -1640,8 +1678,224 @@ function conflict_table() {
 	</script>
 <?php
 }
+
+function errata() {
+	readfile("/var/www/html/sne/sne/table-templates/errata.html");
+?>
+	<script>
+	jQuery(document).ready(function() {
+		var floatColValDict = {};
+		var floatColInds = [];
+		var floatSearchCols = [];
+		var stringColValDict = {};
+		var stringColInds = [];
+		var stringSearchCols = [];
+		var raDecColValDict = {};
+		var raDecColInds = [];
+		var raDecSearchCols = [ ];
+		var dateColValDict = {};
+		var dateColInds = [];
+		var dateSearchCols = [ ];
+        jQuery('#example tfoot th').each( function ( index ) {
+			var title = jQuery(this).text();
+			var classname = jQuery(this).attr('class').split(' ')[0];
+			if (['check', 'responsive'].indexOf(classname) >= 0) {
+				jQuery(this).html( '' );
+			}
+			if (['check', 'responsive'].indexOf(classname) >= 0) return;
+			for (i = 0; i < floatSearchCols.length; i++) {
+				if (jQuery(this).hasClass(floatSearchCols[i])) {
+					floatColValDict[index] = floatSearchCols[i];
+					floatColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < stringSearchCols.length; i++) {
+				if (jQuery(this).hasClass(stringSearchCols[i])) {
+					stringColValDict[index] = stringSearchCols[i];
+					stringColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < dateSearchCols.length; i++) {
+				if (jQuery(this).hasClass(dateSearchCols[i])) {
+					dateColValDict[index] = dateSearchCols[i];
+					dateColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < raDecSearchCols.length; i++) {
+				if (jQuery(this).hasClass(raDecSearchCols[i])) {
+					raDecColValDict[index] = raDecSearchCols[i];
+					raDecColInds.push(index);
+					break;
+				}
+			}
+            jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
+        } );
+		function bibcodeLinked ( row, type, val, meta ) {
+			var html = '';
+			if (row.authors) {
+				html += row.authors + '<br>';
+			}
+			return html + "<a href='http://adsabs.harvard.edu/abs/" + row.bibcode + "'>" + row.bibcode + "</a>";
+		}
+		function eventsDropdown ( row, type, val, meta ) {
+			var html = String(row.events.length) + ' SNe: ';
+			if (row.events.length == 1) {
+				html += "<a href='https://sne.space/sne/" + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
+			} else if (row.events.length <= 30) {
+				for (i = 0; i < row.events.length; i++) {
+					if (i != 0) html += ', ';
+					html += "<a href='https://sne.space/sne/" + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
+				}
+				html += '</select>';
+				return html;
+			} else {
+				html += ('<br><select id="' + row.bibcode.replace(/\./g, '_') +
+					'" size="3>"');
+				for (i = 0; i < row.events.length; i++) {
+					html += '<option value=' + row.events[i] + '>' + row.events[i] + '</option>';
+				}
+				html += '</select><br><a class="dt-button" ';
+				html += 'onclick="goToBibEvent(\'' + row.bibcode.replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';
+				return html;
+			} 
+			return html;
+		}
+		function allAuthors ( row, type, val, meta ) {
+			var html = '';
+			console.log(row);
+			if (!row.allauthors) return '';
+			for (i = 0; i < row.allauthors.length; i++) {
+				if (i > 0) html += ', ';
+				html += row.allauthors[i];
+			}
+			return html;
+		}
+		function eventsDropdownType ( row, type, val, meta ) {
+			if (type == "sort") {
+				return "num";
+			}
+			return "string";
+		}
+		function eventsCount ( row, type, val, meta ) {
+			return row.events.length;
+		}
+		var table = jQuery('#example').DataTable( {
+			ajax: {
+				url: '../../sne/errata.json',
+				dataSrc: ''
+			},
+			columns: [
+				{ "defaultContent": "", "responsivePriority": 6 },
+				{ "data": {
+					"display": eventLinked,
+					"filter": eventAliases,
+					"_": "name"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"_": "ident"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"_": "kind"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"_": "quantity"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"_": "likelyvalue"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "defaultContent": "" },
+			],
+            dom: 'Bflprtip',
+            //colReorder: true,
+			orderMulti: false,
+            pagingType: 'simple_numbers',
+            pageLength: 50,
+			searchDelay: 400,
+			responsive: {
+				details: {
+					type: 'column',
+					target: -1
+				}
+			},
+            select: true,
+            lengthMenu: [ [10, 50, 250], [10, 50, 250] ],
+            deferRender: true,
+            autoWidth: false,
+            buttons: [
+                {
+                    action: function ( e, dt, button, config ) {
+                        table.rows( { filter: 'applied' } ).select();
+                    },
+                    text: 'Select all'
+                },
+                'selectNone',
+                {
+                    extend: 'colvis',
+                    columns: ':not(:first-child):not(:last-child)'
+                },
+                {
+                    extend: 'csv',
+                    text: 'Export selected to CSV',
+                    exportOptions: {
+                        modifier: { selected: true },
+                        columns: ':visible:not(:first-child):not(:last-child)',
+						orthogonal: 'export'
+                    }
+				}
+            ],
+            columnDefs: [ {
+                targets: 0,
+                orderable: false,
+                className: 'select-checkbox'
+			}, {
+				className: 'control',
+				orderable: false,
+				width: "2%",
+				targets: -1
+			} ],
+            select: {
+                style:    'os',
+                selector: 'td:first-child'
+            },
+            order: [[ 1, "desc" ]]
+		} );
+        table.columns().every( function ( index ) {
+            var that = this;
+
+            jQuery( 'input', that.footer() ).on( 'input', function () {
+				if (( floatColInds.indexOf(index) === -1 ) &&
+				    ( stringColInds.indexOf(index) === -1 ) &&
+					( dateColInds.indexOf(index) === -1 ) &&
+					( raDecColInds.indexOf(index) === -1 ) ) {
+					if ( that.search() !== this.value ) {
+						that.search( this.value );
+					}
+				}
+				that.draw();
+            } );
+        } );
+		jQuery.fn.dataTable.ext.search.push(
+			function( oSettings, aData, iDataIndex ) {
+				for ( var i = 0; i < aData.length; i++ )
+				{
+					if ( floatColInds.indexOf(i) !== -1 ) {
+						if ( !advancedFloatFilter( aData[i], floatColValDict[i] ) ) return false;
+					} else if ( stringColInds.indexOf(i) !== -1 ) {
+						if ( !advancedStringFilter( aData[i], stringColValDict[i] ) ) return false;
+					}
+				}
+				return true;
+			}
+		);
+	} );
+	</script>
+<?php
+}
 function transient_table_scripts() {
-	if (is_front_page() || is_page('find-duplicates') || is_page('bibliography') || is_page('find-conflicts')) {
+	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'find-conflicts', 'errata'))) {
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__) );
 		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__) );
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
