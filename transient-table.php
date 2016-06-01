@@ -40,42 +40,142 @@ function datatables_functions() {
 			return aliases.slice(1).join(', ');
 		} else return '';
 	}
-	function goToBibEvent( bibcode ){
-		var ddl = document.getElementById( bibcode );
+	function goToEvent( id ){
+		var ddl = document.getElementById( id );
 		var selectedVal = ddl.options[ddl.selectedIndex].value;
 
 		window.open('https://sne.space/sne/' + selectedVal + '/', '_blank');
 	}
 	function nameSwitcher ( data, type, row ) {
-		if ( type === 'display' ) {
+		if (!row.alias) return data;
+		if ( type === 'display' && row.alias.length > 1 ) {
 			var idObj = document.getElementById("name");
-			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase();
-			var idObjTxt = idObj.value.toUpperCase();
+			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
+			var idObjTxt = idObj.value.toUpperCase().replace(/"/g, '');
 			var txts = Array(filterTxt, idObjTxt);
 			for (var t = 0; t < txts.length; t++) {
 				var txt = txts[t];
 				if (txt !== "") {
-					if (row.alias.length > 1) {
-						var aliases = getAliases(row);
-						var primaryname = row.name;
-						for (var a = 0; a < aliases.length; a++) {
-							if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
-								primaryname = aliases[a];
-								break;
-							}
+					var aliases = getAliases(row);
+					var primaryname = row.name;
+					for (var a = 0; a < aliases.length; a++) {
+						if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
+							primaryname = aliases[a];
+							break;
 						}
-						var otheraliases = Array();
-						for (var a = 0; a < aliases.length; a++) {
-							if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
-								continue;
-							}
-							otheraliases.push(aliases[a]);
-						}
-						return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
-							"/' target='_blank'>" + primaryname + "</a><span class='tooltiptext'> " + otheraliases.join(', ') + "</span></div>";
-					} else {
-						return "<a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'>" + row.name + "</a>";
 					}
+					var otheraliases = Array();
+					for (var a = 0; a < aliases.length; a++) {
+						if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
+							continue;
+						}
+						otheraliases.push(aliases[a]);
+					}
+					return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
+						"/' target='_blank'>" + primaryname + "</a><span class='tooltiptext'> " + otheraliases.join(', ') + "</span></div>";
+				}
+			}
+			return data;
+		}
+		return data;
+	}
+	function hostUnlinked ( row, type, val, meta ) {
+		if (!row.host) return '';
+		var host = "<a class='hhi' href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0] + "&submit=SIMBAD+search' target='_blank'></a> "; 
+		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0] + "&submit=SIMBAD+search' target='_blank'>" + row.host[0] + "</a>"; 
+		if (row.host.length > 1) {
+			var hostAliases = '';
+			for (var i = 1; i < row.host.length; i++) {
+				if (i != 1) hostAliases += ', ';
+				hostAliases += row.host[i];
+			}
+			return "<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'> " + hostAliases + "</span></div>";
+		} else {
+			return (host + mainHost);
+		}
+	}
+	function hostLinked ( row, type, val, meta ) {
+		if (!row.host) return '';
+		var host = '';
+		host = "<a class='hhi' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> ";
+		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0]['value'] + "&submit=SIMBAD+search' target='_blank'>" + row.host[0]['value'] + "</a>"; 
+		if (row.host.length > 1) {
+			var hostAliases = '';
+			for (var i = 1; i < row.host.length; i++) {
+				if (i != 1) hostAliases += ', ';
+				hostAliases += row.host[i]['value'];
+			}
+			return "<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'> " + hostAliases + "</span></div>";
+		} else {
+			return (host + mainHost);
+		}
+	}
+	function hostSwitcher ( data, type, row ) {
+		if (!row.host) return data;
+		if ( type === 'display' && row.host.length > 1 ) {
+			var host = "<a class='hhi' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> ";
+			var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
+			var idObj = document.getElementById("host");
+			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
+			var idObjTxt = idObj.value.toUpperCase().replace(/"/g, '');
+			var txts = Array(filterTxt, idObjTxt);
+			for (var t = 0; t < txts.length; t++) {
+				var txt = txts[t];
+				if (txt !== "") {
+					var aliases = [];
+					for (i = 0; i < row.host.length; i++) {
+						aliases.push(row.host[i]['value']);
+					}
+					var primaryname = row.host[0]['value'];
+					for (var a = 0; a < aliases.length; a++) {
+						if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
+							primaryname = aliases[a];
+							break;
+						}
+					}
+					var otheraliases = Array();
+					for (var a = 0; a < aliases.length; a++) {
+						if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
+							continue;
+						}
+						otheraliases.push(aliases[a]);
+					}
+					return "<div class='tooltip'>" + host + mainHost.replace(/%s/g, primaryname) + "<span class='tooltiptext'> " + otheraliases + "</span></div>";
+				}
+			}
+			return data;
+		}
+		return data;
+	}
+	function typeSwitcher ( data, type, row ) {
+		if (!row.claimedtype) return data;
+		if ( type === 'display' && row.claimedtype.length > 1 ) {
+			var idObj = document.getElementById("claimedtype");
+			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
+			var idObjTxt = idObj.value.toUpperCase().replace(/"/g, '');
+			var txts = Array(filterTxt, idObjTxt);
+			for (var t = 0; t < txts.length; t++) {
+				var txt = txts[t];
+				if (txt !== "") {
+					var types = [];
+					for (i = 0; i < row.claimedtype.length; i++) {
+						types.push(row.claimedtype[i]['value']);
+					}
+					var primarytype = row.claimedtype[0]['value'];
+					for (var a = 0; a < types.length; a++) {
+						if (types[a].toUpperCase().indexOf(txt) !== -1) {
+							primarytype = types[a];
+							break;
+						}
+					}
+					var othertypes = Array();
+					for (var a = 0; a < types.length; a++) {
+						if (types[a].toUpperCase() === primarytype.toUpperCase()) {
+							continue;
+						}
+						othertypes.push(types[a]);
+					}
+					return "<div class='tooltip'>" + primarytype + "<span class='tooltiptext'> " + othertypes + "</span></div>";
 				}
 			}
 			return data;
@@ -704,21 +804,6 @@ function transient_catalog() {
 			mjd = String(mydate.getJulian() - 2400000.5);
 			return "<div class='tooltip'>" + row.discoverdate[0]['value'] + "<span class='tooltiptext'> MJD: " + mjd + "</span></div>";
 		}
-		function hostLinked ( row, type, val, meta ) {
-			if (!row.host) return '';
-			var host = "<a class='hhi' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> ";
-			var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0]['value'] + "&submit=SIMBAD+search' target='_blank'>" + row.host[0]['value'] + "</a>"; 
-			if (row.host.length > 1) {
-				var hostAliases = '';
-				for (var i = 1; i < row.host.length; i++) {
-					if (i != 1) hostAliases += ', ';
-					hostAliases += row.host[i]['value'];
-				}
-				return "<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'> " + hostAliases + "</span></div>";
-			} else {
-				return (host + mainHost);
-			}
-		}
 		function dataLinked ( row, type, val, meta ) {
 			var fileeventname = row.name.replace(/\//g,'_');
 			var datalink = "<a class='dci' title='Download Data' href='https://sne.space/sne/" + fileeventname + ".json' download></a>"
@@ -819,7 +904,7 @@ function transient_catalog() {
 				{ "data": {
 					"display": hostLinked,
 					"_": "host[, ].value",
-				  }, "type": "string", "defaultContent": "", "width":"14%" },
+				  }, "type": "string", "defaultContent": "", "width":"14%", "render": hostSwitcher },
 				{ "data": {
 					"display": raLinked,
 					"filter": "ra.0.value",
@@ -854,7 +939,7 @@ function transient_catalog() {
 				{ "data": {
 					"display": typeLinked,
 					"_": "claimedtype[, ].value"
-				  }, "defaultContent": "", "type": "string", "responsivePriority": 3 },
+				  }, "defaultContent": "", "type": "string", "responsivePriority": 3, "render": typeSwitcher },
 				{ "data": {
 					"display": ebvLinked,
 					"_": ebvValue
@@ -965,8 +1050,7 @@ function transient_catalog() {
 						that.search( this.value )
 					}
 				}
-				that.draw()
-					.rows({page:'current'}).invalidate();
+				that.draw();
             } );
         } );
 		jQuery.fn.dataTable.ext.search.push(
@@ -986,6 +1070,9 @@ function transient_catalog() {
 				return true;
 			}
 		);
+		table.on( 'search.dt', function () {
+			table.rows({page:'current'}).invalidate()
+		} );
 	} );
 	</script>
 <?php
@@ -1329,7 +1416,7 @@ function bibliography() {
 					html += '<option value=' + row.events[i] + '>' + row.events[i] + '</option>';
 				}
 				html += '</select><br><a class="dt-button" ';
-				html += 'onclick="goToBibEvent(\'' + row.bibcode.replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';
+				html += 'onclick="goToEvent(\'' + row.bibcode.replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';
 				return html;
 			} 
 			return html;
@@ -1484,6 +1571,260 @@ function bibliography() {
 <?php
 }
 
+function hosts() {
+	readfile("/var/www/html/sne/sne/table-templates/hosts.html");
+?>
+	<script>
+	jQuery(document).ready(function() {
+		var floatColValDict = {};
+		var floatColInds = [];
+		var floatSearchCols = ['photocount', 'spectracount', 'redshift', 'lumdist', 'rate'];
+		var stringColValDict = {};
+		var stringColInds = [];
+		var stringSearchCols = ['name', 'events', 'types'];
+		var raDecColValDict = {};
+		var raDecColInds = [];
+		var raDecSearchCols = [ ];
+		var dateColValDict = {};
+		var dateColInds = [];
+		var dateSearchCols = [ ];
+        jQuery('#example tfoot th').each( function ( index ) {
+			var title = jQuery(this).text();
+			var classname = jQuery(this).attr('class').split(' ')[0];
+			if (['check', 'responsive'].indexOf(classname) >= 0) {
+				jQuery(this).html( '' );
+			}
+			if (['check', 'responsive'].indexOf(classname) >= 0) return;
+			for (i = 0; i < floatSearchCols.length; i++) {
+				if (jQuery(this).hasClass(floatSearchCols[i])) {
+					floatColValDict[index] = floatSearchCols[i];
+					floatColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < stringSearchCols.length; i++) {
+				if (jQuery(this).hasClass(stringSearchCols[i])) {
+					stringColValDict[index] = stringSearchCols[i];
+					stringColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < dateSearchCols.length; i++) {
+				if (jQuery(this).hasClass(dateSearchCols[i])) {
+					dateColValDict[index] = dateSearchCols[i];
+					dateColInds.push(index);
+					break;
+				}
+			}
+			for (i = 0; i < raDecSearchCols.length; i++) {
+				if (jQuery(this).hasClass(raDecSearchCols[i])) {
+					raDecColValDict[index] = raDecSearchCols[i];
+					raDecColInds.push(index);
+					break;
+				}
+			}
+            jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
+        } );
+		function redshiftValue ( row, type, val, meta ) {
+			if (!row.redshift) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			return parseFloat(row.redshift.replace('*',''));
+		}
+		function lumdistValue ( row, type, val, meta ) {
+			if (!row.lumdist) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			return parseFloat(row.lumdist.replace('*',''));
+		}
+		function rateValue ( row, type, val, meta ) {
+			if (!row.rate) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			return parseFloat(row.rate.split(',')[0]);
+		}
+		function rateDisplay ( row, type, val, meta ) {
+			if (!row.rate) return '';
+			return row.rate.split(',')[0] + ' ± ' + row.rate.split(',')[1];
+		}
+		function eventsDropdown ( row, type, val, meta ) {
+			var html = String(row.events.length) + ' SNe: ';
+			if (row.events.length == 1) {
+				html += "<a href='https://sne.space/sne/" + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
+			} else if (row.events.length <= 30) {
+				for (i = 0; i < row.events.length; i++) {
+					if (i != 0) html += ', ';
+					html += "<a href='https://sne.space/sne/" + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
+				}
+				html += '</select>';
+				return html;
+			} else {
+				html += ('<br><select id="' + row.host[0].replace(/\./g, '_') +
+					'" size="3>"');
+				for (i = 0; i < row.events.length; i++) {
+					html += '<option value=' + row.events[i] + '>' + row.events[i] + '</option>';
+				}
+				html += '</select><br><a class="dt-button" ';
+				html += 'onclick="goToEvent(\'' + row.host[0].replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';
+				return html;
+			} 
+			return html;
+		}
+		function eventsDropdownType ( row, type, val, meta ) {
+			if (type == "sort") {
+				return "num";
+			}
+			return "string";
+		}
+		function eventsCount ( row, type, val, meta ) {
+			return row.events.length;
+		}
+		var table = jQuery('#example').DataTable( {
+			ajax: {
+				url: '../../sne/hosts.json',
+				dataSrc: ''
+			},
+			columns: [
+				{ "defaultContent": "", "responsivePriority": 6 },
+				{ "data": {
+					"display": hostUnlinked,
+					"_": "host[, ]"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"display": eventsDropdown,
+					"sort": eventsCount,
+					"_": "events[, ]"
+				  }, "type": eventsDropdownType, "defaultContent": "", "responsivePriority": 10 },
+				{ "data": {
+					"display": rateDisplay,
+					"filter": rateValue,
+					"sort": rateValue,
+					"_": "rate",
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5 },
+				{ "data": {
+					"_": "redshift",
+					"filter": redshiftValue,
+					"sort": redshiftValue
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 4 },
+				{ "data": {
+					"_": "lumdist",
+					"filter": lumdistValue,
+					"sort": lumdistValue
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 4 },
+				{ "data": {
+					"_": "types[, ]"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 3 },
+				{ "data": {
+					"_": "photocount"
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 5 },
+				{ "data": {
+					"_": "spectracount"
+				  }, "type": "num", "defaultContent": "", "responsivePriority": 5 },
+				{ "defaultContent": "" },
+			],
+            dom: 'Bflprtip',
+            //colReorder: true,
+			orderMulti: false,
+            pagingType: 'simple_numbers',
+            pageLength: 50,
+			searchDelay: 400,
+			responsive: {
+				details: {
+					type: 'column',
+					target: -1
+				}
+			},
+            select: true,
+            lengthMenu: [ [10, 50, 250], [10, 50, 250] ],
+            deferRender: true,
+            autoWidth: false,
+            buttons: [
+                {
+                    action: function ( e, dt, button, config ) {
+                        table.rows( { filter: 'applied' } ).select();
+                    },
+                    text: 'Select all'
+                },
+                'selectNone',
+                {
+                    extend: 'colvis',
+                    columns: ':not(:first-child):not(:last-child)'
+                },
+                {
+                    extend: 'csv',
+                    text: 'Export selected to CSV',
+                    exportOptions: {
+                        modifier: { selected: true },
+                        columns: ':visible:not(:first-child):not(:last-child)',
+						orthogonal: 'export'
+                    }
+				}
+            ],
+            columnDefs: [ {
+                targets: 0,
+                orderable: false,
+                className: 'select-checkbox'
+			}, {
+				targets: [ 'events', 'photocount', 'spectracount', 'rate' ],
+				orderSequence: [ 'desc', 'asc' ]
+			}, {
+                targets: [ 'lumdist' ],
+				visible: false
+			}, {
+				targets: [ 'host' ],
+				className: 'nowrap'
+			}, {
+				className: 'control',
+				orderable: false,
+				width: "2%",
+				targets: -1
+			} ],
+            select: {
+                style:    'os',
+                selector: 'td:first-child'
+            },
+            order: [[ 2, "desc" ]]
+		} );
+        table.columns().every( function ( index ) {
+            var that = this;
+
+            jQuery( 'input', that.footer() ).on( 'input', function () {
+				if (( floatColInds.indexOf(index) === -1 ) &&
+				    ( stringColInds.indexOf(index) === -1 ) &&
+					( dateColInds.indexOf(index) === -1 ) &&
+					( raDecColInds.indexOf(index) === -1 ) ) {
+					if ( that.search() !== this.value ) {
+						that.search( this.value );
+					}
+				}
+				that.draw();
+            } );
+        } );
+		jQuery.fn.dataTable.ext.search.push(
+			function( oSettings, aData, iDataIndex ) {
+				for ( var i = 0; i < aData.length; i++ )
+				{
+					if ( floatColInds.indexOf(i) !== -1 ) {
+						if ( !advancedFloatFilter( aData[i], floatColValDict[i] ) ) return false;
+					} else if ( stringColInds.indexOf(i) !== -1 ) {
+						if ( !advancedStringFilter( aData[i], stringColValDict[i] ) ) return false;
+					} else if ( dateColInds.indexOf(i) !== -1 ) {
+						if ( !advancedDateFilter( aData[i], dateColValDict[i] ) ) return false;
+					} else if ( raDecColInds.indexOf(i) !== -1 ) {
+						if ( !advancedRaDecFilter( aData[i], raDecColValDict[i] ) ) return false;
+					}
+				}
+				return true;
+			}
+		);
+	} );
+	</script>
+<?php
+}
+
 function conflict_table() {
 	readfile("/var/www/html/sne/sne/table-templates/conflicts.html");
 ?>
@@ -1515,7 +1856,7 @@ function conflict_table() {
 				}
 				html += "<div class='tooltip'><button class='markerror' type='button' onclick='markError(\"" +
 					row.name + "\", \"" + row.quantity + "\", \"" + row.sources[i].idtype +
-					"\", \"" + row.sources[i].id + "\", \"" + row.edit + "\")'>" + quantityStr + " =<br>" +
+					"\", \"" + row.sources[i].id + "\", \"" + row.edit + "\")'>" + quantityStr + ((quantityStr !== "") ? " =<br>" : "") +
 					String(row.values[i]) + "<br>is erroneous</button><span class='tooltiptextbot'>" + row.sources[i].id + "</span></div>";
 			}
 			var aliases = getAliases(row);
@@ -1758,7 +2099,7 @@ function errata() {
 					html += '<option value=' + row.events[i] + '>' + row.events[i] + '</option>';
 				}
 				html += '</select><br><a class="dt-button" ';
-				html += 'onclick="goToBibEvent(\'' + row.bibcode.replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';
+				html += 'onclick="goToEvent(\'' + row.bibcode.replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';
 				return html;
 			} 
 			return html;
@@ -1894,8 +2235,9 @@ function errata() {
 	</script>
 <?php
 }
+
 function transient_table_scripts() {
-	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'find-conflicts', 'errata'))) {
+	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'find-conflicts', 'errata', 'host-galaxies'))) {
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__) );
 		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__) );
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
