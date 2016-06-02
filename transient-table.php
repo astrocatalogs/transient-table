@@ -596,13 +596,14 @@ function transient_catalog() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink', 'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist'];
+		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
+			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffset'];
 		var stringColValDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype'];
 		var raDecColValDict = {};
 		var raDecColInds = [];
-		var raDecSearchCols = ['ra', 'dec'];
+		var raDecSearchCols = ['ra', 'dec', 'hostra', 'hostdec'];
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
@@ -674,6 +675,14 @@ function transient_catalog() {
 		function xrayLinked ( row, type, val, meta ) {
 			if (!row.xraylink) return '';
 			return "<a class='xci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.xraylink; 
+		}
+		function hostoffsetValue ( row, type, val, meta ) {
+			if (!row.hostoffset) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = parseFloat(row.hostoffset);
+			return data;
 		}
 		function redshiftValue ( row, type, val, meta ) {
 			if (!row.redshift) {
@@ -754,8 +763,6 @@ function transient_catalog() {
 			var data = row.ra[0]['value'];
 			var degrees = raToDegrees(data).toFixed(5);
 			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
-			//return "<div class='tooltip'>" + data + "<span class='tooltiptext'>" + degrees + "&deg;" +
-			//	hammerMap(String(meta.row), row.ra[0]['value'], row.dec[0]['value']) + "</span></div>";
 		}
 		function decLinked ( row, type, val, meta ) {
 			if (!row.dec) return '';
@@ -763,15 +770,33 @@ function transient_catalog() {
 			var degrees = decToDegrees(data).toFixed(5);
 			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
 		}
-		function hammerMap ( id, ra, dec ) {
-			var html = "<canvas id='hammer-" + id + "' width='100' height='50'></canvas>"
-			//var canvas = document.getElementById('hammer-' + id);
-			//var context = canvas.getContext('2d');
-			//context.beginPath();
-			//context.moveTo(0, 0);
-			//context.lineTo(100, 50);
-			//context.stroke();
-			return html;
+		function hostraValue ( row, type, val, meta ) {
+			if (!row.hostra) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = row.hostra[0]['value'];
+			return raToDegrees(data);
+		}
+		function hostdecValue ( row, type, val, meta ) {
+			if (!row.hostdec) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = row.hostdec[0]['value'];
+			return decToDegrees(data);
+		}
+		function hostraLinked ( row, type, val, meta ) {
+			if (!row.hostra) return '';
+			var data = row.hostra[0]['value'];
+			var degrees = raToDegrees(data).toFixed(5);
+			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
+		}
+		function hostdecLinked ( row, type, val, meta ) {
+			if (!row.hostdec) return '';
+			var data = row.hostdec[0]['value'];
+			var degrees = decToDegrees(data).toFixed(5);
+			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
 		}
 		Date.prototype.getJulian = function() {
 			return Math.round((this / 86400000) - (this.getTimezoneOffset()/1440) + 2440587.5, 0.1);
@@ -917,6 +942,23 @@ function transient_catalog() {
 					"sort": decValue,
 					"_": "dec[, ].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				{ "data": {
+					"display": hostraLinked,
+					"filter": "hostra.0.value",
+					"sort": hostraValue,
+					"_": "hostra[, ].value"
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				{ "data": {
+					"display": hostdecLinked,
+					"filter": "hostdec.0.value",
+					"sort": hostdecValue,
+					"_": "hostdec[, ].value"
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				{ "data": {
+					"filter": hostoffsetValue,
+					"sort": hostoffsetValue,
+					"_": "hostoffset"
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": {
 					"display": redshiftLinked,
@@ -1010,7 +1052,7 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
 			}, {
-                targets: [ 'alias', 'maxdate', 'velocity', 'maxabsmag',
+                targets: [ 'alias', 'maxdate', 'velocity', 'maxabsmag', 'hostra', 'hostdec', 'hostoffset',
 					'references', 'instruments', 'ebv', 'lumdist', 'xraylink' ],
 				visible: false
 			}, {
@@ -1035,7 +1077,7 @@ function transient_catalog() {
                 style:    'os',
                 selector: 'td:first-child'
             },
-            order: [[ 16, "desc" ]]
+            order: [[ 19, "desc" ]]
 		} );
         table.columns().every( function ( index ) {
             var that = this;
@@ -1584,7 +1626,7 @@ function hosts() {
 		var stringSearchCols = ['name', 'events', 'types'];
 		var raDecColValDict = {};
 		var raDecColInds = [];
-		var raDecSearchCols = [ ];
+		var raDecSearchCols = ['hostra', 'hostdec'];
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ ];
@@ -1625,6 +1667,34 @@ function hosts() {
 			}
             jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
+		function hostraValue ( row, type, val, meta ) {
+			if (!row.hostra) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = row.hostra;
+			return raToDegrees(data);
+		}
+		function hostdecValue ( row, type, val, meta ) {
+			if (!row.hostdec) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = row.hostdec;
+			return decToDegrees(data);
+		}
+		function hostraLinked ( row, type, val, meta ) {
+			if (!row.hostra) return '';
+			var data = row.hostra;
+			var degrees = raToDegrees(data).toFixed(5);
+			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
+		}
+		function hostdecLinked ( row, type, val, meta ) {
+			if (!row.hostdec) return '';
+			var data = row.hostdec;
+			var degrees = decToDegrees(data).toFixed(5);
+			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
+		}
 		function redshiftValue ( row, type, val, meta ) {
 			if (!row.redshift) {
 				if (type === 'sort') return NaN;
@@ -1704,6 +1774,18 @@ function hosts() {
 					"sort": rateValue,
 					"_": "rate",
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5 },
+				{ "data": {
+					"_": "hostra",
+					"display": hostraLinked,
+					"filter": hostraValue,
+					"sort": hostraValue
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 4 },
+				{ "data": {
+					"_": "hostdec",
+					"display": hostdecLinked,
+					"filter": hostdecValue,
+					"sort": hostdecValue
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 4 },
 				{ "data": {
 					"_": "redshift",
 					"filter": redshiftValue,
