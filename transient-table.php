@@ -12,6 +12,12 @@
 function datatables_functions() {
 ?>
 	<script>
+	function noBreak (str) {
+		return str.replace(/ /g, "&nbsp;").replace(/-/g, "&#x2011;");
+	}
+	function someBreak (str) {
+		return str.replace(/([+-])/g, "&#8203;$1");
+	}
 	function getAliases (row) {
 		var aliases = [];
 		for (i = 0; i < row.alias.length; i++) {
@@ -23,9 +29,9 @@ function datatables_functions() {
 		if (row.alias.length > 1) {
 			var aliases = getAliases(row);
 			return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
-				"/' target='_blank'>" + row.name + "</a><span class='tooltiptext'> " + aliases.slice(1).join(', ') + "</span></div>";
+				"/' target='_blank'>" + noBreak(row.name) + "</a><span class='tooltiptext'> " + aliases.slice(1).map(noBreak).join(', ') + "</span></div>";
 		} else {
-			return "<a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'>" + row.name + "</a>";
+			return "<a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'>" + noBreak(row.name) + "</a>";
 		}
 	}
 	function eventAliases ( row, type, val, meta ) {
@@ -48,10 +54,10 @@ function datatables_functions() {
 	}
 	function nameSwitcher ( data, type, row ) {
 		if (!row.alias) return data;
-		if ( type === 'display' && row.alias.length > 1 ) {
+		if ( (type === 'display' || type === 'sort') && row.alias.length > 1 ) {
 			var idObj = document.getElementById("name");
 			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
-			var idObjTxt = idObj.value.toUpperCase().replace(/"/g, '');
+			var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
 			var txts = Array(filterTxt, idObjTxt);
 			for (var t = 0; t < txts.length; t++) {
 				var txt = txts[t];
@@ -64,12 +70,15 @@ function datatables_functions() {
 							break;
 						}
 					}
+					if (type === 'sort') {
+						return primaryname;
+					}
 					var otheraliases = Array();
 					for (var a = 0; a < aliases.length; a++) {
 						if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
 							continue;
 						}
-						otheraliases.push(aliases[a]);
+						otheraliases.push(noBreak(aliases[a]));
 					}
 					return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
 						"/' target='_blank'>" + primaryname + "</a><span class='tooltiptext'> " + otheraliases.join(', ') + "</span></div>";
@@ -79,45 +88,39 @@ function datatables_functions() {
 		}
 		return data;
 	}
-	function hostUnlinked ( row, type, val, meta ) {
-		if (!row.host) return '';
-		var host = "<a class='hhi' href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0] + "&submit=SIMBAD+search' target='_blank'></a> "; 
-		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0] + "&submit=SIMBAD+search' target='_blank'>" + row.host[0] + "</a>"; 
-		if (row.host.length > 1) {
-			var hostAliases = '';
-			for (var i = 1; i < row.host.length; i++) {
-				if (i != 1) hostAliases += ', ';
-				hostAliases += row.host[i];
-			}
-			return "<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'> " + hostAliases + "</span></div>";
-		} else {
-			return (host + mainHost);
-		}
-	}
 	function hostLinked ( row, type, val, meta ) {
 		if (!row.host) return '';
 		var host = '';
-		host = "<a class='hhi' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> ";
-		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0]['value'] + "&submit=SIMBAD+search' target='_blank'>" + row.host[0]['value'] + "</a>"; 
+		host = "<a class='" + (('kind' in row.host[0] && row.host[0]['kind'] == 'cluster') ? "hci" : "hhi") +
+			"' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a>&nbsp;";
+		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0]['value'] +
+			"&submit=SIMBAD+search' target='_blank'>" + someBreak(row.host[0]['value']) + "</a>"; 
+		var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
+			"style='background-image:url(https://sne.space/sne/" + row.name.replace('/', '_') + "-host.jpg);'> </div>") : "";
 		if (row.host.length > 1) {
 			var hostAliases = '';
 			for (var i = 1; i < row.host.length; i++) {
 				if (i != 1) hostAliases += ', ';
-				hostAliases += row.host[i]['value'];
+				hostAliases += noBreak(row.host[i]['value']);
 			}
-			return "<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'> " + hostAliases + "</span></div>";
+			return "<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'> " +
+				hostImg + 'AKA: ' + hostAliases + "</span></div>";
 		} else {
-			return (host + mainHost);
+			if (hostImg) {
+				return "<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'> " +
+					hostImg + "</span></div>";
+			} else return host + mainHost;
 		}
 	}
 	function hostSwitcher ( data, type, row ) {
 		if (!row.host) return data;
-		if ( type === 'display' && row.host.length > 1 ) {
-			var host = "<a class='hhi' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> ";
+		if ( (type === 'display' || type === 'sort') && row.host.length > 1 ) {
 			var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
+			var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
+				"style=background-image:url(https://sne.space/sne/" + row.name.replace('/', '_') + "-host.jpg);'> </div>") : "";
 			var idObj = document.getElementById("host");
 			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
-			var idObjTxt = idObj.value.toUpperCase().replace(/"/g, '');
+			var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
 			var txts = Array(filterTxt, idObjTxt);
 			for (var t = 0; t < txts.length; t++) {
 				var txt = txts[t];
@@ -127,11 +130,16 @@ function datatables_functions() {
 						aliases.push(row.host[i]['value']);
 					}
 					var primaryname = row.host[0]['value'];
+					var primarykind = ('kind' in row.host[0]) ? row.host[0]['kind'] : '';
 					for (var a = 0; a < aliases.length; a++) {
 						if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
 							primaryname = aliases[a];
+							primarykind = ('kind' in row.host[a]) ? row.host[a]['kind'] : '';
 							break;
 						}
+					}
+					if (type === 'sort') {
+						return primaryname;
 					}
 					var otheraliases = Array();
 					for (var a = 0; a < aliases.length; a++) {
@@ -140,7 +148,10 @@ function datatables_functions() {
 						}
 						otheraliases.push(aliases[a]);
 					}
-					return "<div class='tooltip'>" + host + mainHost.replace(/%s/g, primaryname) + "<span class='tooltiptext'> " + otheraliases + "</span></div>";
+					var host = "<a class='" + ((primarykind == 'cluster') ? "hci" : "hhi") +
+						"' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> ";
+					return "<div class='tooltip'>" + host + mainHost.replace(/%s/g, primaryname) + "<span class='tooltiptext'> " +
+						hostImg + 'AKA: ' + otheraliases + "</span></div>";
 				}
 			}
 			return data;
@@ -149,10 +160,10 @@ function datatables_functions() {
 	}
 	function typeSwitcher ( data, type, row ) {
 		if (!row.claimedtype) return data;
-		if ( type === 'display' && row.claimedtype.length > 1 ) {
+		if ( (type === 'display' || type === 'sort') && row.claimedtype.length > 1 ) {
 			var idObj = document.getElementById("claimedtype");
 			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
-			var idObjTxt = idObj.value.toUpperCase().replace(/"/g, '');
+			var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
 			var txts = Array(filterTxt, idObjTxt);
 			for (var t = 0; t < txts.length; t++) {
 				var txt = txts[t];
@@ -167,6 +178,9 @@ function datatables_functions() {
 							primarytype = types[a];
 							break;
 						}
+					}
+					if (type === 'sort') {
+						return primaryname;
 					}
 					var othertypes = Array();
 					for (var a = 0; a < types.length; a++) {
@@ -208,10 +222,10 @@ function datatables_functions() {
 			}
 		}
 		if (parts.length >= 2) {
-			value += sign*Number(parts[1])/60.;
+			value += sign*Number(parts[1])*360./(24*60.);
 		}
 		if (parts.length >= 3) {
-			value += sign*Number(parts[2])/3600.;
+			value += sign*Number(parts[2])*360./(24*3600.);
 		}
 		return value;
 	}
@@ -613,9 +627,9 @@ function transient_catalog() {
 				var altTypes = '';
 				for (var i = 1; i < row.claimedtype.length; i++) {
 					if (i != 1) altTypes += ', ';
-					altTypes += row.claimedtype[i]['value'];
+					altTypes += noBreak(row.claimedtype[i]['value']);
 				}
-				return "<div class='tooltip'>" + row.claimedtype[0]['value'] + "</a><span class='tooltiptext'> " + altTypes + "</span></div>";
+				return "<div class='tooltip'>" + noBreak(row.claimedtype[0]['value']) + "</a><span class='tooltiptext'> " + altTypes + "</span></div>";
 			} else if (row.claimedtype[0]) {
 				return row.claimedtype[0]['value'];
 			}
@@ -901,13 +915,16 @@ function transient_catalog() {
 				url: '../../sne/catalog.min.json',
 				dataSrc: ''
 			},
+			"language": {
+				"loadingRecords": "Loading... (should take a few seconds)"
+			},
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": {
 					"display": eventLinked,
 					"filter": eventAliases,
 					"_": "name"
-				  }, "name": "name", "type": "string", "defaultContent": "", "responsivePriority": 1, "render": nameSwitcher },
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1, "render": nameSwitcher },
 				{ "data": {
 					"_": eventAliases,
 					"display": eventAliasesOnly,
@@ -1140,7 +1157,7 @@ function duplicate_table() {
 		function name1Linked ( row, type, val, meta ) {
 			if (row.aliases1.length > 1) {
 				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name1.replace(/\//g,'_') +
-					"/' target='_blank'>" + row.name1 + "</a><span class='tooltiptext'> " + row.aliases1.slice(1).join(', ') + "</span></div>";
+					"/' target='_blank'>" + row.name1 + "</a><span class='tooltiptext'> " + row.aliases1.map(noBreak).slice(1).join(', ') + "</span></div>";
 			} else {
 				return "<a href='https://sne.space/sne/" + row.name1.replace(/\//g,'_') + "/' target='_blank'>" + row.name1 + "</a>";
 			}
@@ -1152,7 +1169,7 @@ function duplicate_table() {
 		function name2Linked ( row, type, val, meta ) {
 			if (row.aliases2.length > 1) {
 				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name2.replace(/\//g,'_') +
-					"/' target='_blank'>" + row.name2 + "</a><span class='tooltiptext'> " + row.aliases2.slice(1).join(', ') + "</span></div>";
+					"/' target='_blank'>" + row.name2 + "</a><span class='tooltiptext'> " + row.aliases2.map(noBreak).slice(1).join(', ') + "</span></div>";
 			} else {
 				return "<a href='https://sne.space/sne/" + row.name2.replace(/\//g,'_') + "/' target='_blank'>" + row.name2 + "</a>";
 			}
@@ -1176,7 +1193,8 @@ function duplicate_table() {
 			return (parseFloat(row.diffyear)*365.25).toFixed(3);
 		}
 		function performGoogleSearch ( row, type, val, meta ) {
-			return "<button class='googleit' type='button' onclick='googleNames(\"" + row.name1 + "\",\"" + row.name2 + "\")'>Google both names</button>"
+			var namearr = row.aliases1.concat(row.aliases2);
+			return "<button class='googleit' type='button' onclick='googleNames(\"" + namearr.join(',') + "\")'>Google all names</button>"
 		}
 		function markAsDuplicate ( row, type, val, meta ) {
 			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\")'>These are the same</button>"
@@ -1720,22 +1738,59 @@ function hosts() {
 			if (!row.rate) return '';
 			return row.rate.split(',')[0] + ' ± ' + row.rate.split(',')[1];
 		}
+		function hostUnlinked ( row, type, val, meta ) {
+			if (!row.host) return '';
+			var host = "<a class='" + (row.kind == 'cluster' ? "hci" : "hhi") + "' href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" +
+				"%s&submit=SIMBAD+search' target='_blank'></a> "; 
+			var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
+			var text;
+			if (row.host.length > 1) {
+				var hostAliases = '';
+				var primaryname = row.host[0];
+				for (var i = 1; i < row.host.length; i++) {
+					// Temporary until host object retains kind.
+					if (row.host[i].toUpperCase().indexOf("ABELL") !== -1) primaryname = row.host[i];
+					if (i != 1) hostAliases += ', ';
+					hostAliases += noBreak(row.host[i]);
+				}
+				text = ("<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'> " +
+					hostAliases + "</span></div>").replace(/%s/g, noBreak(primaryname));
+			} else {
+				text = (host + mainHost).replace(/%s/g, noBreak(row.host[0]));
+			}
+			var minwidth = 12;
+			var totalwidth = 200;
+			var padding = 1;
+			var imgwidth = Math.max(Math.round(80.0/Math.sqrt(1.0*row.events.length)), minwidth);
+			var mod = Math.max(Math.round(1.0*totalwidth/(1.0*(imgwidth + padding))), 1);
+			text = text + "<div style='padding-top:5px; line-height:" + (10 /*imgwidth + padding - 2*/) + "px;'>";
+			var cnt = 0;
+			for (var i = 0; i < row.events.length; i++) {
+				if (!row.events[i].img) continue;
+				cnt++;
+				text = (text + "<a href='https://sne.space/sne/" + row.events[i].name.replace(/\//g,'_') + "/' target='_blank'>" +
+					"<img width='" + imgwidth + "' height='" + imgwidth + "' src='https://sne.space/sne/" + row.events[i].name.replace('/', '_') + "-host.jpg' style='margin-right:" +
+					padding + "px;'></a>");
+			}
+			text = text + "</div>";
+			return text;
+		}
 		function eventsDropdown ( row, type, val, meta ) {
 			var html = String(row.events.length) + ' SNe: ';
 			if (row.events.length == 1) {
-				html += "<a href='https://sne.space/sne/" + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
+				html += "<a href='https://sne.space/sne/" + row.events[0].name + "/' target='_blank'>" + row.events[0].name + "</a>";
 			} else if (row.events.length <= 30) {
 				for (i = 0; i < row.events.length; i++) {
 					if (i != 0) html += ', ';
-					html += "<a href='https://sne.space/sne/" + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
+					html += "<a href='https://sne.space/sne/" + row.events[i].name + "/' target='_blank'>" + row.events[i].name + "</a>";
 				}
 				html += '</select>';
 				return html;
 			} else {
 				html += ('<br><select id="' + row.host[0].replace(/\./g, '_') +
-					'" size="3>"');
+					'" size="' + Math.max(3, Math.ceil(row.events.length/20)) + '">');
 				for (i = 0; i < row.events.length; i++) {
-					html += '<option value=' + row.events[i] + '>' + row.events[i] + '</option>';
+					html += '<option value=' + row.events[i].name + '>' + row.events[i].name + '</option>';
 				}
 				html += '</select><br><a class="dt-button" ';
 				html += 'onclick="goToEvent(\'' + row.host[0].replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';
@@ -1762,7 +1817,7 @@ function hosts() {
 				{ "data": {
 					"display": hostUnlinked,
 					"_": "host[, ]"
-				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1, "width":"200px" },
 				{ "data": {
 					"display": eventsDropdown,
 					"sort": eventsCount,
@@ -1853,11 +1908,8 @@ function hosts() {
 				targets: [ 'events', 'photocount', 'spectracount', 'rate' ],
 				orderSequence: [ 'desc', 'asc' ]
 			}, {
-                targets: [ 'lumdist' ],
+                targets: [ 'lumdist', 'hostra', 'hostdec' ],
 				visible: false
-			}, {
-				targets: [ 'host' ],
-				className: 'nowrap'
 			}, {
 				className: 'control',
 				orderable: false,
@@ -2176,7 +2228,7 @@ function errata() {
 				return html;
 			} else {
 				html += ('<br><select id="' + row.bibcode.replace(/\./g, '_') +
-					'" size="3>"');
+					'" size="3">');
 				for (i = 0; i < row.events.length; i++) {
 					html += '<option value=' + row.events[i] + '>' + row.events[i] + '</option>';
 				}

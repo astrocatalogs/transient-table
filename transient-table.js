@@ -6,7 +6,7 @@ function eSN(name, filename) {
 		'\t\t"alias":[\n' +
 		'\t\t\t{\n' +
 		'\t\t\t\t"value":"' + name + '"\n' +
-		'\t\t\t},\n' +
+		'\t\t\t}\n' +
 		'\t\t]\n' +
 		'\t}\n' +
 		'}')
@@ -128,16 +128,14 @@ function markError(name, quantity, sourcekind, source, edit) {
 	win.focus();
 }
 
-function googleNames(name1, name2) {
-	var sname1 = name1;
-	var sname2 = name2;
+function googleNames(names) {
+	var namearr = names.split(',');
 	
-	if (sname1.startsWith('SN') && !isNaN(parseFloat(sname1.slice(2,6)))) {
-		sname1 = sname1.replace('SN', '');
+	for (var i = 0; i < namearr.length; i++) {
+		if (namearr[i].startsWith('SN') && !isNaN(parseFloat(namearr[i].slice(2,6)))) {
+			namearr[i] = namearr[i].replace('SN', '');
+		}
 	}
-	if (sname2.startsWith('SN') && !isNaN(parseFloat(sname2.slice(2,6)))) {
-		sname2 = sname2.replace('SN', '');
-	}
-	var win = window.open('https://www.google.com/#q=' + encodeURIComponent(sname1 + " " + sname2), '_blank')
+	var win = window.open('https://www.google.com/#q=' + encodeURIComponent(namearr.join(" ")), '_blank')
 	win.focus();
 }
