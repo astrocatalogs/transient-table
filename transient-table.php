@@ -53,7 +53,7 @@ function datatables_functions() {
 		var ddl = document.getElementById( id );
 		var selectedVal = ddl.options[ddl.selectedIndex].value;
 
-		window.open('https://sne.space/sne/' + selectedVal + '/', '_blank');
+		window.open('https://sne.space/sne/' + encodeURIComponent(selectedVal) + '/', '_blank');
 	}
 	function nameSwitcher ( data, type, row ) {
 		if (!row.alias) return data;
@@ -93,13 +93,12 @@ function datatables_functions() {
 	}
 	function hostLinked ( row, type, val, meta ) {
 		if (!row.host) return '';
-		var host = '';
-		host = "<a class='" + (('kind' in row.host[0] && row.host[0]['kind'] == 'cluster') ? "hci" : "hhi") +
+		var host = "<a class='" + (('kind' in row.host[0] && row.host[0]['kind'] == 'cluster') ? "hci" : "hhi") +
 			"' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a>&nbsp;";
 		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0]['value'] +
 			"&submit=SIMBAD+search' target='_blank'>" + someBreak(row.host[0]['value']) + "</a>"; 
 		var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
-			"style='background-image:url(https://sne.space/sne/" + nameToFilename(row.name) + "-host.jpg);'> </div>") : "";
+			"style='background-image:url(https://sne.space/sne/" + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
 		if (row.host.length > 1) {
 			var hostAliases = '';
 			for (var i = 1; i < row.host.length; i++) {
@@ -120,7 +119,7 @@ function datatables_functions() {
 		if ( (type === 'display' || type === 'sort') && row.host.length > 1 ) {
 			var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
 			var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
-				"style=background-image:url(https://sne.space/sne/" + nameToFilename(row.name) + "-host.jpg);'> </div>") : "";
+				"style=background-image:url(https://sne.space/sne/" + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
 			var idObj = document.getElementById("host");
 			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
 			var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
@@ -149,7 +148,7 @@ function datatables_functions() {
 						if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
 							continue;
 						}
-						otheraliases.push(aliases[a]);
+						otheraliases.push(noBreak(aliases[a]));
 					}
 					var host = "<a class='" + ((primarykind == 'cluster') ? "hci" : "hhi") +
 						"' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> ";
@@ -614,7 +613,7 @@ function transient_catalog() {
 		var floatColValDict = {};
 		var floatColInds = [];
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
-			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffset'];
+			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffmin', 'hostoffkpc'];
 		var stringColValDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype'];
@@ -693,12 +692,20 @@ function transient_catalog() {
 			if (!row.xraylink) return '';
 			return "<a class='xci' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> " + row.xraylink; 
 		}
-		function hostoffsetValue ( row, type, val, meta ) {
-			if (!row.hostoffset) {
+		function hostoffminValue ( row, type, val, meta ) {
+			if (!row.hostoffmin) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			var data = parseFloat(row.hostoffset);
+			var data = parseFloat(row.hostoffmin);
+			return data;
+		}
+		function hostoffkpcValue ( row, type, val, meta ) {
+			if (!row.hostoffkpc) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = parseFloat(row.hostoffkpc);
 			return data;
 		}
 		function redshiftValue ( row, type, val, meta ) {
@@ -975,9 +982,14 @@ function transient_catalog() {
 					"_": "hostdec[, ].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
-					"filter": hostoffsetValue,
-					"sort": hostoffsetValue,
-					"_": "hostoffset"
+					"filter": hostoffminValue,
+					"sort": hostoffminValue,
+					"_": "hostoffmin"
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				{ "data": {
+					"filter": hostoffkpcValue,
+					"sort": hostoffkpcValue,
+					"_": "hostoffkpc"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": {
@@ -1072,7 +1084,7 @@ function transient_catalog() {
                 orderable: false,
                 className: 'select-checkbox'
 			}, {
-                targets: [ 'alias', 'maxdate', 'velocity', 'maxabsmag', 'hostra', 'hostdec', 'hostoffset',
+                targets: [ 'alias', 'maxdate', 'velocity', 'maxabsmag', 'hostra', 'hostdec', 'hostoffmin', 'hostoffkpc',
 					'references', 'instruments', 'ebv', 'lumdist', 'xraylink' ],
 				visible: false
 			}, {
@@ -1097,7 +1109,7 @@ function transient_catalog() {
                 style:    'os',
                 selector: 'td:first-child'
             },
-            order: [[ 19, "desc" ]]
+            order: [[ 20, "desc" ]]
 		} );
         table.columns().every( function ( index ) {
             var that = this;
@@ -1465,7 +1477,7 @@ function bibliography() {
 			var html = String(row.events.length) + ' SNe: ';
 			if (row.events.length == 1) {
 				html += "<a href='https://sne.space/sne/" + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
-			} else if (row.events.length <= 30) {
+			} else if (row.events.length <= 25) {
 				for (i = 0; i < row.events.length; i++) {
 					if (i != 0) html += ', ';
 					html += "<a href='https://sne.space/sne/" + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
@@ -1476,7 +1488,7 @@ function bibliography() {
 				html += ('<br><select id="' + row.bibcode.replace(/\./g, '_') +
 					'" size="3>"');
 				for (i = 0; i < row.events.length; i++) {
-					html += '<option value=' + row.events[i] + '>' + row.events[i] + '</option>';
+					html += '<option value="' + row.events[i] + '">' + row.events[i] + '</option>';
 				}
 				html += '</select><br><a class="dt-button" ';
 				html += 'onclick="goToEvent(\'' + row.bibcode.replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';
@@ -1772,7 +1784,7 @@ function hosts() {
 				if (!row.events[i].img) continue;
 				cnt++;
 				text = (text + "<a href='https://sne.space/sne/" + nameToFilename(row.events[i].name) + "/' target='_blank'>" +
-					"<img width='" + imgwidth + "' height='" + imgwidth + "' src='https://sne.space/sne/" +
+					"<img class='hostimg' width='" + imgwidth + "' height='" + imgwidth + "' src='https://sne.space/sne/" +
 					nameToFilename(row.events[i].name) + "-host.jpg' style='margin-right:" +
 					padding + "px;'></a>");
 			}
@@ -1783,7 +1795,7 @@ function hosts() {
 			var html = String(row.events.length) + ' SNe: ';
 			if (row.events.length == 1) {
 				html += "<a href='https://sne.space/sne/" + row.events[0].name + "/' target='_blank'>" + row.events[0].name + "</a>";
-			} else if (row.events.length <= 30) {
+			} else if (row.events.length <= 20) {
 				for (i = 0; i < row.events.length; i++) {
 					if (i != 0) html += ', ';
 					html += "<a href='https://sne.space/sne/" + row.events[i].name + "/' target='_blank'>" + row.events[i].name + "</a>";
@@ -1794,7 +1806,7 @@ function hosts() {
 				html += ('<br><select id="' + row.host[0].replace(/\./g, '_') +
 					'" size="' + Math.max(3, Math.ceil(row.events.length/20)) + '">');
 				for (i = 0; i < row.events.length; i++) {
-					html += '<option value=' + row.events[i].name + '>' + row.events[i].name + '</option>';
+					html += '<option value="' + row.events[i].name + '">' + row.events[i].name + '</option>';
 				}
 				html += '</select><br><a class="dt-button" ';
 				html += 'onclick="goToEvent(\'' + row.host[0].replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';
@@ -1813,7 +1825,7 @@ function hosts() {
 		}
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../sne/hosts.json',
+				url: '../../sne/hosts.min.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -1870,7 +1882,7 @@ function hosts() {
             //colReorder: true,
 			orderMulti: false,
             pagingType: 'simple_numbers',
-            pageLength: 50,
+            pageLength: 20,
 			searchDelay: 400,
 			responsive: {
 				details: {
@@ -1879,7 +1891,7 @@ function hosts() {
 				}
 			},
             select: true,
-            lengthMenu: [ [10, 50, 250], [10, 50, 250] ],
+            lengthMenu: [ [10, 20, 50], [10, 20, 50] ],
             deferRender: true,
             autoWidth: false,
             buttons: [
@@ -2234,7 +2246,7 @@ function errata() {
 				html += ('<br><select id="' + row.bibcode.replace(/\./g, '_') +
 					'" size="3">');
 				for (i = 0; i < row.events.length; i++) {
-					html += '<option value=' + row.events[i] + '>' + row.events[i] + '</option>';
+					html += '<option value="' + row.events[i] + '">' + row.events[i] + '</option>';
 				}
 				html += '</select><br><a class="dt-button" ';
 				html += 'onclick="goToEvent(\'' + row.bibcode.replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';

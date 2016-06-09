@@ -142,6 +142,10 @@
     text-indent: 100%;
 } 
 
+.hostimg:hover {
+	transform: scale(2.8);
+}
+
 .icontxt {
 	margin-top: -5px;
 }
