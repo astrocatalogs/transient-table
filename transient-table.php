@@ -18,6 +18,9 @@ function datatables_functions() {
 	function someBreak (str) {
 		return str.replace(/([+-])/g, "&#8203;$1");
 	}
+	function nameToFilename (name) {
+		return name.replace(/\//g,'_')
+	}
 	function getAliases (row) {
 		var aliases = [];
 		for (i = 0; i < row.alias.length; i++) {
@@ -28,10 +31,10 @@ function datatables_functions() {
 	function eventLinked ( row, type, val, meta ) {
 		if (row.alias.length > 1) {
 			var aliases = getAliases(row);
-			return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
+			return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name) +
 				"/' target='_blank'>" + noBreak(row.name) + "</a><span class='tooltiptext'> " + aliases.slice(1).map(noBreak).join(', ') + "</span></div>";
 		} else {
-			return "<a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'>" + noBreak(row.name) + "</a>";
+			return "<a href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'>" + noBreak(row.name) + "</a>";
 		}
 	}
 	function eventAliases ( row, type, val, meta ) {
@@ -80,7 +83,7 @@ function datatables_functions() {
 						}
 						otheraliases.push(noBreak(aliases[a]));
 					}
-					return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
+					return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name) +
 						"/' target='_blank'>" + primaryname + "</a><span class='tooltiptext'> " + otheraliases.join(', ') + "</span></div>";
 				}
 			}
@@ -92,11 +95,11 @@ function datatables_functions() {
 		if (!row.host) return '';
 		var host = '';
 		host = "<a class='" + (('kind' in row.host[0] && row.host[0]['kind'] == 'cluster') ? "hci" : "hhi") +
-			"' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a>&nbsp;";
+			"' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a>&nbsp;";
 		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0]['value'] +
 			"&submit=SIMBAD+search' target='_blank'>" + someBreak(row.host[0]['value']) + "</a>"; 
 		var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
-			"style='background-image:url(https://sne.space/sne/" + row.name.replace('/', '_') + "-host.jpg);'> </div>") : "";
+			"style='background-image:url(https://sne.space/sne/" + nameToFilename(row.name) + "-host.jpg);'> </div>") : "";
 		if (row.host.length > 1) {
 			var hostAliases = '';
 			for (var i = 1; i < row.host.length; i++) {
@@ -117,7 +120,7 @@ function datatables_functions() {
 		if ( (type === 'display' || type === 'sort') && row.host.length > 1 ) {
 			var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
 			var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
-				"style=background-image:url(https://sne.space/sne/" + row.name.replace('/', '_') + "-host.jpg);'> </div>") : "";
+				"style=background-image:url(https://sne.space/sne/" + nameToFilename(row.name) + "-host.jpg);'> </div>") : "";
 			var idObj = document.getElementById("host");
 			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
 			var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
@@ -149,7 +152,7 @@ function datatables_functions() {
 						otheraliases.push(aliases[a]);
 					}
 					var host = "<a class='" + ((primarykind == 'cluster') ? "hci" : "hhi") +
-						"' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> ";
+						"' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> ";
 					return "<div class='tooltip'>" + host + mainHost.replace(/%s/g, primaryname) + "<span class='tooltiptext'> " +
 						hostImg + 'AKA: ' + otheraliases + "</span></div>";
 				}
@@ -650,10 +653,10 @@ function transient_catalog() {
 			if (!row.photolink) return '';
 			if (row.photolink.indexOf(',') !== -1) {
 				var photosplit = row.photolink.split(',');
-				return "<div class='tooltip'><a class='lci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
+				return "<div class='tooltip'><a class='lci' href='https://sne.space/sne/" + nameToFilename(row.name) +
 					"/' target='_blank'></a> " + photosplit[0] + "<span class='tooltiptext'> Detected epochs: " + photosplit[1] + " – " + photosplit[2] + "</span></div>"; 
 			}
-			return "<a class='lci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.photolink; 
+			return "<a class='lci' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> " + row.photolink; 
 		}
 		function photoValue ( row, type, val, meta ) {
 			if (!row.photolink) {
@@ -668,10 +671,10 @@ function transient_catalog() {
 			if (!row.spectralink) return '';
 			if (row.spectralink.indexOf(',') !== -1) {
 				var spectrasplit = row.spectralink.split(',');
-				return "<div class='tooltip'><a class='sci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') +
+				return "<div class='tooltip'><a class='sci' href='https://sne.space/sne/" + nameToFilename(row.name) +
 					"/' target='_blank'></a> " + spectrasplit[0] + "<span class='tooltiptext'> Epochs: " + spectrasplit[1] + " – " + spectrasplit[2] + "</span></div>"; 
 			}
-			return "<a class='sci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.spectralink; 
+			return "<a class='sci' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> " + row.spectralink; 
 		}
 		function spectraValue ( row, type, val, meta ) {
 			if (!row.spectralink) {
@@ -684,11 +687,11 @@ function transient_catalog() {
 		}
 		function radioLinked ( row, type, val, meta ) {
 			if (!row.radiolink) return '';
-			return "<a class='rci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.radiolink; 
+			return "<a class='rci' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> " + row.radiolink; 
 		}
 		function xrayLinked ( row, type, val, meta ) {
 			if (!row.xraylink) return '';
-			return "<a class='xci' href='https://sne.space/sne/" + row.name.replace(/\//g,'_') + "/' target='_blank'></a> " + row.xraylink; 
+			return "<a class='xci' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> " + row.xraylink; 
 		}
 		function hostoffsetValue ( row, type, val, meta ) {
 			if (!row.hostoffset) {
@@ -844,7 +847,7 @@ function transient_catalog() {
 			return "<div class='tooltip'>" + row.discoverdate[0]['value'] + "<span class='tooltiptext'> MJD: " + mjd + "</span></div>";
 		}
 		function dataLinked ( row, type, val, meta ) {
-			var fileeventname = row.name.replace(/\//g,'_');
+			var fileeventname = nameToFilename(row.name);
 			var datalink = "<a class='dci' title='Download Data' href='https://sne.space/sne/" + fileeventname + ".json' download></a>"
 			if (row.download == 'e') {
 				return (datalink + "<a class='eci' title='Edit Data' href='https://github.com/astrocatalogs/sne-internal/edit/master/"
@@ -862,7 +865,7 @@ function transient_catalog() {
 				refstr += "<a href='http://adsabs.harvard.edu/abs/" + references[i] + "' target='_blank'>" + references[i] + "</a>";
 			}
 			if (references.length >= 5) {
-				var fileeventname = row.name.replace(/\//g,'_');
+				var fileeventname = nameToFilename(row.name);
 				refstr += "<br><a href='sne/" + fileeventname + "/'>(See full list)</a>";
 			}
 			return refstr;
@@ -1156,10 +1159,10 @@ function duplicate_table() {
 		var dateSearchCols = [ ];
 		function name1Linked ( row, type, val, meta ) {
 			if (row.aliases1.length > 1) {
-				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name1.replace(/\//g,'_') +
+				return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name1) +
 					"/' target='_blank'>" + row.name1 + "</a><span class='tooltiptext'> " + row.aliases1.map(noBreak).slice(1).join(', ') + "</span></div>";
 			} else {
-				return "<a href='https://sne.space/sne/" + row.name1.replace(/\//g,'_') + "/' target='_blank'>" + row.name1 + "</a>";
+				return "<a href='https://sne.space/sne/" + nameToFilename(row.name1) + "/' target='_blank'>" + row.name1 + "</a>";
 			}
 		}
 		function name1Aliases ( row, type, val, meta ) {
@@ -1168,10 +1171,10 @@ function duplicate_table() {
 		}
 		function name2Linked ( row, type, val, meta ) {
 			if (row.aliases2.length > 1) {
-				return "<div class='tooltip'><a href='https://sne.space/sne/" + row.name2.replace(/\//g,'_') +
+				return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name2) +
 					"/' target='_blank'>" + row.name2 + "</a><span class='tooltiptext'> " + row.aliases2.map(noBreak).slice(1).join(', ') + "</span></div>";
 			} else {
-				return "<a href='https://sne.space/sne/" + row.name2.replace(/\//g,'_') + "/' target='_blank'>" + row.name2 + "</a>";
+				return "<a href='https://sne.space/sne/" + nameToFilename(row.name2) + "/' target='_blank'>" + row.name2 + "</a>";
 			}
 		}
 		function name2Aliases ( row, type, val, meta ) {
@@ -1768,8 +1771,9 @@ function hosts() {
 			for (var i = 0; i < row.events.length; i++) {
 				if (!row.events[i].img) continue;
 				cnt++;
-				text = (text + "<a href='https://sne.space/sne/" + row.events[i].name.replace(/\//g,'_') + "/' target='_blank'>" +
-					"<img width='" + imgwidth + "' height='" + imgwidth + "' src='https://sne.space/sne/" + row.events[i].name.replace('/', '_') + "-host.jpg' style='margin-right:" +
+				text = (text + "<a href='https://sne.space/sne/" + nameToFilename(row.events[i].name) + "/' target='_blank'>" +
+					"<img width='" + imgwidth + "' height='" + imgwidth + "' src='https://sne.space/sne/" +
+					nameToFilename(row.events[i].name) + "-host.jpg' style='margin-right:" +
 					padding + "px;'></a>");
 			}
 			text = text + "</div>";
