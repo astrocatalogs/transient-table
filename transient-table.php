@@ -2387,7 +2387,7 @@ function errata() {
 }
 
 function transient_table_scripts() {
-	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'find-conflicts', 'errata', 'host-galaxies'))) {
+	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'find-conflicts', 'errata', 'host-galaxies')) || is_search()) {
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__) );
 		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__) );
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
