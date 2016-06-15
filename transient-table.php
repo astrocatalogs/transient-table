@@ -19,7 +19,7 @@ function datatables_functions() {
 		return str.replace(/([+-])/g, "&#8203;$1");
 	}
 	function nameToFilename (name) {
-		return name.replace(/\//g,'_')
+		return name.replace(/\//g, '_')
 	}
 	function getAliases (row) {
 		var aliases = [];
@@ -28,14 +28,12 @@ function datatables_functions() {
 		}
 		return aliases;
 	}
-	function eventLinked ( row, type, val, meta ) {
-		if (row.alias.length > 1) {
-			var aliases = getAliases(row);
-			return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name) +
-				"/' target='_blank'>" + noBreak(row.name) + "</a><span class='tooltiptext'> " + aliases.slice(1).map(noBreak).join(', ') + "</span></div>";
-		} else {
-			return "<a href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'>" + noBreak(row.name) + "</a>";
+	function getAliasesOnly (row) {
+		var aliases = [];
+		for (i = 1; i < row.alias.length; i++) {
+			aliases.push(row.alias[i].value);
 		}
+		return aliases;
 	}
 	function eventAliases ( row, type, val, meta ) {
 		if (!row.alias) return '';
@@ -45,8 +43,8 @@ function datatables_functions() {
 	function eventAliasesOnly ( row, type, val, meta ) {
 		if (!row.alias) return '';
 		if (row.alias.length > 1) {
-			var aliases = getAliases(row);
-			return aliases.slice(1).join(', ');
+			var aliases = getAliasesOnly(row);
+			return aliases.join(', ');
 		} else return '';
 	}
 	function goToEvent( id ){
@@ -55,44 +53,58 @@ function datatables_functions() {
 
 		window.open('https://sne.space/sne/' + encodeURIComponent(selectedVal) + '/', '_blank');
 	}
+	function nameLinked ( row, type, val, meta ) {
+		if (row.alias.length > 1) {
+			var aliases = getAliasesOnly(row);
+			return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name) +
+				"/' target='_blank'>" + noBreak(row.name) + "</a><span class='tooltiptext'> " + aliases.map(noBreak).join(', ') + "</span></div>";
+		} else {
+			return "<a href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'>" + noBreak(row.name) + "</a>";
+		}
+	}
 	function nameSwitcher ( data, type, row ) {
-		if (!row.alias) return data;
-		if ( (type === 'display' || type === 'sort') && row.alias.length > 1 ) {
-			var idObj = document.getElementById("name");
-			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
-			var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
-			var txts = Array(filterTxt, idObjTxt);
-			for (var t = 0; t < txts.length; t++) {
-				var txt = txts[t];
-				if (txt !== "") {
-					var aliases = getAliases(row);
-					var primaryname = row.name;
-					for (var a = 0; a < aliases.length; a++) {
-						if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
-							primaryname = aliases[a];
-							break;
+		if ( (type === 'display' || type === 'sort') ) {
+			if ( row.alias.length > 1 ) {
+				var idObj = document.getElementById("name");
+				var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
+				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
+				var txts = [filterTxt, idObjTxt];
+				for (var t = 0; t < txts.length; t++) {
+					var txt = txts[t];
+					if (txt !== "") {
+						var aliases = getAliases(row);
+						var primaryname = row.name;
+						for (var a = 0; a < aliases.length; a++) {
+							if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
+								primaryname = aliases[a];
+								break;
+							}
 						}
-					}
-					if (type === 'sort') {
-						return primaryname;
-					}
-					var otheraliases = Array();
-					for (var a = 0; a < aliases.length; a++) {
-						if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
-							continue;
+						if (type === 'sort') {
+							return primaryname;
 						}
-						otheraliases.push(noBreak(aliases[a]));
+						var otheraliases = [];
+						for (var a = 0; a < aliases.length; a++) {
+							if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
+								continue;
+							}
+							otheraliases.push(noBreak(aliases[a]));
+						}
+						return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name) +
+							"/' target='_blank'>" + primaryname + "</a><span class='tooltiptext'> " + otheraliases.join(', ') + "</span></div>";
 					}
-					return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name) +
-						"/' target='_blank'>" + primaryname + "</a><span class='tooltiptext'> " + otheraliases.join(', ') + "</span></div>";
 				}
 			}
-			return data;
+			if (type === 'display') {
+				return nameLinked(row);
+			}
+			return row.name;
+		} else if (type === 'filter') {
+			return eventAliases(row);
 		}
-		return data;
+		return row.name;
 	}
 	function hostLinked ( row, type, val, meta ) {
-		if (!row.host) return '';
 		var host = "<a class='" + (('kind' in row.host[0] && row.host[0]['kind'] == 'cluster') ? "hci" : "hhi") +
 			"' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a>&nbsp;";
 		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0]['value'] +
@@ -115,88 +127,123 @@ function datatables_functions() {
 		}
 	}
 	function hostSwitcher ( data, type, row ) {
-		if (!row.host) return data;
-		if ( (type === 'display' || type === 'sort') && row.host.length > 1 ) {
-			var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
-			var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
-				"style=background-image:url(https://sne.space/sne/" + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
-			var idObj = document.getElementById("host");
-			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
-			var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
-			var txts = Array(filterTxt, idObjTxt);
-			for (var t = 0; t < txts.length; t++) {
-				var txt = txts[t];
-				if (txt !== "") {
-					var aliases = [];
-					for (i = 0; i < row.host.length; i++) {
-						aliases.push(row.host[i]['value']);
-					}
-					var primaryname = row.host[0]['value'];
-					var primarykind = ('kind' in row.host[0]) ? row.host[0]['kind'] : '';
-					for (var a = 0; a < aliases.length; a++) {
-						if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
-							primaryname = aliases[a];
-							primarykind = ('kind' in row.host[a]) ? row.host[a]['kind'] : '';
-							break;
+		if (!row.host) return '';
+		if ( (type === 'display' || type === 'sort') ) {
+			if (row.host.length > 1) {
+				var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
+				var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
+					"style=background-image:url(https://sne.space/sne/" + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
+				var idObj = document.getElementById("host");
+				var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
+				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
+				var txts = [filterTxt, idObjTxt];
+				for (var t = 0; t < txts.length; t++) {
+					var txt = txts[t];
+					if (txt !== "") {
+						var aliases = [];
+						for (i = 0; i < row.host.length; i++) {
+							aliases.push(row.host[i]['value']);
 						}
-					}
-					if (type === 'sort') {
-						return primaryname;
-					}
-					var otheraliases = Array();
-					for (var a = 0; a < aliases.length; a++) {
-						if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
-							continue;
+						var primaryname = aliases[0];
+						var primarykind = ('kind' in row.host[0]) ? row.host[0]['kind'] : '';
+						for (var a = 1; a < aliases.length; a++) {
+							if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
+								primaryname = aliases[a];
+								primarykind = ('kind' in row.host[a]) ? row.host[a]['kind'] : '';
+								break;
+							}
 						}
-						otheraliases.push(noBreak(aliases[a]));
+						if (type === 'sort') {
+							return primaryname;
+						}
+						var otheraliases = [];
+						for (var a = 0; a < aliases.length; a++) {
+							if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
+								continue;
+							}
+							otheraliases.push(noBreak(aliases[a]));
+						}
+						var host = "<a class='" + ((primarykind == 'cluster') ? "hci" : "hhi") +
+							"' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> ";
+						return "<div class='tooltip'>" + host + mainHost.replace(/%s/g, primaryname) + "<span class='tooltiptext'> " +
+							hostImg + 'AKA: ' + otheraliases + "</span></div>";
 					}
-					var host = "<a class='" + ((primarykind == 'cluster') ? "hci" : "hhi") +
-						"' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> ";
-					return "<div class='tooltip'>" + host + mainHost.replace(/%s/g, primaryname) + "<span class='tooltiptext'> " +
-						hostImg + 'AKA: ' + otheraliases + "</span></div>";
 				}
 			}
-			return data;
+			if (type === 'display') {
+				return hostLinked(row);
+			}
+			return row.host[0].value;
+		} else if (type === 'filter') {
+			var hostAliases = [];
+			for (var a = 0; a < row.host.length; a++) {
+				hostAliases.push(row.host[a].value);
+			}
+			return hostAliases.join(', ');
 		}
-		return data;
+		return row.host[0].value;
+	}
+	function typeLinked ( row, type, val, meta ) {
+		if (row.claimedtype.length > 1) {
+			var altTypes = '';
+			for (var i = 1; i < row.claimedtype.length; i++) {
+				if (i != 1) altTypes += ', ';
+				altTypes += noBreak(row.claimedtype[i]['value']);
+			}
+			return "<div class='tooltip'>" + noBreak(row.claimedtype[0]['value']) + "</a><span class='tooltiptext'> " + altTypes + "</span></div>";
+		} else if (row.claimedtype[0]) {
+			return row.claimedtype[0]['value'];
+		}
+		return '';
 	}
 	function typeSwitcher ( data, type, row ) {
-		if (!row.claimedtype) return data;
-		if ( (type === 'display' || type === 'sort') && row.claimedtype.length > 1 ) {
-			var idObj = document.getElementById("claimedtype");
-			var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
-			var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
-			var txts = Array(filterTxt, idObjTxt);
-			for (var t = 0; t < txts.length; t++) {
-				var txt = txts[t];
-				if (txt !== "") {
-					var types = [];
-					for (i = 0; i < row.claimedtype.length; i++) {
-						types.push(row.claimedtype[i]['value']);
-					}
-					var primarytype = row.claimedtype[0]['value'];
-					for (var a = 0; a < types.length; a++) {
-						if (types[a].toUpperCase().indexOf(txt) !== -1) {
-							primarytype = types[a];
-							break;
+		if (!row.claimedtype || row.claimedtype.length === 0) return '';
+		if ( (type === 'display' || type === 'sort') ) {
+			if ( row.claimedtype.length > 1 ) {
+				var idObj = document.getElementById("claimedtype");
+				var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
+				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
+				var txts = [filterTxt, idObjTxt];
+				for (var t = 0; t < txts.length; t++) {
+					var txt = txts[t];
+					if (txt !== "") {
+						var types = [];
+						for (i = 0; i < row.claimedtype.length; i++) {
+							types.push(row.claimedtype[i]['value']);
 						}
-					}
-					if (type === 'sort') {
-						return primaryname;
-					}
-					var othertypes = Array();
-					for (var a = 0; a < types.length; a++) {
-						if (types[a].toUpperCase() === primarytype.toUpperCase()) {
-							continue;
+						var primarytype = types[0];
+						for (var a = 1; a < types.length; a++) {
+							if (types[a].toUpperCase().indexOf(txt) !== -1) {
+								primarytype = types[a];
+								break;
+							}
 						}
-						othertypes.push(types[a]);
+						if (type === 'sort') {
+							return primarytype;
+						}
+						var othertypes = [];
+						for (var a = 0; a < types.length; a++) {
+							if (types[a].toUpperCase() === primarytype.toUpperCase()) {
+								continue;
+							}
+							othertypes.push(types[a]);
+						}
+						return "<div class='tooltip'>" + primarytype + "<span class='tooltiptext'> " + othertypes + "</span></div>";
 					}
-					return "<div class='tooltip'>" + primarytype + "<span class='tooltiptext'> " + othertypes + "</span></div>";
 				}
 			}
-			return data;
+			if (type === 'display') {
+				return typeLinked(row);
+			}
+			return row.claimedtype[0].value;
+		} else if (type === 'filter') {
+			var allTypes = [];
+			for (var a = 0; a < row.claimedtype.length; a++) {
+				allTypes.push(row.claimedtype[a].value);
+			}
+			return allTypes.join(', ');
 		}
-		return data;
+		return row.claimedtype[0].value;
 	}
 	function noBlanksNumRender ( data, type, row ) {
 		if ( type === 'sort' ) {
@@ -605,10 +652,11 @@ function datatables_functions() {
 <?php
 }
 
-function transient_catalog() {
+function transient_catalog($bones = False) {
 	readfile("/var/www/html/sne/sne/table-templates/catalog.html");
 ?>
 	<script>
+	var bones = <?php echo json_encode($bones); ?>;
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
@@ -623,20 +671,6 @@ function transient_catalog() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
-		function typeLinked ( row, type, val, meta ) {
-			if (!row.claimedtype) return '';
-			if (row.claimedtype.length > 1) {
-				var altTypes = '';
-				for (var i = 1; i < row.claimedtype.length; i++) {
-					if (i != 1) altTypes += ', ';
-					altTypes += noBreak(row.claimedtype[i]['value']);
-				}
-				return "<div class='tooltip'>" + noBreak(row.claimedtype[0]['value']) + "</a><span class='tooltiptext'> " + altTypes + "</span></div>";
-			} else if (row.claimedtype[0]) {
-				return row.claimedtype[0]['value'];
-			}
-			return '';
-		}
 		function ebvValue ( row, type, val, meta ) {
 			if (!row.ebv) {
 				if (type === 'sort') return NaN;
@@ -662,9 +696,7 @@ function transient_catalog() {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			var photosplit = row.photolink.split(',');
-			var data = parseFloat(photosplit[0]);
-			return data;
+			return parseInt(row.photolink.split(',')[0]);
 		}
 		function spectraLinked ( row, type, val, meta ) {
 			if (!row.spectralink) return '';
@@ -681,7 +713,7 @@ function transient_catalog() {
 				return '';
 			}
 			var spectrasplit = row.spectralink.split(',');
-			var data = parseFloat(spectrasplit[0]);
+			var data = parseInt(spectrasplit[0]);
 			return data;
 		}
 		function radioLinked ( row, type, val, meta ) {
@@ -739,7 +771,7 @@ function transient_catalog() {
 			for (i = 1; i < row.redshift.length; i++) {
 				maxdiff = Math.max(Math.abs(parseFloat(data) - row.redshift[i]['value']), maxdiff);
 			}
-			if (maxdiff / parseFloat(data) > 0.1) {
+			if (maxdiff / parseFloat(data) > 0.05) {
 				data = '<em>' + data + '</em>';
 			}
 			if (row.redshift[0]['kind']) {
@@ -922,7 +954,7 @@ function transient_catalog() {
         } );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../sne/catalog.min.json',
+				url: '../../sne/' + ((bones) ? 'bones' : 'catalog') + '.min.json',
 				dataSrc: ''
 			},
 			"language": {
@@ -930,11 +962,7 @@ function transient_catalog() {
 			},
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
-				{ "data": {
-					"display": eventLinked,
-					"filter": eventAliases,
-					"_": "name"
-				  }, "type": "string", "defaultContent": "", "responsivePriority": 1, "render": nameSwitcher },
+				{ "data": null, "type": "string", "responsivePriority": 1, "render": nameSwitcher },
 				{ "data": {
 					"_": eventAliases,
 					"display": eventAliasesOnly,
@@ -953,10 +981,7 @@ function transient_catalog() {
 				  }, "type": "non-empty-float", "defaultContent": "" },
 				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "maxabsmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
-				{ "data": {
-					"display": hostLinked,
-					"_": "host[, ].value",
-				  }, "type": "string", "defaultContent": "", "width":"14%", "render": hostSwitcher },
+				{ "data": null, "type": "string", "width":"14%", "render": hostSwitcher },
 				{ "data": {
 					"display": raLinked,
 					"filter": "ra.0.value",
@@ -1010,10 +1035,7 @@ function transient_catalog() {
 					"sort": lumdistValue,
 					"_": "lumdist[, ].value"
 				  }, "type": "non-empty-float", "defaultContent": "" },
-				{ "data": {
-					"display": typeLinked,
-					"_": "claimedtype[, ].value"
-				  }, "defaultContent": "", "type": "string", "responsivePriority": 3, "render": typeSwitcher },
+				{ "data": null, "type": "string", "responsivePriority": 3, "render": typeSwitcher },
 				{ "data": {
 					"display": ebvLinked,
 					"_": ebvValue
@@ -1275,41 +1297,23 @@ function duplicate_table() {
 					"_": "name2"
 				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
 				{ "data": {
-					//"display": raLinked,
-					//"filter": raValue,
-					//"sort": raValue,
 					"_": "ra1"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
-					//"display": decLinked,
-					//"filter": decValue,
-					//"sort": decValue,
 					"_": "dec1"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
-					//"display": raLinked,
-					//"filter": raValue,
-					//"sort": raValue,
 					"_": "ra2"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
-					//"display": decLinked,
-					//"filter": decValue,
-					//"sort": decValue,
 					"_": "dec2"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
-					//"display": decLinked,
-					//"filter": decValue,
-					//"sort": decValue,
 					"_": distDegValue,
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5 },
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5, "width": "5%" },
 				{ "data": {
-					//"display": decLinked,
-					//"filter": decValue,
-					//"sort": decValue,
 					"_": diffYearValue,
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5 },
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5, "width": "5%" },
 				{ "data": performGoogleSearch, "responsivePriority": 4, "searchable": false },
 				{ "data": markAsDuplicate, "responsivePriority": 4, "searchable": false },
 				{ "data": markAsDistinct, "responsivePriority": 4, "searchable": false },
@@ -2063,7 +2067,7 @@ function conflict_table() {
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": {
-					"display": eventLinked,
+					"display": nameLinked,
 					"filter": eventAliases,
 					"_": "name"
 				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
@@ -2281,7 +2285,7 @@ function errata() {
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": {
-					"display": eventLinked,
+					"display": nameLinked,
 					"filter": eventAliases,
 					"_": "name"
 				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
@@ -2387,7 +2391,7 @@ function errata() {
 }
 
 function transient_table_scripts() {
-	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'find-conflicts', 'errata', 'host-galaxies')) || is_search()) {
+	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'find-conflicts', 'errata', 'host-galaxies', 'supernova-graveyard')) || is_search()) {
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__) );
 		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__) );
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
