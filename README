@@ -1,0 +1,1 @@
+To remove the HTML stripping in the column visibility dropdown, remove the '.replace( /<.*?>/g, "" )' line from the _columnText method.

@@ -589,10 +589,19 @@ function datatables_functions() {
 				if ( splitString[i].indexOf('-') !== -1 )
 				{
 					var splitRange = splitString[i].split('-');
+					var newSplitRange = [];
+					for ( var j = 0; j < splitRange.length; j++ ) {
+						if ( j < splitRange.length - 1 && splitRange[j].length == 0 ) {
+							splitRange[j+1] = '-' + splitRange[j+1];
+						} else {
+							newSplitRange.push(splitRange[j]);
+						}
+					}
+					splitRange = newSplitRange;
 					var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
 					var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
-					var minVal = minStr*1.0;
-					var maxVal = maxStr*1.0;
+					var minVal = parseFloat(minStr);
+					var maxVal = parseFloat(maxStr);
 					if (minStr !== '') {
 						if (!( (minStr !== '' && cVal < minVal) || (maxStr !== '' && cVal > maxVal) )) return !isNot;
 					}
@@ -661,7 +670,7 @@ function transient_catalog($bones = False) {
 		var floatColValDict = {};
 		var floatColInds = [];
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
-			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffmin', 'hostoffkpc'];
+			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffsetang', 'hostoffsetdist'];
 		var stringColValDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype'];
@@ -724,20 +733,20 @@ function transient_catalog($bones = False) {
 			if (!row.xraylink) return '';
 			return "<a class='xci' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> " + row.xraylink; 
 		}
-		function hostoffminValue ( row, type, val, meta ) {
-			if (!row.hostoffmin) {
+		function hostoffsetangValue ( row, type, val, meta ) {
+			if (!row.hostoffsetang) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			var data = parseFloat(row.hostoffmin);
+			var data = parseFloat(row.hostoffsetang[0]['value']);
 			return data;
 		}
-		function hostoffkpcValue ( row, type, val, meta ) {
-			if (!row.hostoffkpc) {
+		function hostoffsetdistValue ( row, type, val, meta ) {
+			if (!row.hostoffsetdist) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			var data = parseFloat(row.hostoffkpc);
+			var data = parseFloat(row.hostoffsetdist[0]['value']);
 			return data;
 		}
 		function redshiftValue ( row, type, val, meta ) {
@@ -1007,14 +1016,14 @@ function transient_catalog($bones = False) {
 					"_": "hostdec[, ].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
-					"filter": hostoffminValue,
-					"sort": hostoffminValue,
-					"_": "hostoffmin"
+					"filter": hostoffsetangValue,
+					"sort": hostoffsetangValue,
+					"_": "hostoffsetang.0.value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
-					"filter": hostoffkpcValue,
-					"sort": hostoffkpcValue,
-					"_": "hostoffkpc"
+					"filter": hostoffsetdistValue,
+					"sort": hostoffsetdistValue,
+					"_": "hostoffsetdist.0.value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": {
@@ -1106,7 +1115,7 @@ function transient_catalog($bones = False) {
                 orderable: false,
                 className: 'select-checkbox'
 			}, {
-                targets: [ 'alias', 'maxdate', 'velocity', 'maxabsmag', 'hostra', 'hostdec', 'hostoffmin', 'hostoffkpc',
+                targets: [ 'alias', 'maxdate', 'velocity', 'maxabsmag', 'hostra', 'hostdec', 'hostoffsetang', 'hostoffsetdist',
 					'references', 'instruments', 'ebv', 'lumdist', 'xraylink' ],
 				visible: false
 			}, {
@@ -1181,7 +1190,7 @@ function duplicate_table() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = ['distdeg', 'diffyear'];
+		var floatSearchCols = ['distdeg', 'maxdiffyear', 'maxdiffyear'];
 		var stringColValDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['name1', 'name2'];
@@ -1222,12 +1231,19 @@ function duplicate_table() {
 			}
 			return (parseFloat(row.distdeg)*3600.).toFixed(5);
 		}
-		function diffYearValue ( row, type, val, meta ) {
-			if (!row.diffyear) {
+		function maxDiffYearValue ( row, type, val, meta ) {
+			if (!row.maxdiffyear) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			return (parseFloat(row.diffyear)*365.25).toFixed(3);
+			return (parseFloat(row.maxdiffyear)*365.25).toFixed(3);
+		}
+		function discDiffYearValue ( row, type, val, meta ) {
+			if (!row.discdiffyear) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			return (parseFloat(row.discdiffyear)*365.25).toFixed(3);
 		}
 		function performGoogleSearch ( row, type, val, meta ) {
 			var namearr = row.aliases1.concat(row.aliases2);
@@ -1312,7 +1328,10 @@ function duplicate_table() {
 					"_": distDegValue,
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5, "width": "5%" },
 				{ "data": {
-					"_": diffYearValue,
+					"_": maxDiffYearValue,
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5, "width": "5%" },
+				{ "data": {
+					"_": discDiffYearValue,
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5, "width": "5%" },
 				{ "data": performGoogleSearch, "responsivePriority": 4, "searchable": false },
 				{ "data": markAsDuplicate, "responsivePriority": 4, "searchable": false },
@@ -1377,7 +1396,7 @@ function duplicate_table() {
                 style:    'os',
                 selector: 'td:first-child'
             },
-            order: [[ 7, "asc" ], [8, "asc"]]
+            order: [[ 7, "asc" ], [8, "asc"], [9, "asc"]]
 		} );
         table.columns().every( function ( index ) {
             var that = this;
@@ -2392,10 +2411,10 @@ function errata() {
 
 function transient_table_scripts() {
 	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'find-conflicts', 'errata', 'host-galaxies', 'supernova-graveyard')) || is_search()) {
-		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__) );
-		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__) );
-		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
+		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__), array() );
 		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('transient-table') );
+		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
+		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__), array() );
 		#wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.js", array('jquery') );
 		#wp_enqueue_style( 'datatables-css', "https://cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.css", array('transient-table') );
 		#wp_enqueue_script( 'datatables-js', "https://nightly.datatables.net/js/jquery.dataTables.min.js", array('jquery') );
