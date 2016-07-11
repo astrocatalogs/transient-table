@@ -602,6 +602,11 @@ function datatables_functions() {
 					var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
 					var minVal = parseFloat(minStr);
 					var maxVal = parseFloat(maxStr);
+					if (maxVal < minVal) {
+						var temp = maxVal;
+						maxVal = minVal;
+						minVal = temp;
+					}
 					if (minStr !== '') {
 						if (!( (minStr !== '' && cVal < minVal) || (maxStr !== '' && cVal > maxVal) )) return !isNot;
 					}
