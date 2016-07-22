@@ -166,13 +166,14 @@ function datatables_functions() {
 						var host = "<a class='" + ((primarykind == 'cluster') ? "hci" : "hhi") +
 							"' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> ";
 						return "<div class='tooltip'>" + host + mainHost.replace(/%s/g, primaryname) + "<span class='tooltiptext'> " +
-							hostImg + 'AKA: ' + otheraliases + "</span></div>";
+							hostImg + 'AKA: ' + otheraliases.join(', ') + "</span></div>";
 					}
 				}
 			}
 			if (type === 'display') {
 				return hostLinked(row);
 			}
+			if (!row.host[0]) return '';
 			return row.host[0].value;
 		} else if (type === 'filter') {
 			var hostAliases = [];
@@ -181,6 +182,7 @@ function datatables_functions() {
 			}
 			return hostAliases.join(', ');
 		}
+		if (!row.host[0]) return '';
 		return row.host[0].value;
 	}
 	function typeLinked ( row, type, val, meta ) {
@@ -667,7 +669,7 @@ function datatables_functions() {
 }
 
 function transient_catalog($bones = False) {
-	readfile("/var/www/html/sne/sne/table-templates/catalog.html");
+	readfile("/var/www/html/sne/astrocats/astrocats/supernovae/html/table-templates/catalog.html");
 ?>
 	<script>
 	var bones = <?php echo json_encode($bones); ?>;
@@ -968,7 +970,8 @@ function transient_catalog($bones = False) {
         } );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../sne/' + ((bones) ? 'bones' : 'catalog') + '.min.json',
+				//url: '../../sne/' + ((bones) ? 'bones' : 'catalog') + '.min.json',
+				url: '/../../astrocats/astrocats/supernovae/output/' + ((bones) ? 'bones' : 'catalog') + '.min.json',
 				dataSrc: ''
 			},
 			"language": {
@@ -1189,7 +1192,7 @@ function transient_catalog($bones = False) {
 }
 
 function duplicate_table() {
-	readfile("/var/www/html/sne/sne/table-templates/duplicates.html");
+	readfile("/root/astrocats/astrocats/supernovae/html/table-templates/duplicates.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -1302,7 +1305,7 @@ function duplicate_table() {
         } );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../sne/dupes.json',
+				url: '/../../astrocats/astrocats/supernovae/output/dupes.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -1441,7 +1444,7 @@ function duplicate_table() {
 }
 
 function bibliography() {
-	readfile("/var/www/html/sne/sne/table-templates/biblio.html");
+	readfile("/root/astrocats/astrocats/supernovae/html/table-templates/biblio.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -1545,7 +1548,7 @@ function bibliography() {
 		}
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../sne/biblio.json',
+				url: '/../../astrocats/astrocats/supernovae/output/biblio.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -1675,7 +1678,7 @@ function bibliography() {
 }
 
 function hosts() {
-	readfile("/var/www/html/sne/sne/table-templates/hosts.html");
+	readfile("/root/astrocats/astrocats/supernovae/html/table-templates/hosts.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -1853,7 +1856,7 @@ function hosts() {
 		}
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../sne/hosts.min.json',
+				url: '/../../astrocats/astrocats/supernovae/output/hosts.min.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -2004,7 +2007,7 @@ function hosts() {
 }
 
 function conflict_table() {
-	readfile("/var/www/html/sne/sne/table-templates/conflicts.html");
+	readfile("/root/astrocats/astrocats/supernovae/html/table-templates/conflicts.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -2085,7 +2088,7 @@ function conflict_table() {
         } );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../sne/conflicts.json',
+				url: '/../../astrocats/astrocats/supernovae/output/conflicts.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -2199,7 +2202,7 @@ function conflict_table() {
 }
 
 function errata() {
-	readfile("/var/www/html/sne/sne/table-templates/errata.html");
+	readfile("/root/astrocats/astrocats/supernovae/html/table-templates/errata.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -2303,7 +2306,7 @@ function errata() {
 		}
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '../../sne/errata.json',
+				url: '/../../astrocats/astrocats/supernovae/output/errata.json',
 				dataSrc: ''
 			},
 			columns: [
