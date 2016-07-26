@@ -135,7 +135,13 @@ function googleNames(names) {
 		if (namearr[i].startsWith('SN') && !isNaN(parseFloat(namearr[i].slice(2,6)))) {
 			namearr[i] = namearr[i].replace('SN', '');
 		}
+		if (namearr[i].startsWith('AT') && !isNaN(parseFloat(namearr[i].slice(2,6)))) {
+			namearr[i] = namearr[i].replace('AT', '');
+		}
 	}
+	namearr = jQuery.grep(namearr, function(v, k){
+		return jQuery.inArray(v, namearr) === k;
+	});
 	var win = window.open('https://www.google.com/#q=' + encodeURIComponent(namearr.join(" ")), '_blank')
 	win.focus();
 }

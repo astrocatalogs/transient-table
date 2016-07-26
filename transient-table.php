@@ -21,29 +21,41 @@ function datatables_functions() {
 	function nameToFilename (name) {
 		return name.replace(/\//g, '_')
 	}
-	function getAliases (row) {
+	function getAliases (row, field) {
+		if (field === undefined) field = 'alias';
 		var aliases = [];
-		for (i = 0; i < row.alias.length; i++) {
-			aliases.push(row.alias[i].value);
+		for (i = 0; i < row[field].length; i++) {
+			if (typeof row[field][i] === 'string') {
+				aliases.push(row[field][i]);
+			} else {
+				aliases.push(row[field][i].value);
+			}
 		}
 		return aliases;
 	}
-	function getAliasesOnly (row) {
+	function getAliasesOnly (row, field) {
+		if (field === undefined) field = 'alias';
 		var aliases = [];
-		for (i = 1; i < row.alias.length; i++) {
-			aliases.push(row.alias[i].value);
+		for (i = 1; i < row[field].length; i++) {
+			if (typeof row[field][i] === 'string') {
+				aliases.push(row[field][i]);
+			} else {
+				aliases.push(row[field][i].value);
+			}
 		}
 		return aliases;
 	}
-	function eventAliases ( row, type, val, meta ) {
-		if (!row.alias) return '';
-		var aliases = getAliases(row);
+	function eventAliases ( row, type, val, meta, field ) {
+		if (field === undefined) field = 'alias';
+		if (!row[field]) return '';
+		var aliases = getAliases(row, field);
 		return aliases.join(', ');
 	}
-	function eventAliasesOnly ( row, type, val, meta ) {
-		if (!row.alias) return '';
-		if (row.alias.length > 1) {
-			var aliases = getAliasesOnly(row);
+	function eventAliasesOnly ( row, type, val, meta, field ) {
+		if (field === undefined) field = 'alias';
+		if (!row[field]) return '';
+		if (row[field].length > 1) {
+			var aliases = getAliasesOnly(row, field);
 			return aliases.join(', ');
 		} else return '';
 	}
@@ -53,30 +65,56 @@ function datatables_functions() {
 
 		window.open('https://sne.space/sne/' + encodeURIComponent(selectedVal) + '/', '_blank');
 	}
-	function nameLinked ( row, type, val, meta ) {
-		if (row.alias.length > 1) {
-			var aliases = getAliasesOnly(row);
-			return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name) +
-				"/' target='_blank'>" + noBreak(row.name) + "</a><span class='tooltiptext'> " + aliases.map(noBreak).join(', ') + "</span></div>";
+	function nameLinkedName ( row, type, val, meta ) {
+		return nameLinked ( row, type, val, meta, 'name', 'alias' );
+	}
+	function nameLinkedName1 ( row, type, val, meta ) {
+		return nameLinked ( row, type, val, meta, 'name1', 'aliases1' );
+	}
+	function nameLinkedName2 ( row, type, val, meta ) {
+		return nameLinked ( row, type, val, meta, 'name2', 'aliases2' );
+	}
+	function nameLinked ( row, type, val, meta, namefield, aliasfield ) {
+		if (namefield === undefined) namefield = 'name';
+		if (aliasfield === undefined) aliasfield = 'alias';
+		if (row[aliasfield].length > 1) {
+			var aliases = getAliasesOnly(row, aliasfield);
+			return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row[namefield]) +
+				"/' target='_blank'>" + noBreak(row[namefield]) + "</a><span class='tooltiptext'> " + aliases.map(noBreak).join(', ') + "</span></div>";
 		} else {
-			return "<a href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'>" + noBreak(row.name) + "</a>";
+			return "<a href='https://sne.space/sne/" + nameToFilename(row[namefield]) + "/' target='_blank'>" + noBreak(row[namefield]) + "</a>";
 		}
 	}
-	function nameSwitcher ( data, type, row ) {
+	function nameSwitcherName ( data, type, row, meta ) {
+		return nameSwitcher ( data, type, row, meta, 'name', 'alias' );
+	}
+	function nameSwitcherName1 ( data, type, row, meta ) {
+		return nameSwitcher ( data, type, row, meta, 'name1', 'aliases1' );
+	}
+	function nameSwitcherName2 ( data, type, row, meta ) {
+		return nameSwitcher ( data, type, row, meta, 'name2', 'aliases2' );
+	}
+	function nameSwitcher ( data, type, row, meta, namefield, aliasfield ) {
+		if (namefield === undefined) namefield = 'name';
+		if (aliasfield === undefined) aliasfield = 'alias';
 		if ( (type === 'display' || type === 'sort') ) {
-			if ( row.alias.length > 1 ) {
-				var idObj = document.getElementById("name");
+			if ( row[aliasfield].length > 1 ) {
+				//var idObj = meta.settings.oInit.searchFields[field];
+				var idObj = document.getElementById(namefield);
 				var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
 				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
 				var txts = [filterTxt, idObjTxt];
-				for (var t = 0; t < txts.length; t++) {
+				var tlen = txts.length;
+				for (var t = 0; t < tlen; t++) {
 					var txt = txts[t];
 					if (txt !== "") {
-						var aliases = getAliases(row);
-						var primaryname = row.name;
-						for (var a = 0; a < aliases.length; a++) {
+						var aliases = getAliases(row, aliasfield);
+						var primaryname = row[namefield];
+						var alen = aliases.length;
+						for (var a = 0; a < alen; a++) {
 							if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
 								primaryname = aliases[a];
+								console.log(primaryname);
 								break;
 							}
 						}
@@ -84,25 +122,25 @@ function datatables_functions() {
 							return primaryname;
 						}
 						var otheraliases = [];
-						for (var a = 0; a < aliases.length; a++) {
+						for (var a = 0; a < alen; a++) {
 							if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
 								continue;
 							}
 							otheraliases.push(noBreak(aliases[a]));
 						}
-						return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name) +
+						return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row[namefield]) +
 							"/' target='_blank'>" + primaryname + "</a><span class='tooltiptext'> " + otheraliases.join(', ') + "</span></div>";
 					}
 				}
 			}
 			if (type === 'display') {
-				return nameLinked(row);
+				return nameLinked(row, null, null, null, namefield, aliasfield);
 			}
-			return row.name;
+			return row[namefield];
 		} else if (type === 'filter') {
-			return eventAliases(row);
+			return eventAliases(row, null, null, null, aliasfield);
 		}
-		return row.name;
+		return row[namefield];
 	}
 	function hostLinked ( row, type, val, meta ) {
 		var host = "<a class='" + (('kind' in row.host[0] && row.host[0]['kind'] == 'cluster') ? "hci" : "hhi") +
@@ -111,9 +149,10 @@ function datatables_functions() {
 			"&submit=SIMBAD+search' target='_blank'>" + someBreak(row.host[0]['value']) + "</a>"; 
 		var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
 			"style='background-image:url(https://sne.space/sne/" + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
-		if (row.host.length > 1) {
+		var hlen = row.host.length;
+		if (hlen > 1) {
 			var hostAliases = '';
-			for (var i = 1; i < row.host.length; i++) {
+			for (var i = 1; i < hlen; i++) {
 				if (i != 1) hostAliases += ', ';
 				hostAliases += noBreak(row.host[i]['value']);
 			}
@@ -126,27 +165,31 @@ function datatables_functions() {
 			} else return host + mainHost;
 		}
 	}
-	function hostSwitcher ( data, type, row ) {
+	function hostSwitcher ( data, type, row, meta ) {
 		if (!row.host) return '';
+		//return row.host[0].value;
+		var hlen = row.host.length;
 		if ( (type === 'display' || type === 'sort') ) {
-			if (row.host.length > 1) {
+			if (hlen > 1) {
 				var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
 				var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
 					"style=background-image:url(https://sne.space/sne/" + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
-				var idObj = document.getElementById("host");
+				var idObj = meta.settings.oInit.searchFields['host'];
 				var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
 				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
 				var txts = [filterTxt, idObjTxt];
-				for (var t = 0; t < txts.length; t++) {
+				var tlen = txts.length;
+				for (var t = 0; t < tlen; t++) {
 					var txt = txts[t];
 					if (txt !== "") {
 						var aliases = [];
-						for (i = 0; i < row.host.length; i++) {
+						for (i = 0; i < hlen; i++) {
 							aliases.push(row.host[i]['value']);
 						}
 						var primaryname = aliases[0];
 						var primarykind = ('kind' in row.host[0]) ? row.host[0]['kind'] : '';
-						for (var a = 1; a < aliases.length; a++) {
+						var alen = aliases.length;
+						for (var a = 1; a < alen; a++) {
 							if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
 								primaryname = aliases[a];
 								primarykind = ('kind' in row.host[a]) ? row.host[a]['kind'] : '';
@@ -157,7 +200,7 @@ function datatables_functions() {
 							return primaryname;
 						}
 						var otheraliases = [];
-						for (var a = 0; a < aliases.length; a++) {
+						for (var a = 0; a < alen; a++) {
 							if (aliases[a].toUpperCase() === primaryname.toUpperCase()) {
 								continue;
 							}
@@ -177,7 +220,7 @@ function datatables_functions() {
 			return row.host[0].value;
 		} else if (type === 'filter') {
 			var hostAliases = [];
-			for (var a = 0; a < row.host.length; a++) {
+			for (var a = 0; a < hlen; a++) {
 				hostAliases.push(row.host[a].value);
 			}
 			return hostAliases.join(', ');
@@ -186,9 +229,10 @@ function datatables_functions() {
 		return row.host[0].value;
 	}
 	function typeLinked ( row, type, val, meta ) {
-		if (row.claimedtype.length > 1) {
+		var clen = row.claimedtype.length;
+		if (clen > 1) {
 			var altTypes = '';
-			for (var i = 1; i < row.claimedtype.length; i++) {
+			for (var i = 1; i < clen; i++) {
 				if (i != 1) altTypes += ', ';
 				altTypes += noBreak(row.claimedtype[i]['value']);
 			}
@@ -198,23 +242,28 @@ function datatables_functions() {
 		}
 		return '';
 	}
-	function typeSwitcher ( data, type, row ) {
-		if (!row.claimedtype || row.claimedtype.length === 0) return '';
+	function typeSwitcher ( data, type, row, meta ) {
+		if (!row.claimedtype) return '';
+		var clen = row.claimedtype.length;
+		if (clen === 0) return '';
+		//return row.claimedtype[0]['value'];
 		if ( (type === 'display' || type === 'sort') ) {
-			if ( row.claimedtype.length > 1 ) {
-				var idObj = document.getElementById("claimedtype");
+			if ( clen > 1 ) {
+				var idObj = meta.settings.oInit.searchFields['claimedtype'];
 				var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
 				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
 				var txts = [filterTxt, idObjTxt];
-				for (var t = 0; t < txts.length; t++) {
+				var tlen = txts.length;
+				for (var t = 0; t < tlen; t++) {
 					var txt = txts[t];
 					if (txt !== "") {
 						var types = [];
-						for (i = 0; i < row.claimedtype.length; i++) {
+						for (i = 0; i < clen; i++) {
 							types.push(row.claimedtype[i]['value']);
 						}
 						var primarytype = types[0];
-						for (var a = 1; a < types.length; a++) {
+						var ylen = types.length;
+						for (var a = 1; a < ylen; a++) {
 							if (types[a].toUpperCase().indexOf(txt) !== -1) {
 								primarytype = types[a];
 								break;
@@ -224,7 +273,7 @@ function datatables_functions() {
 							return primarytype;
 						}
 						var othertypes = [];
-						for (var a = 0; a < types.length; a++) {
+						for (var a = 0; a < ylen; a++) {
 							if (types[a].toUpperCase() === primarytype.toUpperCase()) {
 								continue;
 							}
@@ -240,7 +289,7 @@ function datatables_functions() {
 			return row.claimedtype[0].value;
 		} else if (type === 'filter') {
 			var allTypes = [];
-			for (var a = 0; a < row.claimedtype.length; a++) {
+			for (var a = 0; a < clen; a++) {
 				allTypes.push(row.claimedtype[a].value);
 			}
 			return allTypes.join(', ');
@@ -340,9 +389,10 @@ function datatables_functions() {
 	function compDates ( date1, date2, includeSame ) {
 		var d1;
 		var d1split = date1.split('/');
-		if (d1split.length == 1) {
+		var d1len = d1split.length;
+		if (d1len == 1) {
 			d1 = new Date(date1 + '/12/31');
-		} else if (d1split.length == 2) {
+		} else if (d1len == 2) {
 			var daysInMonth = new Date(d1split[0], d1split[1], 0).getDate();
 			d1 = new Date(date1 + '/' + String(daysInMonth));
 		} else {
@@ -350,9 +400,10 @@ function datatables_functions() {
 		}
 		var d2;
 		var d2split = date2.split('/');
-		if (d2split.length == 1) {
+		var d2len = d2split.length;
+		if (d2len == 1) {
 			d2 = new Date(date2 + '/12/31');
-		} else if (d2split.length == 2) {
+		} else if (d2len == 2) {
 			var daysInMonth = new Date(d2split[0], d2split[1], 0).getDate();
 			d2 = new Date(date2 + '/' + String(daysInMonth));
 		} else {
@@ -394,16 +445,18 @@ function datatables_functions() {
 		}
 		var rd1split = radec1.split(':');
 		var rd2split = radec2.split(':');
-		if (rd1split.length == 1) {
+		var rd1len = rd1split.length;
+		if (rd1len == 1) {
 			rd1 = parseFloat(rd1split[0]);
-		} else if (rd1split.length == 2) {
+		} else if (rd1len == 2) {
 			rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60.;
 		} else {
 			rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60. + parseFloat(rd1split[2])/3600.;
 		}
-		if (rd2split.length == 1) {
+		var rd2len = rd2split.length;
+		if (rd2len == 1) {
 			rd2 = parseFloat(rd2split[0]);
-		} else if (rd2split.length == 2) {
+		} else if (rd2len == 2) {
 			rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60.;
 		} else {
 			rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60. + parseFloat(rd2split[2])/3600.;
@@ -424,9 +477,11 @@ function datatables_functions() {
 		idString = idString.replace(/!/g, '');
 		var splitString = idString.split(/(?:,|OR)+/);
 		var splitData = data.split(/(?:,|OR)+/);
-		for ( var d = 0; d < splitData.length; d++ ) {
+		var sdlen = splitData.length;
+		for ( var d = 0; d < sdlen; d++ ) {
 			var cData = splitData[d].trim();
-			for ( var i = 0; i < splitString.length; i++ ) {
+			var sslen = splitString.length;
+			for ( var i = 0; i < sslen; i++ ) {
 				if ( splitString[i].indexOf('-') !== -1 )
 				{
 					var splitRange = splitString[i].split('-');
@@ -486,9 +541,11 @@ function datatables_functions() {
 		idString = idString.replace(/!/g, '');
 		var splitString = idString.split(/(?:,|OR)+/);
 		var splitData = data.split(/(?:,|OR)+/);
-		for ( var d = 0; d < splitData.length; d++ ) {
+		var sdlen = splitData.length;
+		for ( var d = 0; d < sdlen; d++ ) {
 			var cData = splitData[d].trim();
-			for ( var i = 0; i < splitString.length; i++ ) {
+			var sslen = splitString.length;
+			for ( var i = 0; i < sslen; i++ ) {
 				if ( splitString[i].indexOf('-') !== -1 )
 				{
 					var splitRange = splitString[i].split('-');
@@ -546,9 +603,11 @@ function datatables_functions() {
 		if ( idString === '' ) return true;
 		var splitString = idString.split(/(?:,|OR)+/);
 		var splitData = data.split(',');
-		for ( var d = 0; d < splitData.length; d++ ) {
+		var sdlen = splitData.length;
+		for ( var d = 0; d < sdlen; d++ ) {
 			var cData = splitData[d].trim();
-			for ( var i = 0; i < splitString.length; i++ ) {
+			var sslen = splitString.length;
+			for ( var i = 0; i < sslen; i++ ) {
 				var idStr = splitString[i].trim().toUpperCase();
 				var isNot = (idStr.indexOf('!') !== -1 || idStr.indexOf('NOT') !== -1)
 				idStr = idStr.replace(/!/g, '');
@@ -584,16 +643,19 @@ function datatables_functions() {
 		if ( idString === '' ) return true;
 		var splitString = idString.split(/(?:,|OR)+/);
 		var splitData = data.split(/(?:,|OR)+/);
-		for ( var d = 0; d < splitData.length; d++ ) {
+		var sdlen = splitData.length;
+		for ( var d = 0; d < sdlen; d++ ) {
 			var cData = splitData[d].trim();
 			var cVal = cData*1.0;
-			for ( var i = 0; i < splitString.length; i++ ) {
+			var sslen = splitString.length;
+			for ( var i = 0; i < sslen; i++ ) {
 				if ( splitString[i].indexOf('-') !== -1 )
 				{
 					var splitRange = splitString[i].split('-');
 					var newSplitRange = [];
-					for ( var j = 0; j < splitRange.length; j++ ) {
-						if ( j < splitRange.length - 1 && splitRange[j].length == 0 ) {
+					var srlen = splitRange.length;
+					for ( var j = 0; j < srlen; j++ ) {
+						if ( j < srlen - 1 && splitRange[j].length == 0 ) {
 							splitRange[j+1] = '-' + splitRange[j+1];
 						} else {
 							newSplitRange.push(splitRange[j]);
@@ -687,6 +749,7 @@ function transient_catalog($bones = False) {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
+		var allSearchCols = floatSearchCols + stringSearchCols + raDecSearchCols + dateSearchCols;
 		function ebvValue ( row, type, val, meta ) {
 			if (!row.ebv) {
 				if (type === 'sort') return NaN;
@@ -707,11 +770,12 @@ function transient_catalog($bones = False) {
 			}
 			return "<a class='lci' href='https://sne.space/sne/" + nameToFilename(row.name) + "/' target='_blank'></a> " + row.photolink; 
 		}
+		function photoSort ( row, type, val ) {
+			if (!row.photolink) return NaN;
+			return parseInt(row.photolink.split(',')[0]);
+		}
 		function photoValue ( row, type, val, meta ) {
-			if (!row.photolink) {
-				if (type === 'sort') return NaN;
-				return '';
-			}
+			if (!row.photolink) return '';
 			return parseInt(row.photolink.split(',')[0]);
 		}
 		function spectraLinked ( row, type, val, meta ) {
@@ -784,7 +848,8 @@ function transient_catalog($bones = False) {
 			if (!row.redshift) return '';
 			var data = row.redshift[0]['value'];
 			var maxdiff = 0.0;
-			for (i = 1; i < row.redshift.length; i++) {
+			var rlen = row.redshift.length;
+			for (i = 1; i < rlen; i++) {
 				maxdiff = Math.max(Math.abs(parseFloat(data) - row.redshift[i]['value']), maxdiff);
 			}
 			if (maxdiff / parseFloat(data) > 0.05) {
@@ -915,11 +980,13 @@ function transient_catalog($bones = False) {
 			if (!row.references) return '';
 			var references = row.references.split(',');
 			var refstr = '';
-			for (var i = 0; i < Math.min(references.length, 4); i++) {
+			var rlen = references.length;
+			var rlen4 = Math.min(rlen, 4);
+			for (var i = 0; i < rlen4; i++) {
 				if (i != 0) refstr += "<br>";
 				refstr += "<a href='http://adsabs.harvard.edu/abs/" + references[i] + "' target='_blank'>" + references[i] + "</a>";
 			}
-			if (references.length >= 5) {
+			if (rlen >= 5) {
 				var fileeventname = nameToFilename(row.name);
 				refstr += "<br><a href='sne/" + fileeventname + "/'>(See full list)</a>";
 			}
@@ -935,28 +1002,32 @@ function transient_catalog($bones = False) {
 				jQuery(this).html( '' );
 			}
 			if (['check', 'alias', 'download', 'references', 'responsive'].indexOf(classname) >= 0) return;
-			for (i = 0; i < floatSearchCols.length; i++) {
+			var fslen = floatSearchCols.length;
+			for (i = 0; i < fslen; i++) {
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
 					floatColValDict[index] = floatSearchCols[i];
 					floatColInds.push(index);
 					break;
 				}
 			}
-			for (i = 0; i < stringSearchCols.length; i++) {
+			var sslen = stringSearchCols.length;
+			for (i = 0; i < sslen; i++) {
 				if (jQuery(this).hasClass(stringSearchCols[i])) {
 					stringColValDict[index] = stringSearchCols[i];
 					stringColInds.push(index);
 					break;
 				}
 			}
-			for (i = 0; i < dateSearchCols.length; i++) {
+			var dslen = dateSearchCols.length;
+			for (i = 0; i < dslen; i++) {
 				if (jQuery(this).hasClass(dateSearchCols[i])) {
 					dateColValDict[index] = dateSearchCols[i];
 					dateColInds.push(index);
 					break;
 				}
 			}
-			for (i = 0; i < raDecSearchCols.length; i++) {
+			var rdlen = raDecSearchCols.length;
+			for (i = 0; i < rdlen; i++) {
 				if (jQuery(this).hasClass(raDecSearchCols[i])) {
 					raDecColValDict[index] = raDecSearchCols[i];
 					raDecColInds.push(index);
@@ -968,7 +1039,24 @@ function transient_catalog($bones = False) {
 			}
             jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
+		function getSearchFields(document) {
+			var searchFields = {};
+			var alen = allSearchCols.length;
+			for (i = 0; i < alen; i++) {
+				var col = allSearchCols[i];
+				objID = document.getElementById(col);
+				console.log(objID);
+				searchFields[col] = document.getElementById(col);
+			}
+			return searchFields;
+		}
 		var table = jQuery('#example').DataTable( {
+			//searchFields: getSearchFields(document),
+			searchFields: {
+				"name": document.getElementById("name"),
+				"host": document.getElementById("host"),
+				"claimedtype": document.getElementById("claimedtype")
+			},
 			ajax: {
 				//url: '../../sne/' + ((bones) ? 'bones' : 'catalog') + '.min.json',
 				url: '/../../astrocats/astrocats/supernovae/output/' + ((bones) ? 'bones' : 'catalog') + '.min.json',
@@ -979,7 +1067,7 @@ function transient_catalog($bones = False) {
 			},
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
-				{ "data": null, "type": "string", "responsivePriority": 1, "render": nameSwitcher },
+				{ "data": null, "type": "string", "responsivePriority": 1, "render": nameSwitcherName },
 				{ "data": {
 					"_": eventAliases,
 					"display": eventAliasesOnly,
@@ -1059,7 +1147,8 @@ function transient_catalog($bones = False) {
 				  }, "name": "ebv", "type": "non-empty-float", "defaultContent": "" },
 				{ "data": {
 					"display": photoLinked,
-					"_": photoValue
+					"_": photoValue,
+					"sort": photoSort
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"6%" },
 				{ "data": {
 					"display": spectraLinked,
@@ -1168,7 +1257,8 @@ function transient_catalog($bones = False) {
         } );
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex ) {
-				for ( var i = 0; i < aData.length; i++ )
+				var alen = aData.length;
+				for ( var i = 0; i < alen; i++ )
 				{
 					if ( floatColInds.indexOf(i) !== -1 ) {
 						if ( !advancedFloatFilter( aData[i], floatColValDict[i] ) ) return false;
@@ -1184,7 +1274,7 @@ function transient_catalog($bones = False) {
 			}
 		);
 		table.on( 'search.dt', function () {
-			table.rows({page:'current'}).invalidate()
+			table.rows({page:'current'}).invalidate();
 		} );
 	} );
 	</script>
@@ -1208,30 +1298,6 @@ function duplicate_table() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ ];
-		function name1Linked ( row, type, val, meta ) {
-			if (row.aliases1.length > 1) {
-				return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name1) +
-					"/' target='_blank'>" + row.name1 + "</a><span class='tooltiptext'> " + row.aliases1.map(noBreak).slice(1).join(', ') + "</span></div>";
-			} else {
-				return "<a href='https://sne.space/sne/" + nameToFilename(row.name1) + "/' target='_blank'>" + row.name1 + "</a>";
-			}
-		}
-		function name1Aliases ( row, type, val, meta ) {
-			if (!row.aliases1) return '';
-			return row.aliases1.join(', ');
-		}
-		function name2Linked ( row, type, val, meta ) {
-			if (row.aliases2.length > 1) {
-				return "<div class='tooltip'><a href='https://sne.space/sne/" + nameToFilename(row.name2) +
-					"/' target='_blank'>" + row.name2 + "</a><span class='tooltiptext'> " + row.aliases2.map(noBreak).slice(1).join(', ') + "</span></div>";
-			} else {
-				return "<a href='https://sne.space/sne/" + nameToFilename(row.name2) + "/' target='_blank'>" + row.name2 + "</a>";
-			}
-		}
-		function name2Aliases ( row, type, val, meta ) {
-			if (!row.aliases2) return '';
-			return row.aliases2.join(', ');
-		}
 		function distDegValue ( row, type, val, meta ) {
 			if (!row.distdeg) {
 				if (type === 'sort') return NaN;
@@ -1273,28 +1339,32 @@ function duplicate_table() {
 				jQuery(this).html( '' );
 			}
 			if (['check', 'google', 'aredupes', 'notdupes', 'responsive'].indexOf(classname) >= 0) return;
-			for (i = 0; i < floatSearchCols.length; i++) {
+			var fslen = floatSearchCols.length;
+			for (i = 0; i < fslen; i++) {
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
 					floatColValDict[index] = floatSearchCols[i];
 					floatColInds.push(index);
 					break;
 				}
 			}
-			for (i = 0; i < stringSearchCols.length; i++) {
+			var sslen = stringSearchCols.length;
+			for (i = 0; i < sslen; i++) {
 				if (jQuery(this).hasClass(stringSearchCols[i])) {
 					stringColValDict[index] = stringSearchCols[i];
 					stringColInds.push(index);
 					break;
 				}
 			}
-			for (i = 0; i < dateSearchCols.length; i++) {
+			var dslen = dateSearchCols.length;
+			for (i = 0; i < dslen; i++) {
 				if (jQuery(this).hasClass(dateSearchCols[i])) {
 					dateColValDict[index] = dateSearchCols[i];
 					dateColInds.push(index);
 					break;
 				}
 			}
-			for (i = 0; i < raDecSearchCols.length; i++) {
+			var rdlen = raDecSearchCols.length;
+			for (i = 0; i < rdlen; i++) {
 				if (jQuery(this).hasClass(raDecSearchCols[i])) {
 					raDecColValDict[index] = raDecSearchCols[i];
 					raDecColInds.push(index);
@@ -1310,16 +1380,8 @@ function duplicate_table() {
 			},
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
-				{ "data": {
-					"display": name1Linked,
-					"filter": name1Aliases,
-					"_": "name1"
-				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
-				{ "data": {
-					"display": name2Linked,
-					"filter": name2Aliases,
-					"_": "name2"
-				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": null, "type": "string", "responsivePriority": 1, "render": nameSwitcherName1 },
+				{ "data": null, "type": "string", "responsivePriority": 1, "render": nameSwitcherName2 },
 				{ "data": {
 					"_": "ra1"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
@@ -1423,7 +1485,8 @@ function duplicate_table() {
         } );
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex ) {
-				for ( var i = 0; i < aData.length; i++ )
+				var alen = aData.length;
+				for ( var i = 0; i < alen; i++ )
 				{
 					if ( floatColInds.indexOf(i) !== -1 ) {
 						if ( !advancedFloatFilter( aData[i], floatColValDict[i] ) ) return false;
@@ -1438,6 +1501,9 @@ function duplicate_table() {
 				return true;
 			}
 		);
+		table.on( 'search.dt', function () {
+			table.rows({page:'current'}).invalidate();
+		} );
 	} );
 	</script>
 <?php
@@ -1467,28 +1533,32 @@ function bibliography() {
 				jQuery(this).html( '' );
 			}
 			if (['check', 'responsive'].indexOf(classname) >= 0) return;
-			for (i = 0; i < floatSearchCols.length; i++) {
+			var fslen = floatSearchCols.length;
+			for (i = 0; i < fslen; i++) {
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
 					floatColValDict[index] = floatSearchCols[i];
 					floatColInds.push(index);
 					break;
 				}
 			}
-			for (i = 0; i < stringSearchCols.length; i++) {
+			var sslen = stringSearchCols.length;
+			for (i = 0; i < sslen; i++) {
 				if (jQuery(this).hasClass(stringSearchCols[i])) {
 					stringColValDict[index] = stringSearchCols[i];
 					stringColInds.push(index);
 					break;
 				}
 			}
-			for (i = 0; i < dateSearchCols.length; i++) {
+			var dslen = dateSearchCols.length;
+			for (i = 0; i < dslen; i++) {
 				if (jQuery(this).hasClass(dateSearchCols[i])) {
 					dateColValDict[index] = dateSearchCols[i];
 					dateColInds.push(index);
 					break;
 				}
 			}
-			for (i = 0; i < raDecSearchCols.length; i++) {
+			var rdlen = raDecSearchCols.length;
+			for (i = 0; i < rdlen; i++) {
 				if (jQuery(this).hasClass(raDecSearchCols[i])) {
 					raDecColValDict[index] = raDecSearchCols[i];
 					raDecColInds.push(index);
@@ -1505,11 +1575,12 @@ function bibliography() {
 			return html + "<a href='http://adsabs.harvard.edu/abs/" + row.bibcode + "'>" + row.bibcode + "</a>";
 		}
 		function eventsDropdown ( row, type, val, meta ) {
-			var html = String(row.events.length) + ' SNe: ';
-			if (row.events.length == 1) {
+			var elen = row.events.length;
+			var html = String(elen) + ' SNe: ';
+			if (elen == 1) {
 				html += "<a href='https://sne.space/sne/" + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
-			} else if (row.events.length <= 25) {
-				for (i = 0; i < row.events.length; i++) {
+			} else if (elen <= 25) {
+				for (i = 0; i < elen i++) {
 					if (i != 0) html += ', ';
 					html += "<a href='https://sne.space/sne/" + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
 				}
@@ -1518,7 +1589,7 @@ function bibliography() {
 			} else {
 				html += ('<br><select id="' + row.bibcode.replace(/\./g, '_') +
 					'" size="3>"');
-				for (i = 0; i < row.events.length; i++) {
+				for (i = 0; i < elen i++) {
 					html += '<option value="' + row.events[i] + '">' + row.events[i] + '</option>';
 				}
 				html += '</select><br><a class="dt-button" ';
@@ -1531,7 +1602,8 @@ function bibliography() {
 			var html = '';
 			console.log(row);
 			if (!row.allauthors) return '';
-			for (i = 0; i < row.allauthors.length; i++) {
+			var alen = row.allauthors.length;
+			for (i = 0; i < alen; i++) {
 				if (i > 0) html += ', ';
 				html += row.allauthors[i];
 			}
@@ -1657,7 +1729,8 @@ function bibliography() {
         } );
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex ) {
-				for ( var i = 0; i < aData.length; i++ )
+				var alen = aData.length;
+				for ( var i = 0; i < alen; i++ )
 				{
 					if ( floatColInds.indexOf(i) !== -1 ) {
 						if ( !advancedFloatFilter( aData[i], floatColValDict[i] ) ) return false;
@@ -2094,7 +2167,7 @@ function conflict_table() {
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": {
-					"display": nameLinked,
+					"display": nameLinkedName,
 					"filter": eventAliases,
 					"_": "name"
 				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
@@ -2312,7 +2385,7 @@ function errata() {
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
 				{ "data": {
-					"display": nameLinked,
+					"display": nameLinkedName,
 					"filter": eventAliases,
 					"_": "name"
 				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
