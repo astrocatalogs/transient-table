@@ -9,9 +9,19 @@
  * License: GPL2
  */
 
+$tt = explode("\n", file_get_contents(__DIR__ . '/tt.dat'));
+$stem = trim($tt[0]);
+$modu = trim($tt[1]);
+$subd = trim($tt[2]);
+
 function datatables_functions() {
+	global $stem, $modu, $subd;
 ?>
 	<script>
+	var stem = '<?php echo $stem;?>';
+	var modu = '<?php echo $modu;?>';
+	var subd = '<?php echo $subd;?>';
+	var urlstem = 'https://' + subd + '.space/' + stem + '/'; 
 	function noBreak (str) {
 		return str.replace(/ /g, "&nbsp;").replace(/-/g, "&#x2011;");
 	}
@@ -63,7 +73,7 @@ function datatables_functions() {
 		var ddl = document.getElementById( id );
 		var selectedVal = ddl.options[ddl.selectedIndex].value;
 
-		window.open('https://tde.space/tde/' + encodeURIComponent(selectedVal) + '/', '_blank');
+		window.open(urlstem + encodeURIComponent(selectedVal) + '/', '_blank');
 	}
 	function nameLinkedName ( row, type, val, meta ) {
 		return nameLinked ( row, type, val, meta, 'name', 'alias' );
@@ -79,10 +89,10 @@ function datatables_functions() {
 		if (aliasfield === undefined) aliasfield = 'alias';
 		if (row[aliasfield].length > 1) {
 			var aliases = getAliasesOnly(row, aliasfield);
-			return "<div class='tooltip'><a href='https://tde.space/tde/" + nameToFilename(row[namefield]) +
+			return "<div class='tooltip'><a href='" + urlstem + nameToFilename(row[namefield]) +
 				"/' target='_blank'>" + noBreak(row[namefield]) + "</a><span class='tooltiptext'> " + aliases.map(noBreak).join(', ') + "</span></div>";
 		} else {
-			return "<a href='https://tde.space/tde/" + nameToFilename(row[namefield]) + "/' target='_blank'>" + noBreak(row[namefield]) + "</a>";
+			return "<a href='" + urlstem + nameToFilename(row[namefield]) + "/' target='_blank'>" + noBreak(row[namefield]) + "</a>";
 		}
 	}
 	function nameSwitcherName ( data, type, row, meta ) {
@@ -128,7 +138,7 @@ function datatables_functions() {
 							}
 							otheraliases.push(noBreak(aliases[a]));
 						}
-						return "<div class='tooltip'><a href='https://tde.space/tde/" + nameToFilename(row[namefield]) +
+						return "<div class='tooltip'><a href='" + urlstem + nameToFilename(row[namefield]) +
 							"/' target='_blank'>" + primaryname + "</a><span class='tooltiptext'> " + otheraliases.join(', ') + "</span></div>";
 					}
 				}
@@ -144,11 +154,11 @@ function datatables_functions() {
 	}
 	function hostLinked ( row, type, val, meta ) {
 		var host = "<a class='" + (('kind' in row.host[0] && row.host[0]['kind'] == 'cluster') ? "hci" : "hhi") +
-			"' href='https://tde.space/tde/" + nameToFilename(row.name) + "/' target='_blank'></a>&nbsp;";
+			"' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a>&nbsp;";
 		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0]['value'] +
 			"&submit=SIMBAD+search' target='_blank'>" + someBreak(row.host[0]['value']) + "</a>"; 
 		var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
-			"style='background-image:url(https://tde.space/tde/" + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
+			"style='background-image:url(" + urlstem + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
 		var hlen = row.host.length;
 		if (hlen > 1) {
 			var hostAliases = '';
@@ -173,7 +183,7 @@ function datatables_functions() {
 			if (hlen > 1) {
 				var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
 				var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
-					"style=background-image:url(https://tde.space/tde/" + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
+					"style=background-image:url(" + urlstem + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
 				var idObj = meta.settings.oInit.searchFields['host'];
 				var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
 				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
@@ -207,7 +217,7 @@ function datatables_functions() {
 							otheraliases.push(noBreak(aliases[a]));
 						}
 						var host = "<a class='" + ((primarykind == 'cluster') ? "hci" : "hhi") +
-							"' href='https://tde.space/tde/" + nameToFilename(row.name) + "/' target='_blank'></a> ";
+							"' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a> ";
 						return "<div class='tooltip'>" + host + mainHost.replace(/%s/g, primaryname) + "<span class='tooltiptext'> " +
 							hostImg + 'AKA: ' + otheraliases.join(', ') + "</span></div>";
 					}
@@ -731,7 +741,8 @@ function datatables_functions() {
 }
 
 function transient_catalog($bones = False) {
-	readfile("/var/www/html/tde/astrocats/astrocats/tidaldisruptions/html/table-templates/catalog.html");
+	global $stem, $modu, $subd;
+	readfile("/var/www/html/" . $stem . "/astrocats/astrocats/" . $modu . "/html/table-templates/catalog.html");
 ?>
 	<script>
 	var bones = <?php echo json_encode($bones); ?>;
@@ -765,10 +776,10 @@ function transient_catalog($bones = False) {
 			if (!row.photolink) return '';
 			if (row.photolink.indexOf(',') !== -1) {
 				var photosplit = row.photolink.split(',');
-				return "<div class='tooltip'><a class='lci' href='https://tde.space/tde/" + nameToFilename(row.name) +
+				return "<div class='tooltip'><a class='lci' href='" + urlstem + nameToFilename(row.name) +
 					"/' target='_blank'></a> " + photosplit[0] + "<span class='tooltiptext'> Detected epochs: " + photosplit[1] + " – " + photosplit[2] + "</span></div>"; 
 			}
-			return "<a class='lci' href='https://tde.space/tde/" + nameToFilename(row.name) + "/' target='_blank'></a> " + row.photolink; 
+			return "<a class='lci' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a> " + row.photolink; 
 		}
 		function photoSort ( row, type, val ) {
 			if (!row.photolink) return NaN;
@@ -782,10 +793,10 @@ function transient_catalog($bones = False) {
 			if (!row.spectralink) return '';
 			if (row.spectralink.indexOf(',') !== -1) {
 				var spectrasplit = row.spectralink.split(',');
-				return "<div class='tooltip'><a class='sci' href='https://tde.space/tde/" + nameToFilename(row.name) +
+				return "<div class='tooltip'><a class='sci' href='" + urlstem + nameToFilename(row.name) +
 					"/' target='_blank'></a> " + spectrasplit[0] + "<span class='tooltiptext'> Epochs: " + spectrasplit[1] + " – " + spectrasplit[2] + "</span></div>"; 
 			}
-			return "<a class='sci' href='https://tde.space/tde/" + nameToFilename(row.name) + "/' target='_blank'></a> " + row.spectralink; 
+			return "<a class='sci' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a> " + row.spectralink; 
 		}
 		function spectraValue ( row, type, val, meta ) {
 			if (!row.spectralink) {
@@ -798,11 +809,11 @@ function transient_catalog($bones = False) {
 		}
 		function radioLinked ( row, type, val, meta ) {
 			if (!row.radiolink) return '';
-			return "<a class='rci' href='https://tde.space/tde/" + nameToFilename(row.name) + "/' target='_blank'></a> " + row.radiolink; 
+			return "<a class='rci' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a> " + row.radiolink; 
 		}
 		function xrayLinked ( row, type, val, meta ) {
 			if (!row.xraylink) return '';
-			return "<a class='xci' href='https://tde.space/tde/" + nameToFilename(row.name) + "/' target='_blank'></a> " + row.xraylink; 
+			return "<a class='xci' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a> " + row.xraylink; 
 		}
 		function hostoffsetangValue ( row, type, val, meta ) {
 			if (!row.hostoffsetang) {
@@ -968,9 +979,9 @@ function transient_catalog($bones = False) {
 		}
 		function dataLinked ( row, type, val, meta ) {
 			var fileeventname = nameToFilename(row.name);
-			var datalink = "<a class='dci' title='Download Data' href='https://tde.space/tde/" + fileeventname + ".json' download></a>"
+			var datalink = "<a class='dci' title='Download Data' href='" + urlstem + fileeventname + ".json' download></a>"
 			if (row.download == 'e') {
-				return (datalink + "<a class='eci' title='Edit Data' href='https://github.com/astrocatalogs/tde-internal/edit/master/"
+				return (datalink + "<a class='eci' title='Edit Data' href='https://github.com/astrocatalogs/" + stem + "-internal/edit/master/"
 					+ fileeventname + ".json' target='_blank'></a>")
 			} else {
 				return (datalink + "<a class='eci' title='Edit Data' onclick='eSN(\"" + row.name + "\",\"" + fileeventname + "\")'></a>") 
@@ -988,7 +999,7 @@ function transient_catalog($bones = False) {
 			}
 			if (rlen >= 5) {
 				var fileeventname = nameToFilename(row.name);
-				refstr += "<br><a href='tde/" + fileeventname + "/'>(See full list)</a>";
+				refstr += "<br><a href='" + stem + "/" + fileeventname + "/'>(See full list)</a>";
 			}
 			return refstr;
 		}
@@ -1058,8 +1069,7 @@ function transient_catalog($bones = False) {
 				"claimedtype": document.getElementById("claimedtype")
 			},
 			ajax: {
-				//url: '../../tde/' + ((bones) ? 'bones' : 'catalog') + '.min.json',
-				url: '/../../astrocats/astrocats/tidaldisruptions/output/' + ((bones) ? 'bones' : 'catalog') + '.min.json',
+				url: '/../../astrocats/astrocats/' + modu + '/output/' + ((bones) ? 'bones' : 'catalog') + '.min.json',
 				dataSrc: ''
 			},
 			"language": {
@@ -1282,7 +1292,7 @@ function transient_catalog($bones = False) {
 }
 
 function duplicate_table() {
-	readfile("/root/astrocats/astrocats/tidaldisruptions/html/table-templates/duplicates.html");
+	readfile("/root/astrocats/astrocats/" . $modu . "/html/table-templates/duplicates.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -1375,7 +1385,7 @@ function duplicate_table() {
         } );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '/../../astrocats/astrocats/tidaldisruptions/output/dupes.json',
+				url: '/../../astrocats/astrocats/' + modu + '/output/dupes.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -1510,7 +1520,7 @@ function duplicate_table() {
 }
 
 function bibliography() {
-	readfile("/root/astrocats/astrocats/tidaldisruptions/html/table-templates/biblio.html");
+	readfile("/root/astrocats/astrocats/" . $modu . "/html/table-templates/biblio.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -1578,11 +1588,11 @@ function bibliography() {
 			var elen = row.events.length;
 			var html = String(elen) + ' SNe: ';
 			if (elen == 1) {
-				html += "<a href='https://tde.space/tde/" + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
+				html += "<a href='" + urlstem + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
 			} else if (elen <= 25) {
 				for (i = 0; i < elen i++) {
 					if (i != 0) html += ', ';
-					html += "<a href='https://tde.space/tde/" + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
+					html += "<a href='" + urlstem + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
 				}
 				html += '</select>';
 				return html;
@@ -1620,7 +1630,7 @@ function bibliography() {
 		}
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '/../../astrocats/astrocats/tidaldisruptions/output/biblio.json',
+				url: '/../../astrocats/astrocats/' + modu + '/output/biblio.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -1751,7 +1761,7 @@ function bibliography() {
 }
 
 function hosts() {
-	readfile("/root/astrocats/astrocats/tidaldisruptions/html/table-templates/hosts.html");
+	readfile("/root/astrocats/astrocats/" . $modu . "/html/table-templates/hosts.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -1887,8 +1897,8 @@ function hosts() {
 			for (var i = 0; i < row.events.length; i++) {
 				if (!row.events[i].img) continue;
 				cnt++;
-				text = (text + "<a href='https://tde.space/tde/" + nameToFilename(row.events[i].name) + "/' target='_blank'>" +
-					"<img class='hostimg' width='" + imgwidth + "' height='" + imgwidth + "' src='https://tde.space/tde/" +
+				text = (text + "<a href='" + urlstem + nameToFilename(row.events[i].name) + "/' target='_blank'>" +
+					"<img class='hostimg' width='" + imgwidth + "' height='" + imgwidth + "' src='" + urlstem +
 					nameToFilename(row.events[i].name) + "-host.jpg' style='margin-right:" +
 					padding + "px;'></a>");
 			}
@@ -1898,11 +1908,11 @@ function hosts() {
 		function eventsDropdown ( row, type, val, meta ) {
 			var html = String(row.events.length) + ' SNe: ';
 			if (row.events.length == 1) {
-				html += "<a href='https://tde.space/tde/" + row.events[0].name + "/' target='_blank'>" + row.events[0].name + "</a>";
+				html += "<a href='" + urlstem + row.events[0].name + "/' target='_blank'>" + row.events[0].name + "</a>";
 			} else if (row.events.length <= 20) {
 				for (i = 0; i < row.events.length; i++) {
 					if (i != 0) html += ', ';
-					html += "<a href='https://tde.space/tde/" + row.events[i].name + "/' target='_blank'>" + row.events[i].name + "</a>";
+					html += "<a href='" + urlstem + row.events[i].name + "/' target='_blank'>" + row.events[i].name + "</a>";
 				}
 				html += '</select>';
 				return html;
@@ -1929,7 +1939,7 @@ function hosts() {
 		}
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '/../../astrocats/astrocats/tidaldisruptions/output/hosts.min.json',
+				url: '/../../astrocats/astrocats/' + modu + '/output/hosts.min.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -2080,7 +2090,7 @@ function hosts() {
 }
 
 function conflict_table() {
-	readfile("/root/astrocats/astrocats/tidaldisruptions/html/table-templates/conflicts.html");
+	readfile("/root/astrocats/astrocats/" . $modu . "/html/table-templates/conflicts.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -2161,7 +2171,7 @@ function conflict_table() {
         } );
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '/../../astrocats/astrocats/tidaldisruptions/output/conflicts.json',
+				url: '/../../astrocats/astrocats/' + modu + '/output/conflicts.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -2275,7 +2285,7 @@ function conflict_table() {
 }
 
 function errata() {
-	readfile("/root/astrocats/astrocats/tidaldisruptions/html/table-templates/errata.html");
+	readfile("/root/astrocats/astrocats/" + $modu + "/html/table-templates/errata.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -2338,11 +2348,11 @@ function errata() {
 		function eventsDropdown ( row, type, val, meta ) {
 			var html = String(row.events.length) + ' SNe: ';
 			if (row.events.length == 1) {
-				html += "<a href='https://tde.space/tde/" + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
+				html += "<a href='" + urlstem + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
 			} else if (row.events.length <= 30) {
 				for (i = 0; i < row.events.length; i++) {
 					if (i != 0) html += ', ';
-					html += "<a href='https://tde.space/tde/" + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
+					html += "<a href='" + urlstem + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
 				}
 				html += '</select>';
 				return html;
@@ -2379,7 +2389,7 @@ function errata() {
 		}
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '/../../astrocats/astrocats/tidaldisruptions/output/errata.json',
+				url: '/../../astrocats/astrocats/' + modu + '/output/errata.json',
 				dataSrc: ''
 			},
 			columns: [
@@ -2491,8 +2501,10 @@ function errata() {
 }
 
 function transient_table_scripts() {
-	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'find-conflicts', 'errata', 'host-galaxies', 'tidaldisruption-graveyard')) || is_search()) {
+	global $stem, $modu, $subd;
+	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'find-conflicts', 'errata', 'host-galaxies', $modu . '-graveyard')) || is_search()) {
 		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__), array() );
+		wp_enqueue_style( 'transient-table-' . $stem . plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array() );
 		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('transient-table') );
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__), array() );

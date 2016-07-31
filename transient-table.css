@@ -263,7 +263,6 @@ table.dataTable tr.selected td.select-checkbox:after {
 }
 
 .dataTables_wrapper .dataTables_paginate {
-	//padding-top: 0 !important;
 	margin-bottom: 8px;
 }
 
