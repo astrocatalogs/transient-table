@@ -13,14 +13,24 @@ $tt = explode("\n", file_get_contents(__DIR__ . '/tt.dat'));
 $stem = trim($tt[0]);
 $modu = trim($tt[1]);
 $subd = trim($tt[2]);
+$invi = '"' . implode('","', explode(",", trim($tt[3]))) . '"';
+$nowr = '"' . implode('","', explode(",", trim($tt[4]))) . '"';
+$nwnm = '"' . implode('","', explode(",", trim($tt[5]))) . '"';
+$revo = '"' . implode('","', explode(",", trim($tt[6]))) . '"';
+$ocol = intval(trim($tt[7]));
 
 function datatables_functions() {
-	global $stem, $modu, $subd;
+	global $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol;
 ?>
 	<script>
 	var stem = '<?php echo $stem;?>';
 	var modu = '<?php echo $modu;?>';
 	var subd = '<?php echo $subd;?>';
+	var invi = [<?php echo $invi;?>];
+	var nowr = [<?php echo $nowr;?>];
+	var nwnm = [<?php echo $nwnm;?>];
+	var revo = [<?php echo $revo;?>];
+	var ocol = <?php echo $ocol;?>;
 	var urlstem = 'https://' + subd + '.space/' + stem + '/'; 
 	function noBreak (str) {
 		return str.replace(/ /g, "&nbsp;").replace(/-/g, "&#x2011;");
@@ -741,7 +751,7 @@ function datatables_functions() {
 }
 
 function transient_catalog($bones = False) {
-	global $stem, $modu, $subd;
+	global $stem, $modu;
 	readfile("/var/www/html/" . $stem . "/astrocats/astrocats/" . $modu . "/html/table-templates/catalog.html");
 ?>
 	<script>
@@ -1222,11 +1232,10 @@ function transient_catalog($bones = False) {
                 orderable: false,
                 className: 'select-checkbox'
 			}, {
-                targets: [ 'alias', 'maxdate', 'velocity', 'maxabsmag', 'hostra', 'hostdec', 'hostoffsetang', 'hostoffsetdist',
-					'references', 'instruments', 'ebv', 'lumdist', 'xraylink' ],
+                targets: invi,
 				visible: false
 			}, {
-				targets: [ 'download', 'spectralink', 'photolink', 'radiolink' ],
+				targets: nwnm,
 				className: 'nowrap not-mobile'
 			}, {
 				className: 'control',
@@ -1237,17 +1246,17 @@ function transient_catalog($bones = False) {
 				targets: [ 'download' ],
 				orderable: false
 			}, {
-				targets: [ 'photolink', 'spectralink', 'radiolink', 'xraylink' ],
+				targets: revo,
 				orderSequence: [ 'desc', 'asc' ]
 			}, {
-				targets: [ 'maxdate', 'discoverdate', 'xraylink' ],
+				targets: nowr,
 				className: 'nowrap'
 			} ],
             select: {
                 style:    'os',
                 selector: 'td:first-child'
             },
-            order: [[ 20, "desc" ]]
+            order: [[ ocol, "desc" ]]
 		} );
         table.columns().every( function ( index ) {
             var that = this;
@@ -1292,6 +1301,7 @@ function transient_catalog($bones = False) {
 }
 
 function duplicate_table() {
+	global $modu;
 	readfile("/root/astrocats/astrocats/" . $modu . "/html/table-templates/duplicates.html");
 ?>
 	<script>
@@ -1520,6 +1530,7 @@ function duplicate_table() {
 }
 
 function bibliography() {
+	global $modu;
 	readfile("/root/astrocats/astrocats/" . $modu . "/html/table-templates/biblio.html");
 ?>
 	<script>
@@ -1761,6 +1772,7 @@ function bibliography() {
 }
 
 function hosts() {
+	global $modu;
 	readfile("/root/astrocats/astrocats/" . $modu . "/html/table-templates/hosts.html");
 ?>
 	<script>
@@ -2090,6 +2102,7 @@ function hosts() {
 }
 
 function conflict_table() {
+	global $modu;
 	readfile("/root/astrocats/astrocats/" . $modu . "/html/table-templates/conflicts.html");
 ?>
 	<script>
@@ -2285,6 +2298,7 @@ function conflict_table() {
 }
 
 function errata() {
+	global $modu;
 	readfile("/root/astrocats/astrocats/" + $modu + "/html/table-templates/errata.html");
 ?>
 	<script>
