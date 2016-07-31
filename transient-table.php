@@ -1580,7 +1580,7 @@ function bibliography() {
 			if (elen == 1) {
 				html += "<a href='https://sne.space/sne/" + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
 			} else if (elen <= 25) {
-				for (i = 0; i < elen i++) {
+				for (i = 0; i < elen; i++) {
 					if (i != 0) html += ', ';
 					html += "<a href='https://sne.space/sne/" + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
 				}
@@ -1589,7 +1589,7 @@ function bibliography() {
 			} else {
 				html += ('<br><select id="' + row.bibcode.replace(/\./g, '_') +
 					'" size="3>"');
-				for (i = 0; i < elen i++) {
+				for (i = 0; i < elen; i++) {
 					html += '<option value="' + row.events[i] + '">' + row.events[i] + '</option>';
 				}
 				html += '</select><br><a class="dt-button" ';
