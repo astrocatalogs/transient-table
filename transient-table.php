@@ -1323,21 +1323,21 @@ function duplicate_table() {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			return (parseFloat(row.distdeg)*3600.).toFixed(5);
+			return parseFloat((parseFloat(row.distdeg)*3600.).toFixed(5));
 		}
 		function maxDiffYearValue ( row, type, val, meta ) {
 			if (!row.maxdiffyear) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			return (parseFloat(row.maxdiffyear)*365.25).toFixed(3);
+			return parseFloat((parseFloat(row.maxdiffyear)*365.25).toFixed(3));
 		}
 		function discDiffYearValue ( row, type, val, meta ) {
 			if (!row.discdiffyear) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			return (parseFloat(row.discdiffyear)*365.25).toFixed(3);
+			return parseFloat((parseFloat(row.discdiffyear)*365.25).toFixed(3));
 		}
 		function performGoogleSearch ( row, type, val, meta ) {
 			var namearr = row.aliases1.concat(row.aliases2);
