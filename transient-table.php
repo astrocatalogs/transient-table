@@ -23,6 +23,7 @@ function datatables_functions() {
 	global $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol;
 ?>
 	<script>
+	var searchFields;
 	var stem = '<?php echo $stem;?>';
 	var modu = '<?php echo $modu;?>';
 	var subd = '<?php echo $subd;?>';
@@ -32,6 +33,17 @@ function datatables_functions() {
 	var revo = [<?php echo $revo;?>];
 	var ocol = <?php echo $ocol;?>;
 	var urlstem = 'https://' + subd + '.space/' + stem + '/'; 
+	function getSearchFields(allSearchCols) {
+		var sf = {};
+		var alen = allSearchCols.length;
+		sf['search'] = jQuery('.dataTables_filter input');
+		for (i = 0; i < alen; i++) {
+			var col = allSearchCols[i];
+			objID = document.getElementById(col);
+			sf[col] = document.getElementById(col);
+		}
+		return sf;
+	}
 	function noBreak (str) {
 		return str.replace(/ /g, "&nbsp;").replace(/-/g, "&#x2011;");
 	}
@@ -119,9 +131,8 @@ function datatables_functions() {
 		if (aliasfield === undefined) aliasfield = 'alias';
 		if ( (type === 'display' || type === 'sort') ) {
 			if ( row[aliasfield].length > 1 ) {
-				//var idObj = meta.settings.oInit.searchFields[field];
-				var idObj = document.getElementById(namefield);
-				var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
+				var idObj = searchFields[namefield];
+				var filterTxt = searchFields['search'].val().toUpperCase().replace(/"/g, '');
 				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
 				var txts = [filterTxt, idObjTxt];
 				var tlen = txts.length;
@@ -134,7 +145,6 @@ function datatables_functions() {
 						for (var a = 0; a < alen; a++) {
 							if (aliases[a].toUpperCase().indexOf(txt) !== -1) {
 								primaryname = aliases[a];
-								console.log(primaryname);
 								break;
 							}
 						}
@@ -194,8 +204,8 @@ function datatables_functions() {
 				var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
 				var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
 					"style=background-image:url(" + urlstem + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
-				var idObj = meta.settings.oInit.searchFields['host'];
-				var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
+				var idObj = searchFields['host'];
+				var filterTxt = searchFields['search'].val().toUpperCase().replace(/"/g, '');
 				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
 				var txts = [filterTxt, idObjTxt];
 				var tlen = txts.length;
@@ -269,8 +279,8 @@ function datatables_functions() {
 		//return row.claimedtype[0]['value'];
 		if ( (type === 'display' || type === 'sort') ) {
 			if ( clen > 1 ) {
-				var idObj = meta.settings.oInit.searchFields['claimedtype'];
-				var filterTxt = jQuery('.dataTables_filter input').val().toUpperCase().replace(/"/g, '');
+				var idObj = searchFields['claimedtype'];
+				var filterTxt = searchFields['search'].val().toUpperCase().replace(/"/g, '');
 				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
 				var txts = [filterTxt, idObjTxt];
 				var tlen = txts.length;
@@ -770,7 +780,7 @@ function transient_catalog($bones = False) {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
-		var allSearchCols = floatSearchCols + stringSearchCols + raDecSearchCols + dateSearchCols;
+		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
 		function ebvValue ( row, type, val, meta ) {
 			if (!row.ebv) {
 				if (type === 'sort') return NaN;
@@ -990,11 +1000,11 @@ function transient_catalog($bones = False) {
 		function dataLinked ( row, type, val, meta ) {
 			var fileeventname = nameToFilename(row.name);
 			var datalink = "<a class='dci' title='Download Data' href='" + urlstem + fileeventname + ".json' download></a>"
-			if (row.download == 'e') {
+			if (!row.download || row.download != 'e') {
+				return (datalink + "<a class='eci' title='Edit Data' onclick='eSN(\"" + row.name + "\",\"" + fileeventname + "\")'></a>") 
+			} else {
 				return (datalink + "<a class='eci' title='Edit Data' href='https://github.com/astrocatalogs/" + stem + "-internal/edit/master/"
 					+ fileeventname + ".json' target='_blank'></a>")
-			} else {
-				return (datalink + "<a class='eci' title='Edit Data' onclick='eSN(\"" + row.name + "\",\"" + fileeventname + "\")'></a>") 
 			}
 		}
 		function refLinked ( row, type, val, meta ) {
@@ -1060,24 +1070,7 @@ function transient_catalog($bones = False) {
 			}
             jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
-		function getSearchFields(document) {
-			var searchFields = {};
-			var alen = allSearchCols.length;
-			for (i = 0; i < alen; i++) {
-				var col = allSearchCols[i];
-				objID = document.getElementById(col);
-				console.log(objID);
-				searchFields[col] = document.getElementById(col);
-			}
-			return searchFields;
-		}
 		var table = jQuery('#example').DataTable( {
-			//searchFields: getSearchFields(document),
-			searchFields: {
-				"name": document.getElementById("name"),
-				"host": document.getElementById("host"),
-				"claimedtype": document.getElementById("claimedtype")
-			},
 			ajax: {
 				url: '/../../astrocats/astrocats/' + modu + '/output/' + ((bones) ? 'bones' : 'catalog') + '.min.json',
 				dataSrc: ''
@@ -1293,8 +1286,10 @@ function transient_catalog($bones = False) {
 			}
 		);
 		table.on( 'search.dt', function () {
+			searchFields = getSearchFields(allSearchCols);
 			table.rows({page:'current'}).invalidate();
 		} );
+		searchFields = getSearchFields(allSearchCols);
 	} );
 	</script>
 <?php
@@ -1318,6 +1313,7 @@ function duplicate_table() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ ];
+		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
 		function distDegValue ( row, type, val, meta ) {
 			if (!row.distdeg) {
 				if (type === 'sort') return NaN;
@@ -1522,8 +1518,10 @@ function duplicate_table() {
 			}
 		);
 		table.on( 'search.dt', function () {
+			searchFields = getSearchFields(allSearchCols);
 			table.rows({page:'current'}).invalidate();
 		} );
+		searchFields = getSearchFields(allSearchCols);
 	} );
 	</script>
 <?php
@@ -1547,6 +1545,7 @@ function bibliography() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ ];
+		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
@@ -1621,7 +1620,6 @@ function bibliography() {
 		}
 		function allAuthors ( row, type, val, meta ) {
 			var html = '';
-			console.log(row);
 			if (!row.allauthors) return '';
 			var alen = row.allauthors.length;
 			for (i = 0; i < alen; i++) {
@@ -1771,6 +1769,239 @@ function bibliography() {
 <?php
 }
 
+function sentinel() {
+	global $modu;
+	readfile("/root/astrocats/astrocats/" . $modu . "/html/table-templates/sentinel.html");
+?>
+	<script>
+	jQuery(document).ready(function() {
+		var floatColValDict = {};
+		var floatColInds = [];
+		var floatSearchCols = [];
+		var stringColValDict = {};
+		var stringColInds = [];
+		var stringSearchCols = ['bibcode', 'events'];
+		var raDecColValDict = {};
+		var raDecColInds = [];
+		var raDecSearchCols = [ ];
+		var dateColValDict = {};
+		var dateColInds = [];
+		var dateSearchCols = [ ];
+		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
+        jQuery('#example tfoot th').each( function ( index ) {
+			var title = jQuery(this).text();
+			var classname = jQuery(this).attr('class').split(' ')[0];
+			if (['check', 'responsive'].indexOf(classname) >= 0) {
+				jQuery(this).html( '' );
+			}
+			if (['check', 'responsive'].indexOf(classname) >= 0) return;
+			var fslen = floatSearchCols.length;
+			for (i = 0; i < fslen; i++) {
+				if (jQuery(this).hasClass(floatSearchCols[i])) {
+					floatColValDict[index] = floatSearchCols[i];
+					floatColInds.push(index);
+					break;
+				}
+			}
+			var sslen = stringSearchCols.length;
+			for (i = 0; i < sslen; i++) {
+				if (jQuery(this).hasClass(stringSearchCols[i])) {
+					stringColValDict[index] = stringSearchCols[i];
+					stringColInds.push(index);
+					break;
+				}
+			}
+			var dslen = dateSearchCols.length;
+			for (i = 0; i < dslen; i++) {
+				if (jQuery(this).hasClass(dateSearchCols[i])) {
+					dateColValDict[index] = dateSearchCols[i];
+					dateColInds.push(index);
+					break;
+				}
+			}
+			var rdlen = raDecSearchCols.length;
+			for (i = 0; i < rdlen; i++) {
+				if (jQuery(this).hasClass(raDecSearchCols[i])) {
+					raDecColValDict[index] = raDecSearchCols[i];
+					raDecColInds.push(index);
+					break;
+				}
+			}
+            jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
+        } );
+		function bibcodeLinked ( row, type, val, meta ) {
+			var html = '';
+			if (row.authors) {
+				html += row.authors + '<br>';
+			}
+			return html + "<a href='http://adsabs.harvard.edu/abs/" + row.bibcode + "'>" + row.bibcode + "</a>";
+		}
+		function eventsDropdown ( row, type, val, meta ) {
+			var elen = row.events.length;
+			var html = String(elen) + ' SNe: ';
+			if (elen == 1) {
+				html += "<a href='" + urlstem + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
+			} else if (elen <= 25) {
+				for (i = 0; i < elen; i++) {
+					if (i != 0) html += ', ';
+					html += "<a href='" + urlstem + row.events[i] + "/' target='_blank'>" + row.events[i] + "</a>";
+				}
+				html += '</select>';
+				return html;
+			} else {
+				html += ('<br><select id="' + row.bibcode.replace(/\./g, '_') +
+					'" size="3>"');
+				for (i = 0; i < elen; i++) {
+					html += '<option value="' + row.events[i] + '">' + row.events[i] + '</option>';
+				}
+				html += '</select><br><a class="dt-button" ';
+				html += 'onclick="goToEvent(\'' + row.bibcode.replace(/\./g, '_') + '\');"><span>Go to selected SN</span></a>';
+				return html;
+			} 
+			return html;
+		}
+		function allAuthors ( row, type, val, meta ) {
+			var html = '';
+			if (!row.allauthors) return '';
+			var alen = row.allauthors.length;
+			for (i = 0; i < alen; i++) {
+				if (i > 0) html += ', ';
+				html += row.allauthors[i];
+			}
+			return html;
+		}
+		function eventsDropdownType ( row, type, val, meta ) {
+			if (type == "sort") {
+				return "num";
+			}
+			return "string";
+		}
+		function eventsCount ( row, type, val, meta ) {
+			return row.events.length;
+		}
+		var table = jQuery('#example').DataTable( {
+			ajax: {
+				url: '/../../astrocats/astrocats/' + modu + '/output/sentinel.json',
+				dataSrc: ''
+			},
+			columns: [
+				{ "defaultContent": "", "responsivePriority": 6 },
+				{ "data": {
+					"display": bibcodeLinked,
+					"_": "bibcode"
+				  }, "type": "string", "defaultContent": "", "responsivePriority": 1 },
+				{ "data": {
+					"name": "firstauthor",
+					"_": "allauthors.0"
+				  }, "type": "string", "defaultContent": "" },
+				{ "data": {
+					"_": "allauthors[; ]"
+				  }, "type": "string", "width": "40%", "defaultContent": "" },
+				{ "data": {
+					"display": eventsDropdown,
+					"sort": eventsCount,
+					"_": "events[, ]"
+				  }, "type": eventsDropdownType, "defaultContent": "", "responsivePriority": 2 },
+				{ "defaultContent": "" },
+			],
+            dom: 'Bflprtip',
+            //colReorder: true,
+			orderMulti: false,
+            pagingType: 'simple_numbers',
+            pageLength: 50,
+			searchDelay: 400,
+			responsive: {
+				details: {
+					type: 'column',
+					target: -1
+				}
+			},
+            select: true,
+            lengthMenu: [ [10, 50, 250], [10, 50, 250] ],
+            deferRender: true,
+            autoWidth: false,
+            buttons: [
+                {
+                    action: function ( e, dt, button, config ) {
+                        table.rows( { filter: 'applied' } ).select();
+                    },
+                    text: 'Select all'
+                },
+                'selectNone',
+                {
+                    extend: 'colvis',
+                    columns: ':not(:first-child):not(:last-child)'
+                },
+                {
+                    extend: 'csv',
+                    text: 'Export selected to CSV',
+                    exportOptions: {
+                        modifier: { selected: true },
+                        columns: ':visible:not(:first-child):not(:last-child)',
+						orthogonal: 'export'
+                    }
+				}
+            ],
+            columnDefs: [ {
+                targets: 0,
+                orderable: false,
+                className: 'select-checkbox'
+			}, {
+                targets: [ ],
+				visible: false
+			}, {
+				targets: [ 'events' ],
+				orderSequence: [ 'desc', 'asc' ]
+			}, {
+				className: 'control',
+				orderable: false,
+				width: "2%",
+				targets: -1
+			} ],
+            select: {
+                style:    'os',
+                selector: 'td:first-child'
+            },
+            order: [[ 4, "desc" ]]
+		} );
+        table.columns().every( function ( index ) {
+            var that = this;
+
+            jQuery( 'input', that.footer() ).on( 'input', function () {
+				if (( floatColInds.indexOf(index) === -1 ) &&
+				    ( stringColInds.indexOf(index) === -1 ) &&
+					( dateColInds.indexOf(index) === -1 ) &&
+					( raDecColInds.indexOf(index) === -1 ) ) {
+					if ( that.search() !== this.value ) {
+						that.search( this.value );
+					}
+				}
+				that.draw();
+            } );
+        } );
+		jQuery.fn.dataTable.ext.search.push(
+			function( oSettings, aData, iDataIndex ) {
+				var alen = aData.length;
+				for ( var i = 0; i < alen; i++ )
+				{
+					if ( floatColInds.indexOf(i) !== -1 ) {
+						if ( !advancedFloatFilter( aData[i], floatColValDict[i] ) ) return false;
+					} else if ( stringColInds.indexOf(i) !== -1 ) {
+						if ( !advancedStringFilter( aData[i], stringColValDict[i] ) ) return false;
+					} else if ( dateColInds.indexOf(i) !== -1 ) {
+						if ( !advancedDateFilter( aData[i], dateColValDict[i] ) ) return false;
+					} else if ( raDecColInds.indexOf(i) !== -1 ) {
+						if ( !advancedRaDecFilter( aData[i], raDecColValDict[i] ) ) return false;
+					}
+				}
+				return true;
+			}
+		);
+	} );
+	</script>
+<?php
+}
+
 function hosts() {
 	global $modu;
 	readfile("/root/astrocats/astrocats/" . $modu . "/html/table-templates/hosts.html");
@@ -1789,6 +2020,7 @@ function hosts() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ ];
+		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
@@ -2119,6 +2351,7 @@ function conflict_table() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [];
+		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
 		function actionButtons ( row, type, val, meta ) {
 			var html = '';
 			var quantityStr = '';
@@ -2299,7 +2532,7 @@ function conflict_table() {
 
 function errata() {
 	global $modu;
-	readfile("/root/astrocats/astrocats/" + $modu + "/html/table-templates/errata.html");
+	readfile("/root/astrocats/astrocats/" . $modu . "/html/table-templates/errata.html");
 ?>
 	<script>
 	jQuery(document).ready(function() {
@@ -2315,6 +2548,7 @@ function errata() {
 		var dateColValDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ ];
+		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
@@ -2384,7 +2618,6 @@ function errata() {
 		}
 		function allAuthors ( row, type, val, meta ) {
 			var html = '';
-			console.log(row);
 			if (!row.allauthors) return '';
 			for (i = 0; i < row.allauthors.length; i++) {
 				if (i > 0) html += ', ';
@@ -2516,7 +2749,7 @@ function errata() {
 
 function transient_table_scripts() {
 	global $stem, $modu, $subd;
-	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'find-conflicts', 'errata', 'host-galaxies', 'supernova-graveyard')) || is_search()) {
+	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'supernova-graveyard')) || is_search()) {
 		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__), array() );
 		wp_enqueue_style( 'transient-table-' . $stem . plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array() );
 		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('transient-table') );
