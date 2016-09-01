@@ -1,4 +1,4 @@
-function eSN(name, filename) {
+function eSN(name, filename, stem) {
 	var value = encodeURIComponent(
 		'{\n' +
 		'\t"' + name + '":{\n' + 
@@ -11,7 +11,7 @@ function eSN(name, filename) {
 		'\t}\n' +
 		'}')
 	var instructions = 'PLEASE READ: Welcome to the new JSON page for ' + name + '! Before editing this file, please read our JSON format guidelines [https://github.com/astrocatalogs/sne-internal/blob/master/OSC-JSON-format.md]. Please delete this message before committing.'
-	var win  = window.open('https://github.com/astrocatalogs/sne-internal/new/master/?filename=' +
+	var win  = window.open('https://github.com/astrocatalogs/' + stem + '-internal/new/master/?filename=' +
 		encodeURIComponent(filename) + '.json&value=' + value + '&description=' + instructions, '_blank')
 	win.focus();
 }

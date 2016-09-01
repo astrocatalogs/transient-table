@@ -1001,7 +1001,7 @@ function transient_catalog($bones = False) {
 			var fileeventname = nameToFilename(row.name);
 			var datalink = "<a class='dci' title='Download Data' href='" + urlstem + fileeventname + ".json' download></a>"
 			if (!row.download || row.download != 'e') {
-				return (datalink + "<a class='eci' title='Edit Data' onclick='eSN(\"" + row.name + "\",\"" + fileeventname + "\")'></a>") 
+				return (datalink + "<a class='eci' title='Edit Data' onclick='eSN(\"" + row.name + "\",\"" + fileeventname + "\",\"" + stem + "\")'></a>") 
 			} else {
 				return (datalink + "<a class='eci' title='Edit Data' href='https://github.com/astrocatalogs/" + stem + "-internal/edit/master/"
 					+ fileeventname + ".json' target='_blank'></a>")
