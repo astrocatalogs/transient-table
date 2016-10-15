@@ -760,7 +760,7 @@ function datatables_functions() {
 <?php
 }
 
-function transient_catalog($bones = False) {
+function transient_catalog($bones = false) {
 	global $stem, $modu;
 	readfile("/var/www/html/" . $stem . "/astrocats/astrocats/" . $modu . "/html/table-templates/catalog.html");
 ?>
@@ -1070,13 +1070,14 @@ function transient_catalog($bones = False) {
 			}
             jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
+		var ajaxURL = '/../../astrocats/astrocats/' + modu + '/output/' + ((bones) ? 'bones' : 'catalog') + '.min.json';
 		var table = jQuery('#example').DataTable( {
 			ajax: {
-				url: '/../../astrocats/astrocats/' + modu + '/output/' + ((bones) ? 'bones' : 'catalog') + '.min.json',
+				url: ajaxURL,
 				dataSrc: ''
 			},
 			"language": {
-				"loadingRecords": "Loading... (should take a few seconds)"
+				"loadingRecords": "<img style='vertical-align:-43%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif'>Loading... (should take a few seconds)"
 			},
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
@@ -1290,6 +1291,9 @@ function transient_catalog($bones = False) {
 			table.rows({page:'current'}).invalidate();
 		} );
 		searchFields = getSearchFields(allSearchCols);
+		setInterval( function () {
+			    table.ajax.reload(null, false);
+		}, 14400000 );
 	} );
 	</script>
 <?php
@@ -2381,10 +2385,10 @@ function conflict_table() {
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
-			if (['check', 'actions', 'responsive'].indexOf(classname) >= 0) {
+			if (['check', 'responsive'].indexOf(classname) >= 0) {
 				jQuery(this).html( '' );
 			}
-			if (['check', 'actions', 'responsive'].indexOf(classname) >= 0) return;
+			if (['check', 'responsive'].indexOf(classname) >= 0) return;
 			for (i = 0; i < floatSearchCols.length; i++) {
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
 					floatColValDict[index] = floatSearchCols[i];
@@ -2433,7 +2437,7 @@ function conflict_table() {
 				{ "data": {
 					"_": "difference"
 				  }, "type": "num", "defaultContent": "", "responsivePriority": 5 },
-				{ "data": actionButtons, "responsivePriority": 4, "searchable": false },
+				{ "data": actionButtons, "responsivePriority": 4 },
 				{ "defaultContent": "" },
 			],
             dom: 'Bflprtip',

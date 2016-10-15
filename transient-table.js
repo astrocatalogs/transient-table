@@ -128,6 +128,46 @@ function markError(name, quantity, sourcekind, source, edit) {
 	win.focus();
 }
 
+function addQuantity(name, quantity, edit) {
+	var filename = name.replace("/", "_") + '.json';
+	var codemessage = '';
+	if (edit === "true") {
+		codemessage += '### IMPORTANT: A FILE FOR THIS EVENT ALREADY EXISTS IN THE REPOSITORY.\n';
+		codemessage += '### Due to limitations of the GitHub URL interface, you must copy the contents\n';
+		codemessage += '### of this file into the existing JSON file for this event in order to edit it\n';
+		codemessage += '### The location of the file to paste into is located at:\n';
+		codemessage += '### https://github.com/astrocatalogs/sne-internal/edit/master/' + encodeURIComponent(filename) + '\n';
+		codemessage += '### COMMITTING THE FILE ON THIS PAGE WILL RESULT IN A "FILE ALREADY EXISTS" ERROR.\n';
+		codemessage += '### Delete all lines preceded by a # before committing any changes to the file\n';
+		codemessage += '### located at the above URL.\n';
+	} else {
+		codemessage = '### DELETE THIS LINE TO ENABLE COMMIT BUTTON\n';
+	}
+	var value = encodeURIComponent(
+		codemessage +
+		'{\n' +
+		'\t"' + name + '":{\n' + 
+		'\t\t"name":"' + name + '",\n' +
+		'\t\t"sources":[\n' +
+		'\t\t\t{\n' +
+		'\t\t\t\t"bibcode":"### BIBCODE FOR NEW VALUE ###"\n' +
+		'\t\t\t}\n' +
+		'\t\t],\n' +
+		'\t\t"' + quantity + '":[\n' +
+		'\t\t\t{\n' +
+		'\t\t\t\t"value":"### NEW VALUE ###",\n' +
+		'\t\t\t\t"e_value":"### ERROR IN VALUE (if applicable) ###",\n' +
+		'\t\t\t\t"u_value":"### VALUE\'S UNIT (if applicable) ###"\n' +
+		'\t\t\t}\n' +
+		'\t\t]\n' +
+		'\t}\n' +
+		'}');
+	var instructions = encodeURIComponent('"' + quantity + '" added to ' + name + '.');
+	var win = window.open('https://github.com/astrocatalogs/sne-internal/new/master/?filename=' +
+		encodeURIComponent(filename) + '&value=' + value + '&message=' + instructions, '_blank');
+	win.focus();
+}
+
 function googleNames(names) {
 	var namearr = names.split(',');
 	
