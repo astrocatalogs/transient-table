@@ -1,8 +1,8 @@
 tde
 tidaldisruptions
 tde
-alias,maxdate,velocity,maxabsmag,hostra,hostdec,hostoffsetang,hostoffsetdist,radiolink,spectralink,instruments,ebv,lumdist
+alias,maxdate,velocity,maxabsmag,ra,dec,hostoffsetang,hostoffsetdist,radiolink,instruments,ebv,lumdist,references
 maxdate,discoverdate,xraylink
 download,photolink
-photolink,xraylink
+photolink,xraylink,spectralink
 20

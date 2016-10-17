@@ -20,7 +20,7 @@ input.colsearch {
 	margin: 2px 2px 8px 2px !important;
 }
 
-.paginate_button {
+.dataTables_wrapper .dataTables_paginate .paginate_button {
 	line-height: normal;
 	color: #CCC !important;
 }

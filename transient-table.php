@@ -1105,12 +1105,14 @@ function transient_catalog($bones = false) {
 					"display": raLinked,
 					"filter": "ra.0.value",
 					"sort": raValue,
+					"export": "ra[,].value",
 					"_": "ra[, ].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"display": decLinked,
 					"filter": "dec.0.value",
 					"sort": decValue,
+					"export": "dec[,].value",
 					"_": "dec[, ].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
@@ -2754,7 +2756,7 @@ function errata() {
 function transient_table_scripts() {
 	global $stem, $modu, $subd;
 	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'supernova-graveyard')) || is_search()) {
-		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__), array() );
+		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__), array('parent-style') );
 		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('transient-table') );
 		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('transient-table') );
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
