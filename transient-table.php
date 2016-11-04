@@ -53,6 +53,10 @@ function datatables_functions() {
 	function nameToFilename (name) {
 		return name.replace(/\//g, '_')
 	}
+	function dateToMJD ( da ) {
+		var mydate = new Date(da);
+		return mydate.getJulian() - 2400000.5;
+	}
 	function getAliases (row, field) {
 		if (field === undefined) field = 'alias';
 		var aliases = [];
@@ -446,60 +450,30 @@ function datatables_functions() {
 			return d1.getTime() < d2.getTime();
 		}
 	}
+	function convertRaDec ( radec, ra ) {
+		if (ra !== null && ra) {
+			return raToDegrees(radec);
+		}
+		return decToDegrees(radec);
+	}
 	function compRaDecs ( radec1inp, radec2inp, includeSame ) {
-		var rd1, rd2;
-		var sign1, sign2;
-		if (radec1inp.length > 0) {
-			if (radec1inp[0] == '+') {
-				radec1 = radec1inp.slice(1,-1);
-				sign1 = 1.0;
-			} else if (radec1inp[0] == '-') {
-				radec1 = radec1inp.slice(1,-1);
-				sign1 = -1.0;
-			} else {
-				radec1 = radec1inp;
-				sign1 = 1.0;
-			}
-		}
-		if (radec2inp.length > 0) {
-			if (radec2inp[0] == '+') {
-				radec2 = radec2inp.slice(1,-1);
-				sign2 = 1.0;
-			} else if (radec2inp[0] == '-') {
-				radec2 = radec2inp.slice(1,-1);
-				sign2 = -1.0;
-			} else {
-				radec2 = radec2inp;
-				sign2 = 1.0;
-			}
-		}
-		var rd1split = radec1.split(':');
-		var rd2split = radec2.split(':');
-		var rd1len = rd1split.length;
-		if (rd1len == 1) {
-			rd1 = parseFloat(rd1split[0]);
-		} else if (rd1len == 2) {
-			rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60.;
-		} else {
-			rd1 = parseFloat(rd1split[0]) + parseFloat(rd1split[1])/60. + parseFloat(rd1split[2])/3600.;
-		}
-		var rd2len = rd2split.length;
-		if (rd2len == 1) {
-			rd2 = parseFloat(rd2split[0]);
-		} else if (rd2len == 2) {
-			rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60.;
-		} else {
-			rd2 = parseFloat(rd2split[0]) + parseFloat(rd2split[1])/60. + parseFloat(rd2split[2])/3600.;
-		}
-
+		var val1 = convertRaDec (radec1inp);
+		var val2 = convertRaDec (radec2inp);
 		if (includeSame) {
-			return sign1*rd1 <= sign2*rd2;
+			return val1 <= val2;
 		} else {
-			return sign1*rd1 < sign2*rd2;
+			return val1 < val2;
 		}
 	}
-	function advancedDateFilter ( data, id ) {
+	function advancedDateFilter ( data, id, pmid ) {
 		var idObj = document.getElementById(id);
+		var pmidString = '';
+		if ( typeof pmid !== 'undefined' ) {
+			var pmidObj = document.getElementById(pmid);
+			if ( pmidObj !== null ) {;
+				pmidString = pmidObj.value;
+			}
+		}
 		if ( idObj === null ) return true;
 		var idString = idObj.value;
 		if ( idString === '' ) return true;
@@ -520,6 +494,16 @@ function datatables_functions() {
 					if (minStr !== '') {
 						if (!( (minStr !== '' && compDates(cData, minStr, true)) ||
 							   (maxStr !== '' && compDates(maxStr, cData, true)) || cData === '' )) return !isNot;
+					}
+				}
+				else if ( pmidString !== '' ) {
+					minMJD = dateToMJD(splitString[i]) - parseFloat(pmidString);
+					maxMJD = dateToMJD(splitString[i]) + parseFloat(pmidString);
+					cMJD = dateToMJD(cData);
+					if (cMJD >= minMJD && cMJD <= maxMJD) {
+						return !isNot;
+					} else {
+						return isNot;
 					}
 				}
 				var idStr = splitString[i].replace(/[<=>]/g, '').trim();
@@ -562,8 +546,16 @@ function datatables_functions() {
 		}
 		return isNot;
 	}
-	function advancedRaDecFilter ( data, id ) {
+	function advancedRaDecFilter ( data, id, pmid ) {
+		var ra = (id.indexOf('ra') !== -1);
 		var idObj = document.getElementById(id);
+		var pmidString = '';
+		if ( typeof pmid !== 'undefined' ) {
+			var pmidObj = document.getElementById(pmid);
+			if ( pmidObj !== null ) {;
+				pmidString = pmidObj.value;
+			}
+		}
 		if ( idObj === null ) return true;
 		var idString = idObj.value;
 		if ( idString === '' ) return true;
@@ -584,6 +576,16 @@ function datatables_functions() {
 					if (minStr !== '') {
 						if (!( (minStr !== '' && compRaDecs(cData, minStr, true)) ||
 							   (maxStr !== '' && compRaDecs(maxStr, cData, true)) || cData === '' )) return !isNot;
+					}
+				}
+				else if ( pmidString !== '' ) {
+					minCoord = convertRaDec(splitString[i], ra) - parseFloat(pmidString);
+					maxCoord = convertRaDec(splitString[i], ra) + parseFloat(pmidString);
+					cCoord = convertRaDec(cData, ra);
+					if (cCoord >= minCoord && cCoord <= maxCoord) {
+						return !isNot;
+					} else {
+						return isNot;
 					}
 				}
 				var idStr = splitString[i].replace(/[<=>]/g, '').trim();
@@ -666,8 +668,15 @@ function datatables_functions() {
 		}
 		return false;
 	}
-	function advancedFloatFilter ( data, id ) {
+	function advancedFloatFilter ( data, id, pmid ) {
 		var idObj = document.getElementById(id);
+		var pmidString = '';
+		if ( typeof pmid !== 'undefined' ) {
+			var pmidObj = document.getElementById(pmid);
+			if ( pmidObj !== null ) {;
+				pmidString = pmidObj.value;
+			}
+		}
 		if ( idObj === null ) return true;
 		var idString = idObj.value;
 		if ( idString === '' ) return true;
@@ -703,6 +712,16 @@ function datatables_functions() {
 					}
 					if (minStr !== '') {
 						if (!( (minStr !== '' && cVal < minVal) || (maxStr !== '' && cVal > maxVal) )) return !isNot;
+					}
+				}
+				else if ( pmidString !== '' ) {
+					minVal = parseFloat(splitString[i]) - parseFloat(pmidString);
+					maxVal = parseFloat(splitString[i]) + parseFloat(pmidString);
+					cVal = parseFloat(cData);
+					if (cVal >= minVal && cVal <= maxVal) {
+						return !isNot;
+					} else {
+						return isNot;
 					}
 				}
 				var idStr = splitString[i].replace(/[<=>]/g, '').trim();
@@ -768,6 +787,7 @@ function transient_catalog($bones = false) {
 	var bones = <?php echo json_encode($bones); ?>;
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
+		var floatColValPMDict = {};
 		var floatColInds = [];
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
 			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffsetang', 'hostoffsetdist'];
@@ -775,9 +795,11 @@ function transient_catalog($bones = false) {
 		var stringColInds = [];
 		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype'];
 		var raDecColValDict = {};
+		var raDecColValPMDict = {};
 		var raDecColInds = [];
 		var raDecSearchCols = ['ra', 'dec', 'hostra', 'hostdec'];
 		var dateColValDict = {};
+		var dateColValPMDict = {};
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
 		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
@@ -987,14 +1009,12 @@ function transient_catalog($bones = false) {
 		}
 		function maxDateLinked ( row, type, val, meta ) {
 			if (!row.maxdate) return '';
-			var mydate = new Date(row.maxdate[0]['value']);
-			var mjd = String(mydate.getJulian() - 2400000.5);
+			var mjd = String(dateToMJD(row.maxdate[0]['value']));
 			return "<div class='tooltip'>" + row.maxdate[0]['value'] + "<span class='tooltiptext'> MJD: " + mjd + "</span></div>";
 		}
 		function discoverDateLinked ( row, type, val, meta ) {
 			if (!row.discoverdate) return '';
-			mydate = new Date(row.discoverdate[0]['value']);
-			mjd = String(mydate.getJulian() - 2400000.5);
+			var mjd = String(dateToMJD(row.discoverdate[0]['value']));
 			return "<div class='tooltip'>" + row.discoverdate[0]['value'] + "<span class='tooltiptext'> MJD: " + mjd + "</span></div>";
 		}
 		function dataLinked ( row, type, val, meta ) {
@@ -1037,6 +1057,7 @@ function transient_catalog($bones = false) {
 			for (i = 0; i < fslen; i++) {
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
 					floatColValDict[index] = floatSearchCols[i];
+					floatColValPMDict[index] = floatSearchCols[i] + '-pm';
 					floatColInds.push(index);
 					break;
 				}
@@ -1053,6 +1074,7 @@ function transient_catalog($bones = false) {
 			for (i = 0; i < dslen; i++) {
 				if (jQuery(this).hasClass(dateSearchCols[i])) {
 					dateColValDict[index] = dateSearchCols[i];
+					dateColValPMDict[index] = dateSearchCols[i] + '-pm';
 					dateColInds.push(index);
 					break;
 				}
@@ -1061,6 +1083,7 @@ function transient_catalog($bones = false) {
 			for (i = 0; i < rdlen; i++) {
 				if (jQuery(this).hasClass(raDecSearchCols[i])) {
 					raDecColValDict[index] = raDecSearchCols[i];
+					raDecColValPMDict[index] = raDecSearchCols[i] + '-pm';
 					raDecColInds.push(index);
 					break;
 				}
@@ -1068,7 +1091,15 @@ function transient_catalog($bones = false) {
 			if (classname == 'name') {
 				jQuery(this).attr('colspan', 2);
 			}
-            jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
+			var inputstr = '<input class="colsearch" type="search" incremental="incremental" id="'+classname+'" placeholder="'+title+'" />';
+			if (['ra', 'dec', 'hostra', 'hostdec'].indexOf(classname) >= 0) {
+				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pm" placeholder="± degs" />';
+			} else if (['maxdate', 'discoverdate'].indexOf(classname) >= 0) {
+				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pm" placeholder="± days" />';
+			} else if (['maxabsmag', 'maxappmag'].indexOf(classname) >= 0) {
+				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pm" placeholder="± mags" />';
+			}
+            jQuery(this).html( inputstr );
         } );
 		var ajaxURL = '/../../astrocats/astrocats/' + modu + '/output/' + ((bones) ? 'bones' : 'catalog') + '.min.json';
 		var table = jQuery('#example').DataTable( {
@@ -1090,13 +1121,13 @@ function transient_catalog($bones = false) {
 					"display": discoverDateLinked,
 					"filter": "discoverdate.0.value",
 					"sort": discoverDateValue,
-					"_": "discoverdate[, ].value"
+					"_": "discoverdate[,].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2 },
 				{ "data": {
 					"display": maxDateLinked,
 					"filter": "maxdate.0.value",
 					"sort": maxDateValue,
-					"_": "maxdate[, ].value"
+					"_": "maxdate[,].value"
 				  }, "type": "non-empty-float", "defaultContent": "" },
 				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "maxabsmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
@@ -1105,27 +1136,25 @@ function transient_catalog($bones = false) {
 					"display": raLinked,
 					"filter": "ra.0.value",
 					"sort": raValue,
-					"export": "ra[,].value",
-					"_": "ra[, ].value"
+					"_": "ra[,].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"display": decLinked,
 					"filter": "dec.0.value",
 					"sort": decValue,
-					"export": "dec[,].value",
-					"_": "dec[, ].value"
+					"_": "dec[,].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"display": hostraLinked,
 					"filter": "hostra.0.value",
 					"sort": hostraValue,
-					"_": "hostra[, ].value"
+					"_": "hostra[,].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"display": hostdecLinked,
 					"filter": "hostdec.0.value",
 					"sort": hostdecValue,
-					"_": "hostdec[, ].value"
+					"_": "hostdec[,].value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"filter": hostoffsetangValue,
@@ -1142,19 +1171,19 @@ function transient_catalog($bones = false) {
 					"display": redshiftLinked,
 					"filter": redshiftValue,
 					"sort": redshiftValue,
-					"_": "redshift[, ].value"
+					"_": "redshift[,].value"
 				  }, "type": "non-empty-float", "defaultContent": "" },
 				{ "data": {
 					"display": velocityLinked,
 					"filter": velocityValue,
 					"sort": velocityValue,
-					"_": "velocity[, ].value"
+					"_": "velocity[,].value"
 				  }, "type": "non-empty-float", "defaultContent": "" },
 				{ "data": {
 					"display": lumdistLinked,
 					"filter": lumdistValue,
 					"sort": lumdistValue,
-					"_": "lumdist[, ].value"
+					"_": "lumdist[,].value"
 				  }, "type": "non-empty-float", "defaultContent": "" },
 				{ "data": null, "type": "string", "responsivePriority": 3, "render": typeSwitcher },
 				{ "data": {
@@ -1190,7 +1219,7 @@ function transient_catalog($bones = false) {
 			orderMulti: false,
             pagingType: 'simple_numbers',
             pageLength: 50,
-			searchDelay: 400,
+			searchDelay: 1000,
 			responsive: {
 				details: {
 					type: 'column',
@@ -1257,18 +1286,35 @@ function transient_catalog($bones = false) {
         table.columns().every( function ( index ) {
             var that = this;
 
-            jQuery( 'input', that.footer() ).on( 'input', function () {
-				if (index == 2) return; //Ignore aliases column
-				if (( floatColInds.indexOf(index) === -1 ) &&
-				    ( stringColInds.indexOf(index) === -1 ) &&
-					( dateColInds.indexOf(index) === -1 ) &&
-					( raDecColInds.indexOf(index) === -1 ) ) {
-					if ( that.search() !== this.value ) {
-						that.search( this.value )
+			var isFirefox = typeof InstallTrigger !== 'undefined';
+			if (isFirefox) {
+				// Needed for FireFox
+				jQuery( 'input', that.footer() ).change( function () {
+					if (index == 2) return; //Ignore aliases column
+					if (( floatColInds.indexOf(index) === -1 ) &&
+						( stringColInds.indexOf(index) === -1 ) &&
+						( dateColInds.indexOf(index) === -1 ) &&
+						( raDecColInds.indexOf(index) === -1 ) ) {
+						if ( that.search() !== this.value ) {
+							that.search( this.value )
+						}
 					}
-				}
-				that.draw();
-            } );
+					that.draw();
+				} );
+			} else {
+				jQuery( 'input', that.footer() ).on( 'search', function () {
+					if (index == 2) return; //Ignore aliases column
+					if (( floatColInds.indexOf(index) === -1 ) &&
+						( stringColInds.indexOf(index) === -1 ) &&
+						( dateColInds.indexOf(index) === -1 ) &&
+						( raDecColInds.indexOf(index) === -1 ) ) {
+						if ( that.search() !== this.value ) {
+							that.search( this.value )
+						}
+					}
+					that.draw();
+				} );
+			}
         } );
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex ) {
@@ -1276,13 +1322,13 @@ function transient_catalog($bones = false) {
 				for ( var i = 0; i < alen; i++ )
 				{
 					if ( floatColInds.indexOf(i) !== -1 ) {
-						if ( !advancedFloatFilter( aData[i], floatColValDict[i] ) ) return false;
+						if ( !advancedFloatFilter( aData[i], floatColValDict[i], floatColValPMDict[i] ) ) return false;
 					} else if ( stringColInds.indexOf(i) !== -1 ) {
 						if ( !advancedStringFilter( aData[i], stringColValDict[i] ) ) return false;
 					} else if ( dateColInds.indexOf(i) !== -1 ) {
-						if ( !advancedDateFilter( aData[i], dateColValDict[i] ) ) return false;
+						if ( !advancedDateFilter( aData[i], dateColValDict[i], dateColValPMDict[i] ) ) return false;
 					} else if ( raDecColInds.indexOf(i) !== -1 ) {
-						if ( !advancedRaDecFilter( aData[i], raDecColValDict[i] ) ) return false;
+						if ( !advancedRaDecFilter( aData[i], raDecColValDict[i], raDecColValPMDict[i] ) ) return false;
 					}
 				}
 				return true;
