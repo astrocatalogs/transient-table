@@ -582,10 +582,27 @@ function datatables_functions() {
 					minCoord = convertRaDec(splitString[i], ra) - parseFloat(pmidString);
 					maxCoord = convertRaDec(splitString[i], ra) + parseFloat(pmidString);
 					cCoord = convertRaDec(cData, ra);
-					if (cCoord >= minCoord && cCoord <= maxCoord) {
-						return !isNot;
-					} else {
+					if (cCoord == 0.0) {
 						return isNot;
+					}
+					if (ra && minCoord < 0.0) {
+						if ((cCoord >= minCoord && cCoord <= maxCoord) || (cCoord >= 360.0 + minCoord)) {
+							return !isNot;
+						} else {
+							return isNot;
+						}
+					} else if (ra && maxCoord > 360.0) {
+						if ((cCoord >= minCoord && cCoord <= maxCoord) || (cCoord <= maxCoord - 360.0)) {
+							return !isNot;
+						} else {
+							return isNot;
+						}
+					} else {
+						if (cCoord >= minCoord && cCoord <= maxCoord) {
+							return !isNot;
+						} else {
+							return isNot;
+						}
 					}
 				}
 				var idStr = splitString[i].replace(/[<=>]/g, '').trim();
