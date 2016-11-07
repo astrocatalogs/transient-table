@@ -470,7 +470,7 @@ function datatables_functions() {
 		var pmidString = '';
 		if ( typeof pmid !== 'undefined' ) {
 			var pmidObj = document.getElementById(pmid);
-			if ( pmidObj !== null ) {;
+			if ( pmidObj !== null ) {
 				pmidString = pmidObj.value;
 			}
 		}
@@ -552,7 +552,7 @@ function datatables_functions() {
 		var pmidString = '';
 		if ( typeof pmid !== 'undefined' ) {
 			var pmidObj = document.getElementById(pmid);
-			if ( pmidObj !== null ) {;
+			if ( pmidObj !== null ) {
 				pmidString = pmidObj.value;
 			}
 		}
@@ -628,21 +628,34 @@ function datatables_functions() {
 		}
 		return isNot;
 	}
-	function advancedStringFilter ( data, id ) {
+	function advancedStringFilter ( data, id, prid ) {
 		var idObj = document.getElementById(id);
+		var pridString = '';
+		if ( typeof prid !== 'undefined' ) {
+			var pridObj = document.getElementById(prid);
+			if ( pridObj !== null ) {
+				pridString = pridObj.value.trim().toUpperCase();
+			}
+		}
 		if ( idObj === null ) return true;
 		var idString = idObj.value;
-		if ( idString === '' ) return true;
+		if ( idString === '' && pridString === '' ) return true;
 		var splitString = idString.split(/(?:,|OR)+/);
 		var splitData = data.split(',');
 		var sdlen = splitData.length;
 		for ( var d = 0; d < sdlen; d++ ) {
 			var cData = splitData[d].trim();
+			var uData = cData.toUpperCase();
 			var sslen = splitString.length;
 			for ( var i = 0; i < sslen; i++ ) {
 				var idStr = splitString[i].trim().toUpperCase();
 				var isNot = (idStr.indexOf('!') !== -1 || idStr.indexOf('NOT') !== -1)
 				idStr = idStr.replace(/!/g, '');
+				if ( pridString !== '' ) {
+					if (uData.substring(0, pridString.length) !== pridString) {
+						continue;
+					}
+				}
 				if ( idStr === "" || idStr === NaN ) {
 					if (i === 0) return !isNot;
 				}
@@ -792,6 +805,7 @@ function transient_catalog($bones = false) {
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
 			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffsetang', 'hostoffsetdist'];
 		var stringColValDict = {};
+		var stringColValPRDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype'];
 		var raDecColValDict = {};
@@ -1066,6 +1080,7 @@ function transient_catalog($bones = false) {
 			for (i = 0; i < sslen; i++) {
 				if (jQuery(this).hasClass(stringSearchCols[i])) {
 					stringColValDict[index] = stringSearchCols[i];
+					stringColValPRDict[index] = stringSearchCols[i] + '-pr';
 					stringColInds.push(index);
 					break;
 				}
@@ -1098,6 +1113,10 @@ function transient_catalog($bones = false) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pm" placeholder="± days" />';
 			} else if (['maxabsmag', 'maxappmag'].indexOf(classname) >= 0) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pm" placeholder="± mags" />';
+			} else if (['redshift'].indexOf(classname) >= 0) {
+				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pm" placeholder="±" />';
+			} else if (['name', 'host', 'claimedtype'].indexOf(classname) >= 0) {
+				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pr" placeholder="w/ prefix" />';
 			}
             jQuery(this).html( inputstr );
         } );
@@ -1324,7 +1343,7 @@ function transient_catalog($bones = false) {
 					if ( floatColInds.indexOf(i) !== -1 ) {
 						if ( !advancedFloatFilter( aData[i], floatColValDict[i], floatColValPMDict[i] ) ) return false;
 					} else if ( stringColInds.indexOf(i) !== -1 ) {
-						if ( !advancedStringFilter( aData[i], stringColValDict[i] ) ) return false;
+						if ( !advancedStringFilter( aData[i], stringColValDict[i], stringColValPRDict[i] ) ) return false;
 					} else if ( dateColInds.indexOf(i) !== -1 ) {
 						if ( !advancedDateFilter( aData[i], dateColValDict[i], dateColValPMDict[i] ) ) return false;
 					} else if ( raDecColInds.indexOf(i) !== -1 ) {
