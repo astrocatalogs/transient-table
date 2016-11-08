@@ -290,6 +290,7 @@ table.dataTable tr.selected td.select-checkbox:after {
 input[type="search"].colsearch {
     -webkit-appearance: textfield;
 	box-sizing: content-box;
+	font-size: xx-small!important;
 }
 
 input[type="search"].colsearch:hover {

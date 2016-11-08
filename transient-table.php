@@ -2837,7 +2837,7 @@ function errata() {
 
 function transient_table_scripts() {
 	global $stem, $modu, $subd;
-	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'supernova-graveyard')) || is_search()) {
+	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'graveyard')) || is_search()) {
 		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__), array('parent-style') );
 		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('transient-table') );
 		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('transient-table') );
