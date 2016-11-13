@@ -18,9 +18,10 @@ $nowr = '"' . implode('","', explode(",", trim($tt[4]))) . '"';
 $nwnm = '"' . implode('","', explode(",", trim($tt[5]))) . '"';
 $revo = '"' . implode('","', explode(",", trim($tt[6]))) . '"';
 $ocol = intval(trim($tt[7]));
+$plen = trim($tt[8]);
 
 function datatables_functions() {
-	global $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol;
+	global $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol, $plen;
 ?>
 	<script>
 	var searchFields;
@@ -32,6 +33,7 @@ function datatables_functions() {
 	var nwnm = [<?php echo $nwnm;?>];
 	var revo = [<?php echo $revo;?>];
 	var ocol = <?php echo $ocol;?>;
+	var plen = [<?php echo $plen;?>];
 	var urlstem = 'https://' + subd + '.space/' + stem + '/'; 
 	function getSearchFields(allSearchCols) {
 		var sf = {};
@@ -1254,7 +1256,7 @@ function transient_catalog($bones = false) {
             //colReorder: true,
 			orderMulti: false,
             pagingType: 'simple_numbers',
-            pageLength: 50,
+            pageLength: plen[1],
 			searchDelay: 400,
 			responsive: {
 				details: {
@@ -1263,7 +1265,7 @@ function transient_catalog($bones = false) {
 				}
 			},
             select: true,
-            lengthMenu: [ [10, 50, 250], [10, 50, 250] ],
+            lengthMenu: [ plen, plen ],
             deferRender: true,
             autoWidth: false,
             buttons: [
