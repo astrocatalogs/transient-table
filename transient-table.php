@@ -1255,7 +1255,7 @@ function transient_catalog($bones = false) {
 			orderMulti: false,
             pagingType: 'simple_numbers',
             pageLength: 50,
-			searchDelay: 1000,
+			searchDelay: 400,
 			responsive: {
 				details: {
 					type: 'column',
@@ -2838,9 +2838,8 @@ function errata() {
 function transient_table_scripts() {
 	global $stem, $modu, $subd;
 	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'graveyard')) || is_search()) {
-		wp_enqueue_style( 'transient-table', plugins_url( 'transient-table.css', __FILE__), array('parent-style') );
-		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('transient-table') );
-		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('transient-table') );
+		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('datatables-css'));
+		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('parent-style'));
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__), array() );
 		#wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.js", array('jquery') );
