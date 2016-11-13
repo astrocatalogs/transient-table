@@ -19,9 +19,10 @@ $nwnm = '"' . implode('","', explode(",", trim($tt[5]))) . '"';
 $revo = '"' . implode('","', explode(",", trim($tt[6]))) . '"';
 $ocol = intval(trim($tt[7]));
 $plen = trim($tt[8]);
+$shrt = trim($tt[9]);
 
 function datatables_functions() {
-	global $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol, $plen;
+	global $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol, $plen, $shrt;
 ?>
 	<script>
 	var searchFields;
@@ -34,6 +35,7 @@ function datatables_functions() {
 	var revo = [<?php echo $revo;?>];
 	var ocol = <?php echo $ocol;?>;
 	var plen = [<?php echo $plen;?>];
+	var shrt = '<?php echo $shrt;?>';
 	var urlstem = 'https://' + subd + '.space/' + stem + '/'; 
 	function getSearchFields(allSearchCols) {
 		var sf = {};
@@ -1686,7 +1688,7 @@ function bibliography() {
 		}
 		function eventsDropdown ( row, type, val, meta ) {
 			var elen = row.events.length;
-			var html = String(elen) + ' SNe: ';
+			var html = String(elen) + ' ' + shrt + ': ';
 			if (elen == 1) {
 				html += "<a href='" + urlstem + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
 			} else if (elen <= 25) {
@@ -1928,7 +1930,7 @@ function sentinel() {
 		}
 		function eventsDropdown ( row, type, val, meta ) {
 			var elen = row.events.length;
-			var html = String(elen) + ' SNe: ';
+			var html = String(elen) + ' ' + shrt + ': ';
 			if (elen == 1) {
 				html += "<a href='" + urlstem + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
 			} else if (elen <= 25) {
@@ -2240,7 +2242,7 @@ function hosts() {
 			return text;
 		}
 		function eventsDropdown ( row, type, val, meta ) {
-			var html = String(row.events.length) + ' SNe: ';
+			var html = String(row.events.length) + ' ' + shrt + ': ';
 			if (row.events.length == 1) {
 				html += "<a href='" + urlstem + row.events[0].name + "/' target='_blank'>" + row.events[0].name + "</a>";
 			} else if (row.events.length <= 20) {
@@ -2684,7 +2686,7 @@ function errata() {
 			return html + "<a href='http://adsabs.harvard.edu/abs/" + row.bibcode + "'>" + row.bibcode + "</a>";
 		}
 		function eventsDropdown ( row, type, val, meta ) {
-			var html = String(row.events.length) + ' SNe: ';
+			var html = String(row.events.length) + ' ' + shrt + ': ';
 			if (row.events.length == 1) {
 				html += "<a href='" + urlstem + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
 			} else if (row.events.length <= 30) {
