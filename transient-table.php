@@ -2227,6 +2227,7 @@ function hosts() {
 			var totalwidth = 200;
 			var padding = 1;
 			var imgwidth = Math.max(Math.round(80.0/Math.sqrt(1.0*row.events.length)), minwidth);
+			var usethumbs = (imgwidth < 25);
 			var mod = Math.max(Math.round(1.0*totalwidth/(1.0*(imgwidth + padding))), 1);
 			text = text + "<div style='padding-top:5px; line-height:" + (10 /*imgwidth + padding - 2*/) + "px;'>";
 			var cnt = 0;
@@ -2235,7 +2236,7 @@ function hosts() {
 				cnt++;
 				text = (text + "<a href='" + urlstem + nameToFilename(row.events[i].name) + "/' target='_blank'>" +
 					"<img class='hostimg' width='" + imgwidth + "' height='" + imgwidth + "' src='" + urlstem +
-					nameToFilename(row.events[i].name) + "-host.jpg' style='margin-right:" +
+					(usethumbs ? 'thumbs/' : '') + nameToFilename(row.events[i].name) + "-host.jpg' style='margin-right:" +
 					padding + "px;'></a>");
 			}
 			text = text + "</div>";
