@@ -2288,7 +2288,7 @@ function hosts() {
 				{ "data": {
 					"display": eventsDropdown,
 					"sort": eventsCount,
-					"_": "events[, ]"
+					"_": "events[, ].name"
 				  }, "type": eventsDropdownType, "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"display": rateDisplay,
