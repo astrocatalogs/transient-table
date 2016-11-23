@@ -183,7 +183,8 @@ function datatables_functions() {
 	function hostLinked ( row, type, val, meta ) {
 		var host = "<a class='" + (('kind' in row.host[0] && row.host[0]['kind'] == 'cluster') ? "hci" : "hhi") +
 			"' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a>&nbsp;";
-		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + row.host[0]['value'] +
+		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + 
+			encodeURIComponent(row.host[0]['value']) +
 			"&submit=SIMBAD+search' target='_blank'>" + someBreak(row.host[0]['value']) + "</a>"; 
 		var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
 			"style='background-image:url(" + urlstem + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
@@ -2203,11 +2204,14 @@ function hosts() {
 			if (!row.rate) return '';
 			return row.rate.split(',')[0] + ' ± ' + row.rate.split(',')[1];
 		}
+		function hostNameFormat ( str, name ) {
+			return str.replace(/%name/g, noBreak(name)).replace(/%link/g, encodeURIComponent(name));
+		}
 		function hostUnlinked ( row, type, val, meta ) {
 			if (!row.host) return '';
 			var host = "<a class='" + (row.kind == 'cluster' ? "hci" : "hhi") + "' href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" +
-				"%s&submit=SIMBAD+search' target='_blank'></a> "; 
-			var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
+				"%link&submit=SIMBAD+search' target='_blank'></a> "; 
+			var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%link&submit=SIMBAD+search' target='_blank'>%name</a>"; 
 			var text;
 			if (row.host.length > 1) {
 				var hostAliases = '';
@@ -2218,10 +2222,10 @@ function hosts() {
 					if (i != 1) hostAliases += ', ';
 					hostAliases += noBreak(row.host[i]);
 				}
-				text = ("<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'> " +
-					hostAliases + "</span></div>").replace(/%s/g, noBreak(primaryname));
+				text = hostNameFormat("<div class='tooltip'>" + host + mainHost + "<span class='tooltiptext'> " +
+					hostAliases + "</span></div>", primaryname);
 			} else {
-				text = (host + mainHost).replace(/%s/g, noBreak(row.host[0]));
+				text = hostNameFormat(host + mainHost, row.host[0]);
 			}
 			var minwidth = 12;
 			var totalwidth = 200;
