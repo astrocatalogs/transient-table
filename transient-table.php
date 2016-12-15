@@ -723,7 +723,8 @@ function datatables_functions() {
 			var cVal = cData*1.0;
 			var sslen = splitString.length;
 			for ( var i = 0; i < sslen; i++ ) {
-				if ( splitString[i].indexOf('-') !== -1 )
+				var dashindex = splitString[i].indexOf('-');
+				if ( dashindex !== -1 && dashindex !== 0 )
 				{
 					var splitRange = splitString[i].split('-');
 					var newSplitRange = [];
@@ -769,18 +770,22 @@ function datatables_functions() {
 					idVal = idStr*1.0;
 					if ( splitString[i].indexOf('<=') !== -1 )
 					{
+						if ( cData === "" ) return false;
 						if ( idVal >= cVal ) return true;
 					}
 					else if ( splitString[i].indexOf('<') !== -1 )
 					{
+						if ( cData === "" ) return false;
 						if ( idVal > cVal ) return true;
 					}
 					else if ( splitString[i].indexOf('>=') !== -1 )
 					{
+						if ( cData === "" ) return false;
 						if ( idVal <= cVal ) return true;
 					}
 					else if ( splitString[i].indexOf('>') !== -1 )
 					{
+						if ( cData === "" ) return false;
 						if ( idVal < cVal ) return true;
 					}
 					else
