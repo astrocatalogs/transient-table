@@ -30,6 +30,9 @@ function datatables_functions() {
 	var modu = '<?php echo $modu;?>';
 	var subd = '<?php echo $subd;?>';
 	var invi = [<?php echo $invi;?>];
+	var visi = [<?php echo (array_key_exists('visible', $_GET) ?
+		('"' . implode('","', explode(",", $_GET['visible'])) . '"') : '');?>];
+	invi = jQuery(invi).not(visi).get();
 	var nowr = [<?php echo $nowr;?>];
 	var nwnm = [<?php echo $nwnm;?>];
 	var revo = [<?php echo $revo;?>];
@@ -47,6 +50,19 @@ function datatables_functions() {
 			sf[col] = document.getElementById(col);
 		}
 		return sf;
+	}
+	function getQueryParams(qs) {
+		qs = qs.split("+").join(" ");
+		var params = {},
+			tokens,
+			re = /[?&]?([^=]+)=([^&]*)/g;
+
+		while (tokens = re.exec(qs)) {
+			params[decodeURIComponent(tokens[1])]
+				= decodeURIComponent(tokens[2]);
+		}
+
+		return params;
 	}
 	function noBreak (str) {
 		return str.replace(/ /g, "&nbsp;").replace(/-/g, "&#x2011;");
@@ -832,7 +848,7 @@ function transient_catalog($bones = false) {
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
 			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffsetang', 'hostoffsetdist'];
 		var stringColValDict = {};
-		var stringColValPRDict = {};
+		var stringColValPMDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype'];
 		var raDecColValDict = {};
@@ -1084,6 +1100,7 @@ function transient_catalog($bones = false) {
 			}
 			return refstr;
 		}
+		var $_GET = getQueryParams(document.location.search);
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
@@ -1107,7 +1124,7 @@ function transient_catalog($bones = false) {
 			for (i = 0; i < sslen; i++) {
 				if (jQuery(this).hasClass(stringSearchCols[i])) {
 					stringColValDict[index] = stringSearchCols[i];
-					stringColValPRDict[index] = stringSearchCols[i] + '-pr';
+					stringColValPMDict[index] = stringSearchCols[i] + '-pm';
 					stringColInds.push(index);
 					break;
 				}
@@ -1133,17 +1150,20 @@ function transient_catalog($bones = false) {
 			if (classname == 'name') {
 				jQuery(this).attr('colspan', 2);
 			}
-			var inputstr = '<input class="colsearch" type="search" incremental="incremental" id="'+classname+'" placeholder="'+title+'" />';
+			var getval = (classname in $_GET) ? $_GET[classname] : '';
+			var classnamepm = classname + '-pm'
+			var getpmval = ((classnamepm) in $_GET) ? $_GET[classnamepm] : '';
+			var inputstr = '<input class="colsearch" type="search" incremental="incremental" id="'+classname+'" placeholder="'+title+'" value="' + getval + '" />';
 			if (['ra', 'dec', 'hostra', 'hostdec'].indexOf(classname) >= 0) {
-				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pm" placeholder="± degs" />';
+				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="± degs" value="' + getpmval + '" />';
 			} else if (['maxdate', 'discoverdate'].indexOf(classname) >= 0) {
-				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pm" placeholder="± days" />';
+				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="± days" value="' + getpmval + '" />';
 			} else if (['maxabsmag', 'maxappmag'].indexOf(classname) >= 0) {
-				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pm" placeholder="± mags" />';
+				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="± mags" value="' + getpmval + '" />';
 			} else if (['redshift'].indexOf(classname) >= 0) {
-				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pm" placeholder="±" />';
+				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="±" value="' + getpmval + '" />';
 			} else if (['name', 'host', 'claimedtype'].indexOf(classname) >= 0) {
-				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classname+'-pr" placeholder="w/ prefix" />';
+				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="w/ prefix" value="' + getpmval + '" />';
 			}
             jQuery(this).html( inputstr );
         } );
@@ -1296,6 +1316,32 @@ function transient_catalog($bones = false) {
                         columns: ':visible:not(:first-child):not(:last-child):not(:nth-last-child(2))',
 						orthogonal: 'export'
                     }
+				},
+				{
+					action: function ( e, dt, button, config ) {
+						var colsearches = document.getElementsByClassName('colsearch');
+						var querystring = '';
+						for ( var i = 0; i < colsearches.length; i++ ) {
+							var cs = colsearches[i];
+							if (cs.value !== '') {
+								qpref = (querystring === '') ? '?' : '&';
+								querystring += qpref + cs.id + '=' + encodeURIComponent(cs.value);
+							}
+						}
+						var visiblestring = '';
+						for ( var i = 0; i < colsearches.length; i++ ) {
+							var cs = colsearches[i];
+							vpref = (visiblestring === '') ? '' : ',';
+							if (!cs.id.endsWith('-pm')) {
+								visiblestring += vpref + cs.id;
+							}
+						}
+						visiblestring = 'visible=' + encodeURIComponent(visiblestring);
+						querystring = (querystring === '') ? '?' + visiblestring : querystring + '&' + visiblestring;
+						querystring = 'https://' + subd + '.space/' + querystring; 
+						window.prompt("Permanent link to this table query:", querystring);
+					},
+					text: 'Copy Permalink'
 				}
             ],
             columnDefs: [ {
@@ -1370,7 +1416,7 @@ function transient_catalog($bones = false) {
 					if ( floatColInds.indexOf(i) !== -1 ) {
 						if ( !advancedFloatFilter( aData[i], floatColValDict[i], floatColValPMDict[i] ) ) return false;
 					} else if ( stringColInds.indexOf(i) !== -1 ) {
-						if ( !advancedStringFilter( aData[i], stringColValDict[i], stringColValPRDict[i] ) ) return false;
+						if ( !advancedStringFilter( aData[i], stringColValDict[i], stringColValPMDict[i] ) ) return false;
 					} else if ( dateColInds.indexOf(i) !== -1 ) {
 						if ( !advancedDateFilter( aData[i], dateColValDict[i], dateColValPMDict[i] ) ) return false;
 					} else if ( raDecColInds.indexOf(i) !== -1 ) {
