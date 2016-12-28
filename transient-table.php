@@ -40,6 +40,34 @@ function datatables_functions() {
 	var plen = [<?php echo $plen;?>];
 	var shrt = '<?php echo $shrt;?>';
 	var urlstem = 'https://' + subd + '.space/' + stem + '/'; 
+	function geoFindMe() {
+		var lat = document.getElementById("inplat");
+		var lon = document.getElementById("inplon");
+		var message = document.getElementById("inpmessage");
+
+		if (!navigator.geolocation){
+			message.innerHTML = "Geolocation is not supported by your browser";
+			return;
+		}
+
+		function success(position) {
+			var latitude  = position.coords.latitude;
+			var longitude = position.coords.longitude;
+
+			lat.value = latitude;
+			lon.value = longitude;
+
+			message.innerHTML = "";
+		}
+
+		function error() {
+			message.innerHTML = "Unable to retrieve your location";
+		}
+
+		message.innerHTML = "<img style='vertical-align:-26%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif'>Finding your location...";
+
+		navigator.geolocation.getCurrentPosition(success, error);
+	}
 	function getSearchFields(allSearchCols) {
 		var sf = {};
 		var alen = allSearchCols.length;
@@ -1280,7 +1308,7 @@ function transient_catalog($bones = false) {
 				{ "data": dataLinked, "responsivePriority": 4, "searchable": false },
 				{ "defaultContent": "" },
 			],
-            dom: 'Bflprtip',
+            dom: 'Bflprt<"coordfoot">ip',
             //colReorder: true,
 			orderMulti: false,
             pagingType: 'simple_numbers',
@@ -1375,6 +1403,8 @@ function transient_catalog($bones = false) {
             },
             order: [[ ocol, "desc" ]]
 		} );
+		jQuery("div.coordfoot").html(
+			'<table id="advancedtab"><tr><td><input type="checkbox" id="coordobservable">Observable from <span style="display:inline-table"><input class="coordfield" id="inplat" placeholder="Latitude">, <input class="coordfield" id="inplon" placeholder="Longitude"><br><button type="button" onclick="geoFindMe()">Get my location</button></span><select style="margin-left: 5px"><option value="now">now</option><option value="at">at</option></select><br><span id="inpmessage"></span></td></tr></table>');
         table.columns().every( function ( index ) {
             var that = this;
 
