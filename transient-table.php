@@ -39,7 +39,31 @@ function datatables_functions() {
 	var ocol = <?php echo $ocol;?>;
 	var plen = [<?php echo $plen;?>];
 	var shrt = '<?php echo $shrt;?>';
+	var lst = 0.0;
+	var longitude = 0.0;
+	var latitude = 0.0;
 	var urlstem = 'https://' + subd + '.space/' + stem + '/'; 
+	var raColumn;
+	var decColumn;
+	function updateLST() {
+		var lsttxt = document.getElementById("lst");
+		var lon = document.getElementById("inplon");
+		var long = parseFloat((lon.value === '') ? 0.0 : lon.value);
+		var j2000 = new Date(Date.UTC(2000, 0, 1, 12));
+		var utcsecs = new Date().getTime();
+		var ut = new Date(utcsecs);
+		var j2000d = (ut.getTime() - j2000.getTime())/86400000.0;
+		var dechours = ut.getUTCHours() + ut.getUTCMinutes()/60.0 + ut.getUTCSeconds()/3600.0;
+
+		lst = (100.46 + 0.985647 * j2000d + long + 15.0*dechours) % 360.0;
+		lsttxt.innerHTML = Number(lst.toFixed(4));
+	}
+	function getAlt(rahms, decdms) {
+		var ra = raToDegrees(rahms);
+		var dec = decToDegrees(decdms);
+		var ha = lst - ra;
+		return Math.asin(Math.sin(dec)*Math.sin(latitude)+Math.cos(dec)*Math.cos(latitude)*Math.cos(ha));
+	}
 	function geoFindMe() {
 		var lat = document.getElementById("inplat");
 		var lon = document.getElementById("inplon");
@@ -51,20 +75,24 @@ function datatables_functions() {
 		}
 
 		function success(position) {
-			var latitude  = position.coords.latitude;
-			var longitude = position.coords.longitude;
+			latitude  = position.coords.latitude;
+			longitude = position.coords.longitude;
 
 			lat.value = latitude;
 			lon.value = longitude;
 
+			message.style.display = "none";
 			message.innerHTML = "";
+
+			updateLST();
 		}
 
 		function error() {
 			message.innerHTML = "Unable to retrieve your location";
 		}
 
-		message.innerHTML = "<img style='vertical-align:-26%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif'>Finding your location...";
+		message.style.display = "block";
+		message.innerHTML = "<img style='vertical-align:-26%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif'>Finding your location...<br>";
 
 		navigator.geolocation.getCurrentPosition(success, error);
 	}
@@ -1141,6 +1169,7 @@ function transient_catalog($bones = false) {
 			if (['check', 'alias', 'download', 'references', 'responsive'].indexOf(classname) >= 0) return;
 			var fslen = floatSearchCols.length;
 			for (i = 0; i < fslen; i++) {
+				// The "hasClass" call here should be removed so that invisible columns can still filter.
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
 					floatColValDict[index] = floatSearchCols[i];
 					floatColValPMDict[index] = floatSearchCols[i] + '-pm';
@@ -1231,13 +1260,13 @@ function transient_catalog($bones = false) {
 					"filter": "ra.0.value",
 					"sort": raValue,
 					"_": "ra[,].value"
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				  }, "name": "ra", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"display": decLinked,
 					"filter": "dec.0.value",
 					"sort": decValue,
 					"_": "dec[,].value"
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				  }, "name": "dec", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"display": hostraLinked,
 					"filter": "hostra.0.value",
@@ -1403,8 +1432,9 @@ function transient_catalog($bones = false) {
             },
             order: [[ ocol, "desc" ]]
 		} );
+
 		jQuery("div.coordfoot").html(
-			'<table id="advancedtab"><tr><td><input type="checkbox" id="coordobservable">Observable from <span style="display:inline-table"><input class="coordfield" id="inplat" placeholder="Latitude">, <input class="coordfield" id="inplon" placeholder="Longitude"><br><button type="button" onclick="geoFindMe()">Get my location</button></span><select style="margin-left: 5px"><option value="now">now</option><option value="at">at</option></select><br><span id="inpmessage"></span></td></tr></table>');
+			'<table id="advancedtab"><tr><td><input type="checkbox" id="coordobservable">Observable from <span style="display:inline-table"><input class="coordfield" id="inplon" placeholder="Longitude">, <input class="coordfield" id="inplat" placeholder="Latitude"><br><button type="button" onclick="geoFindMe()">Use my location</button></span><select style="margin-left: 5px"><option value="now">now</option><option value="at">at</option></select><br><span id="inpmessage" style="display:none;"></span>Local sidereal time (deg.): <span id="lst">-</span></td></tr></table>');
         table.columns().every( function ( index ) {
             var that = this;
 
@@ -1438,9 +1468,14 @@ function transient_catalog($bones = false) {
 				} );
 			}
         } );
+
+		raColumn = table.column('ra:name').index();
+		decColumn = table.column('dec:name').index();
+
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex ) {
 				var alen = aData.length;
+
 				for ( var i = 0; i < alen; i++ )
 				{
 					if ( floatColInds.indexOf(i) !== -1 ) {
@@ -1453,6 +1488,9 @@ function transient_catalog($bones = false) {
 						if ( !advancedRaDecFilter( aData[i], raDecColValDict[i], raDecColValPMDict[i] ) ) return false;
 					}
 				}
+				if ( document.getElementById('coordobservable').checked ) {
+					if ( getAlt(aData[raColumn], aData[decColumn]) < 0.0 ) return false;
+				}
 				return true;
 			}
 		);
@@ -1460,10 +1498,16 @@ function transient_catalog($bones = false) {
 			searchFields = getSearchFields(allSearchCols);
 			table.rows({page:'current'}).invalidate();
 		} );
+		jQuery('#coordobservable').change( function () {
+			table.draw();
+		} );
 		searchFields = getSearchFields(allSearchCols);
 		setInterval( function () {
-			    table.ajax.reload(null, false);
+			table.ajax.reload(null, false);
 		}, 14400000 );
+		setInterval( function () {
+			updateLST();
+		}, 1000 );
 	} );
 	</script>
 <?php
