@@ -44,6 +44,7 @@ function datatables_functions() {
 	var raColumn;
 	var decColumn;
 	<?php if ( is_front_page() ) {
+		// File from http://www.minorplanetcenter.net/iau/lists/ObsCodes.html
 		$lochtml = json_encode(file_get_contents(__DIR__ . '/ObsCodes.html'));
 	?>
 	var lochtml = <?php echo $lochtml;?>;
@@ -52,7 +53,7 @@ function datatables_functions() {
 	var longitude = 0.0;
 	var latitude = 0.0;
 	function updateLST() {
-		var suntxt = document.getElementById("suninfo");
+		var sunmoontxt = document.getElementById("suninfo");
 		var lat = document.getElementById("inplat");
 		var lon = document.getElementById("inplon");
 		latitude = parseFloat((lat.value === '') ? latitude : lat.value);
@@ -81,6 +82,7 @@ function datatables_functions() {
 		lst = (100.46 + 0.985647 * j2000d + longitude + 15.0*dechours) % 360.0;
 		if ( lst < 0 ) lst += 360;
 
+		var moonphase = SunCalc.getMoonIllumination(seldate).phase;
 		var times = SunCalc.getTimes(seldate, latitude, longitude);
 		var start = seldate;
 		var timesofday = [
@@ -99,7 +101,27 @@ function datatables_functions() {
 			}
 			break;
 		}
-		suntxt.innerHTML = sunriseStr;
+		var moonphases = [
+			[0.035, '🌑 New Moon'],
+			[0.2, '🌒 Waxing crescent'],
+			[0.3, '🌓 First quarter'],
+			[0.465, '🌔 Waxing gibbous'],
+			[0.535, '🌕 Full Moon'],
+			[0.7, '🌖 Waning gibbous'],
+			[0.8, '🌗 Last quarter'],
+			[0.965, '🌘 Waning crescent']
+		];
+		var moonStr = '🌑 New Moon';
+		for ( var i = moonphases.length - 1; i >= 0; i-- ) {
+			if ( moonphase < moonphases[i][0] ) {
+				continue;
+			}
+			if ( i < moonphases.length - 1) {
+				moonStr = moonphases[i+1][1];
+			}
+			break;
+		}
+		sunmoontxt.innerHTML = sunriseStr + ', ' + moonStr;
 	}
 	function getAlt(rahms, decdms) {
 		var ra = raToDegrees(rahms);
@@ -1507,6 +1529,9 @@ function transient_catalog($bones = false) {
 			}
 			cosp = parseFloat(cosp);
 			sinp = parseFloat(sinp);
+			if ( cosp == 0.0 && sinp == 0.0 ) {
+				continue;
+			}
 			var p = Math.sqrt(cosp*cosp + sinp*sinp);
 			var obslat = (180.0/Math.PI*Math.atan2(sinp/p, cosp/p)).toFixed(5);
 			observatories.push( Array(obsname, obslong + ',' + obslat) );
