@@ -52,11 +52,13 @@ function datatables_functions() {
 	var longitude = 0.0;
 	var latitude = 0.0;
 	function updateLST() {
-		var lsttxt = document.getElementById("lst");
+		var suntxt = document.getElementById("suninfo");
 		var lat = document.getElementById("inplat");
 		var lon = document.getElementById("inplon");
-		latitude = parseFloat((lat.value === '') ? 0.0 : lat.value);
-		longitude = parseFloat((lon.value === '') ? 0.0 : lon.value);
+		latitude = parseFloat((lat.value === '') ? latitude : lat.value);
+		longitude = parseFloat((lon.value === '') ? longitude : lon.value);
+		if (lat.value === '' && latitude != 0.0) lat.value = latitude;
+		if (lon.value === '' && longitude != 0.0) lon.value = longitude;
 		var j2000 = new Date(Date.UTC(2000, 0, 1, 12));
 		var nowon = document.getElementById("nowon");
 		if ( nowon.value === "on" ) {
@@ -78,7 +80,26 @@ function datatables_functions() {
 
 		lst = (100.46 + 0.985647 * j2000d + longitude + 15.0*dechours) % 360.0;
 		if ( lst < 0 ) lst += 360;
-		lsttxt.innerHTML = lst.toFixed(2);
+
+		var times = SunCalc.getTimes(seldate, latitude, longitude);
+		var start = seldate;
+		var timesofday = [
+			[times.nightEnd.getTime(), ' 🌃 Nighttime'],
+			[times.sunrise.getTime(), ' 🌄 Dawn twilight'],
+			[times.sunset.getTime(), ' ☀️ Daytime'],
+			[times.night.getTime(), ' 🌆 Dusk twilight'],
+		];
+		var sunriseStr = ' 🌃 Nighttime';
+		for ( var i = timesofday.length - 1; i >= 0; i-- ) {
+			if ( seldate.getTime() < timesofday[i][0] ) {
+				continue;
+			}
+			if ( i < timesofday.length - 1) {
+				sunriseStr = timesofday[i+1][1];
+			}
+			break;
+		}
+		suntxt.innerHTML = sunriseStr;
 	}
 	function getAlt(rahms, decdms) {
 		var ra = raToDegrees(rahms);
@@ -1487,7 +1508,7 @@ function transient_catalog($bones = false) {
 			cosp = parseFloat(cosp);
 			sinp = parseFloat(sinp);
 			var p = Math.sqrt(cosp*cosp + sinp*sinp);
-			var obslat = 180.0/Math.PI*Math.atan2(sinp/p, cosp/p);
+			var obslat = (180.0/Math.PI*Math.atan2(sinp/p, cosp/p)).toFixed(5);
 			observatories.push( Array(obsname, obslong + ',' + obslat) );
 		}
 		observatories = observatories.sort( function(a, b) { 
@@ -1496,7 +1517,16 @@ function transient_catalog($bones = false) {
 		var obsstr = '<select class="obssel" id="inpobs" style="width:110px">';
 		obsstr += '<option value="select">Observatories</option>';
 		for ( var i = 0; i < observatories.length; i++ ) {
-			obsstr += '<option value="' + observatories[i][1] + '">' + observatories[i][0] + '</option>';
+			obsstr += '<option value="' + observatories[i][1] + '"';
+			if ( observatories[i][0].indexOf('Keck') != -1 ) {
+				var obscoords = observatories[i][1];
+				var obslong = obscoords.split(',')[0];
+				var obslat = obscoords.split(',')[1];
+				longitude = parseFloat(obslong);
+				latitude = parseFloat(obslat);
+				obsstr += ' selected';
+			}
+			obsstr += '>' + observatories[i][0] + '</option>';
 		}
 		obsstr += '</select>';
 		var monshort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -1505,7 +1535,6 @@ function transient_catalog($bones = false) {
 		var curyear = curdate.getFullYear();
 		var curmonth = curdate.getMonth();
 		var curday = curdate.getDate();
-		var curtime = curdate.getDate();
 		var yearslist = Array.apply(null, Array(200)).map(function (_, i) {return curyear - i + 5;});
 		var yearsstr = '<select class="obssel" id="inpyear">';
 		for ( var i = 0; i < yearslist.length; i++ ) {
@@ -1528,18 +1557,18 @@ function transient_catalog($bones = false) {
 			daysstr += '>' + dayslist[i] + '</option>';
 		}
 		daysstr += '</select>';
+
 		var footstring = 
-			'<table id="advancedtab"><tr><td><input type="checkbox" id="coordobservable">' +
-			'Observable from <span class="lonlat">' + 
-			'<input class="coordfield" id="inplon" title="Longitude (deg.)" placeholder="Longitude">, ' +
-			'<input class="coordfield" id="inplat" title="Latitude (deg.)" placeholder="Latitude"><br>' +
+			'<table id="advancedtab"><tr><td><span id="obsfrom"><input type="checkbox" id="coordobservable">' +
+			'Observable from </span><span id="lonlat">' + 
+			'<input class="coordfield" id="inplon" incremental="incremental" title="Longitude (deg.)" placeholder="Longitude">, ' +
+			'<input class="coordfield" id="inplat" incremental="incremental" title="Latitude (deg.)" placeholder="Latitude"><br>' +
 			'<button type="button" id="locbutt" onclick="geoFindMe()"><span id="inpmessage">🌎 Use my location</span></button>' +
 			obsstr + '</span>' +
-			'<select id="nowon" class="obssel"><option value="now">now</option><option value="on">on</option></select>' +
+			'<span id="obstime"><select id="nowon" class="obssel"><option value="now">now</option><option value="on">on</option></select>' +
 			'<span id="ondate" style="display:none">' + yearsstr + monsstr + daysstr +
 			' at <input class="coordfield" id="inptime" title="24-hour time (hh:mm:ss)" value="00:00:00" placeholder="hh:mm:ss"> [UTC]</span>' +
-			'<br>Local sidereal time (deg.): ' +
-			'<span id="lst">--</span></td></tr></table>';
+			'<br><span id="suninfo"></span></span></td></tr></table>';
 		jQuery("div.coordfoot").html(footstring);
         table.columns().every( function ( index ) {
             var that = this;
@@ -1619,6 +1648,9 @@ function transient_catalog($bones = false) {
 				table.draw();
 			}
 		} );
+		jQuery('#inplon, #inplat').change( function () {
+			jQuery('#inpobs').find('option:eq(0)').prop('selected', true);
+		} );
 		jQuery('#inpobs').change( function () {
 			var obscoords = jQuery('#inpobs').val();
 			var obslong = obscoords.split(',')[0];
@@ -1642,16 +1674,17 @@ function transient_catalog($bones = false) {
 			table.ajax.reload(null, false);
 			table.draw(false);
 		}, 14400000 );
-		setInterval( function () {
-			if ( jQuery('#nowon').val() === 'now' ) {
-				updateLST();
-			}
-		}, 2000 );
+		//setInterval( function () {
+		//	if ( jQuery('#nowon').val() === 'now' ) {
+		//		updateLST();
+		//	}
+		//}, 5000 );
 		setInterval( function () {
 			if ( document.getElementById('coordobservable').checked && jQuery('#nowon').val() === 'now' ) {
 				table.draw(false);
 			}
 		}, 60000 );
+		updateLST();
 	} );
 	</script>
 <?php
@@ -3120,6 +3153,7 @@ function transient_table_scripts() {
 		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('parent-style'));
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__), array() );
+		wp_enqueue_script( 'suncalc-js', plugins_url( "suncalc.js", __FILE__), array() );
 		#wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.js", array('jquery') );
 		#wp_enqueue_style( 'datatables-css', "https://cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.css", array('transient-table') );
 		#wp_enqueue_script( 'datatables-js', "https://nightly.datatables.net/js/jquery.dataTables.min.js", array('jquery') );

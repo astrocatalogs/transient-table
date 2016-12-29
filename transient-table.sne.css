@@ -523,7 +523,7 @@ input[type="search"].colsearch:hover {
 	margin-left: 5px;
 }
 
-.lonlat {
+#lonlat {
 	display: inline-block;
     border: 1px dashed #aaa;
     padding-left: 3px;
@@ -532,6 +532,20 @@ input[type="search"].colsearch:hover {
     vertical-align: top;
     position: relative;
     top: -2px;
+}
+
+#obsfrom {
+	position:relative;
+	top:-23px;
+}
+
+#obstime {
+	display:inline-block;
+	text-align:left;
+}
+
+#suninfo {
+	padding-left:5px;
 }
 
 #locbutt {
