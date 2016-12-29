@@ -507,7 +507,7 @@ input[type="search"].colsearch:hover {
 }
 
 .coordfield {
-	width:70px;
+	width:90px;
 	color: #222 !important;
     line-height: 14px !important;
     font-size: 11px !important;
@@ -517,4 +517,24 @@ input[type="search"].colsearch:hover {
 #advancedtab tr td {
 	border: 1px solid #777 !important;
 	text-align: center;
+}
+
+.obssel {
+	margin-left: 5px;
+}
+
+.lonlat {
+	display: inline-block;
+    border: 1px dashed #aaa;
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-bottom: 2px;
+    vertical-align: top;
+    position: relative;
+    top: -2px;
+}
+
+#locbutt {
+	padding: 0em 0.5em;
+	height: 20px;
 }
