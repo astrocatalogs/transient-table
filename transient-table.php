@@ -1014,8 +1014,11 @@ function transient_catalog($bones = false) {
 			if (!row.photolink) return '';
 			if (row.photolink.indexOf(',') !== -1) {
 				var photosplit = row.photolink.split(',');
-				return "<div class='tooltip'><a class='lci' href='" + urlstem + nameToFilename(row.name) +
-					"/' target='_blank'></a> " + photosplit[0] + "<span class='tooltiptext'> Detected epochs: " + photosplit[1] + " – " + photosplit[2] + "</span></div>"; 
+				var retstr = "<div class='tooltip'><a class='lci' href='" + urlstem + nameToFilename(row.name) +
+					"/' target='_blank'></a> " + photosplit[0] + "<span class='tooltiptext'> Detected epochs: " + photosplit[1];
+				if (photosplit.length > 2) retstr += " – " + photosplit[2];
+				retstr += "</span></div>"; 
+				return retstr;
 			}
 			return "<a class='lci' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a> " + row.photolink; 
 		}
@@ -1031,19 +1034,21 @@ function transient_catalog($bones = false) {
 			if (!row.spectralink) return '';
 			if (row.spectralink.indexOf(',') !== -1) {
 				var spectrasplit = row.spectralink.split(',');
-				return "<div class='tooltip'><a class='sci' href='" + urlstem + nameToFilename(row.name) +
-					"/' target='_blank'></a> " + spectrasplit[0] + "<span class='tooltiptext'> Epochs: " + spectrasplit[1] + " – " + spectrasplit[2] + "</span></div>"; 
+				var retstr = "<div class='tooltip'><a class='sci' href='" + urlstem + nameToFilename(row.name) +
+					"/' target='_blank'></a> " + spectrasplit[0] + "<span class='tooltiptext'> Epochs: " + spectrasplit[1];
+				if (spectrasplit.length > 2) retstr += " – " + spectrasplit[2];
+				retstr += "</span></div>"; 
+				return retstr;
 			}
 			return "<a class='sci' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a> " + row.spectralink; 
 		}
+		function spectraSort ( row, type, val ) {
+			if (!row.spectralink) return NaN;
+			return parseInt(row.spectralink.split(',')[0]);
+		}
 		function spectraValue ( row, type, val, meta ) {
-			if (!row.spectralink) {
-				if (type === 'sort') return NaN;
-				return '';
-			}
-			var spectrasplit = row.spectralink.split(',');
-			var data = parseInt(spectrasplit[0]);
-			return data;
+			if (!row.spectralink) return '';
+			return parseInt(row.spectralink.split(',')[0]);
 		}
 		function radioLinked ( row, type, val, meta ) {
 			if (!row.radiolink) return '';
@@ -1400,11 +1405,12 @@ function transient_catalog($bones = false) {
 					"display": photoLinked,
 					"_": photoValue,
 					"sort": photoSort
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"6%" },
+				  }, "name": "photolink", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"6%" },
 				{ "data": {
 					"display": spectraLinked,
-					"_": spectraValue
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"5%" },
+					"_": spectraValue,
+					"source": spectraSort
+				  }, "name": "spectralink", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"5%" },
 				{ "data": {
 					"display": radioLinked,
 					"_": "radiolink"
@@ -1584,8 +1590,8 @@ function transient_catalog($bones = false) {
 		daysstr += '</select>';
 
 		var footstring = 
-			'<table id="advancedtab"><tr><td><span id="obsfrom"><input type="checkbox" id="coordobservable">' +
-			'Observable from </span><span id="lonlat">' + 
+			'<table id="advancedtab"><tr><td><div id="obsfrom"><input type="checkbox" id="coordobservable">' +
+			'Observable from </div><span id="lonlat">' + 
 			'<input class="coordfield" id="inplon" incremental="incremental" title="Longitude (deg.)" placeholder="Longitude">, ' +
 			'<input class="coordfield" id="inplat" incremental="incremental" title="Latitude (deg.)" placeholder="Latitude"><br>' +
 			'<button type="button" id="locbutt" onclick="geoFindMe()"><span id="inpmessage">🌎 Use my location</span></button>' +
@@ -1593,7 +1599,11 @@ function transient_catalog($bones = false) {
 			'<span id="obstime"><select id="nowon" class="obssel"><option value="now">now</option><option value="on">on</option></select>' +
 			'<span id="ondate" style="display:none">' + yearsstr + monsstr + daysstr +
 			' at <input class="coordfield" id="inptime" title="24-hour time (hh:mm:ss)" value="00:00:00" placeholder="hh:mm:ss"> [UTC]</span>' +
-			'<br><span id="suninfo"></span></span></td></tr></table>';
+			'<br><span id="suninfo"></span></span></td><td>Has <span id="prepost"><input type="checkbox" id="premaxphoto"> pre- ' +
+			'<input type="checkbox" id="postmaxphoto"> post-max photometry' +
+			'<br><input type="checkbox" id="premaxspectra"> pre- ' +
+			'<input type="checkbox" id="postmaxspectra"> post-max spectroscopy</span>' +
+			'</td></tr></table>';
 		jQuery("div.coordfoot").html(footstring);
         table.columns().every( function ( index ) {
             var that = this;
@@ -1635,7 +1645,7 @@ function transient_catalog($bones = false) {
 		decColumn = table.column('dec:name').index();
 
 		jQuery.fn.dataTable.ext.search.push(
-			function( oSettings, aData, iDataIndex ) {
+			function( oSettings, aData, iDataIndex, rowData ) {
 				var alen = aData.length;
 
 				for ( var i = 0; i < alen; i++ )
@@ -1653,8 +1663,35 @@ function transient_catalog($bones = false) {
 				if ( document.getElementById('coordobservable').checked ) {
 					if ( aData[raColumn] === null || aData[decColumn] === null ) return false;
 					alt = getAlt(aData[raColumn], aData[decColumn]);
-					name = aData[nameColumn];
 					if ( alt < 0.0 ) return false;
+				}
+				if ( document.getElementById('premaxphoto').checked ) {
+					if ( !rowData.photolink ) return false;
+					var photosplit = rowData.photolink.split(',');
+					if ( photosplit.length < 2 ) return false;
+					var premaxep = parseFloat(photosplit[1]);
+					if ( premaxep >= 0.0 ) return false;
+				}
+				if ( document.getElementById('postmaxphoto').checked ) {
+					if ( !rowData.photolink ) return false;
+					var photosplit = rowData.photolink.split(',');
+					if ( photosplit.length < 2 ) return false;
+					var postmaxep = parseFloat(photosplit[photosplit.length == 3 ? 2 : 1]);
+					if ( postmaxep <= 0.0 ) return false;
+				}
+				if ( document.getElementById('premaxspectra').checked ) {
+					if ( !rowData.spectralink ) return false;
+					var spectrasplit = rowData.spectralink.split(',');
+					if ( spectrasplit.length < 2 ) return false;
+					var premaxep = parseFloat(spectrasplit[1]);
+					if ( premaxep >= 0.0 ) return false;
+				}
+				if ( document.getElementById('postmaxspectra').checked ) {
+					if ( !rowData.spectralink ) return false;
+					var spectrasplit = rowData.spectralink.split(',');
+					if ( spectrasplit.length < 2 ) return false;
+					var postmaxep = parseFloat(spectrasplit[spectrasplit.length == 3 ? 2 : 1]);
+					if ( postmaxep <= 0.0 ) return false;
 				}
 				return true;
 			}
@@ -1662,6 +1699,9 @@ function transient_catalog($bones = false) {
 		table.on( 'search.dt', function () {
 			searchFields = getSearchFields(allSearchCols);
 			table.rows({page:'current'}).invalidate();
+		} );
+		jQuery('#premaxphoto, #postmaxphoto, #premaxspectra, #postmaxspectra').change( function () {
+			table.draw();
 		} );
 		jQuery('#coordobservable').change( function () {
 			updateLST();
