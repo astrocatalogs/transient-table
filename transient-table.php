@@ -43,6 +43,7 @@ function datatables_functions() {
 	var nameColumn;
 	var raColumn;
 	var decColumn;
+	var altColumn;
 	<?php if ( is_front_page() ) {
 		// File from http://www.minorplanetcenter.net/iau/lists/ObsCodes.html
 		$lochtml = json_encode(file_get_contents(__DIR__ . '/ObsCodes.html'));
@@ -976,7 +977,8 @@ function datatables_functions() {
 
 function transient_catalog($bones = false) {
 	global $stem, $modu;
-	readfile("/var/www/html/" . $stem . "/astrocats/astrocats/" . $modu . "/html/table-templates/catalog.html");
+	readfile("/var/www/html/" . $stem . "/astrocats/astrocats/" . $modu .
+		"/output/html/table-templates/" . ($bones ? "bones" : "catalog"). ".html");
 ?>
 	<script>
 	var bones = <?php echo json_encode($bones); ?>;
@@ -985,7 +987,8 @@ function transient_catalog($bones = false) {
 		var floatColValPMDict = {};
 		var floatColInds = [];
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
-			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffsetang', 'hostoffsetdist'];
+			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffsetang',
+			'hostoffsetdist', 'altitude', 'airmass'];
 		var stringColValDict = {};
 		var stringColValPMDict = {};
 		var stringColInds = [];
@@ -1073,6 +1076,25 @@ function transient_catalog($bones = false) {
 			}
 			var data = parseFloat(row.hostoffsetdist[0]['value']);
 			return data;
+		}
+		function altitudeValue ( row, type, val, meta ) {
+			if (!row.ra || !row.dec) {;
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			return parseFloat(getAlt(row.ra[0]['value'], row.dec[0]['value']).toFixed(3));
+		}
+		function airmassValue ( row, type, val, meta ) {
+			if (!row.ra || !row.dec) {;
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var alt = getAlt(row.ra[0]['value'], row.dec[0]['value']);
+			var airmass = 1.0 / Math.sin(Math.PI / 180.0 * (alt + 244.0/(165.0 + 47.0*Math.pow(alt, 1.1))));
+			if (isNaN(airmass) && type !== 'sort') {
+				return '';
+			}
+			return parseFloat(airmass.toFixed(3));
 		}
 		function redshiftValue ( row, type, val, meta ) {
 			if (!row.redshift) {
@@ -1377,6 +1399,8 @@ function transient_catalog($bones = false) {
 					"sort": hostoffsetdistValue,
 					"_": "hostoffsetdist.0.value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				{ "data": null, "name": "altitude", "type": "non-empty-float", "render": altitudeValue },
+				{ "data": null, "name": "airmass", "type": "num", "render": airmassValue },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": {
 					"display": redshiftLinked,
@@ -1566,7 +1590,7 @@ function transient_catalog($bones = false) {
 		var curyear = curdate.getFullYear();
 		var curmonth = curdate.getMonth();
 		var curday = curdate.getDate();
-		var yearslist = Array.apply(null, Array(200)).map(function (_, i) {return curyear - i + 5;});
+		var yearslist = Array.apply(null, Array(1000)).map(function (_, i) {return curyear - i + 5;});
 		var yearsstr = '<select class="obssel" id="inpyear">';
 		for ( var i = 0; i < yearslist.length; i++ ) {
 			yearsstr += '<option value="' + yearslist[i] + '"';
@@ -1643,6 +1667,7 @@ function transient_catalog($bones = false) {
 		nameColumn = table.column('name:name').index();
 		raColumn = table.column('ra:name').index();
 		decColumn = table.column('dec:name').index();
+		altColumn = table.column('altitude:name').index();
 
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex, rowData ) {
@@ -1696,6 +1721,15 @@ function transient_catalog($bones = false) {
 				return true;
 			}
 		);
+		function locTableUpdate () {
+			updateLST();
+			if ( document.getElementById('coordobservable').checked || table.column(altColumn).visible() ) {
+				if ( table.column(altColumn).visible() ) {
+					table.cells(altColumn).invalidate();
+				}
+				table.draw(false);
+			}
+		}
 		table.on( 'search.dt', function () {
 			searchFields = getSearchFields(allSearchCols);
 			table.rows({page:'current'}).invalidate();
@@ -1708,10 +1742,7 @@ function transient_catalog($bones = false) {
 			table.draw();
 		} );
 		jQuery('#inplon, #inplat, #inptime, #inpyear, #inpmon, #inpday, #nowon').change( function () {
-			updateLST();
-			if ( document.getElementById('coordobservable').checked ) {
-				table.draw();
-			}
+			locTableUpdate();
 		} );
 		jQuery('#inplon, #inplat').change( function () {
 			jQuery('#inpobs').find('option:eq(0)').prop('selected', true);
@@ -1722,10 +1753,7 @@ function transient_catalog($bones = false) {
 			var obslat = obscoords.split(',')[1];
 			jQuery('#inplon').val(obslong);
 			jQuery('#inplat').val(obslat);
-			updateLST();
-			if ( document.getElementById('coordobservable').checked ) {
-				table.draw();
-			}
+			locTableUpdate();
 		} );
 		jQuery('#nowon').change( function () {
 			if ( jQuery(this).val() == 'on' ) {
@@ -1733,6 +1761,7 @@ function transient_catalog($bones = false) {
 			} else {
 				jQuery('#ondate').hide();
 			}
+			locTableUpdate();
 		} );
 		searchFields = getSearchFields(allSearchCols);
 		setInterval( function () {
