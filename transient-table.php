@@ -44,6 +44,7 @@ function datatables_functions() {
 	var raColumn;
 	var decColumn;
 	var altColumn;
+	var amColumn;
 	<?php if ( is_front_page() ) {
 		// File from http://www.minorplanetcenter.net/iau/lists/ObsCodes.html
 		$lochtml = json_encode(file_get_contents(__DIR__ . '/ObsCodes.html'));
@@ -1091,7 +1092,8 @@ function transient_catalog($bones = false) {
 			}
 			var alt = getAlt(row.ra[0]['value'], row.dec[0]['value']);
 			var airmass = 1.0 / Math.sin(Math.PI / 180.0 * (alt + 244.0/(165.0 + 47.0*Math.pow(alt, 1.1))));
-			if (isNaN(airmass) && type !== 'sort') {
+			if (isNaN(airmass)) {
+				if (type === 'sort') return NaN;
 				return '';
 			}
 			return parseFloat(airmass.toFixed(3));
@@ -1399,8 +1401,8 @@ function transient_catalog($bones = false) {
 					"sort": hostoffsetdistValue,
 					"_": "hostoffsetdist.0.value"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
-				{ "data": null, "name": "altitude", "type": "non-empty-float", "render": altitudeValue },
-				{ "data": null, "name": "airmass", "type": "num", "render": airmassValue },
+				{ "data": null, "name": "altitude", "type": "non-empty-float", "render": altitudeValue, "defaultContent": "" },
+				{ "data": null, "name": "airmass", "type": "non-empty-float", "render": airmassValue, "defaultContent": "" },
 				{ "data": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": {
 					"display": redshiftLinked,
@@ -1668,6 +1670,7 @@ function transient_catalog($bones = false) {
 		raColumn = table.column('ra:name').index();
 		decColumn = table.column('dec:name').index();
 		altColumn = table.column('altitude:name').index();
+		amColumn = table.column('airmass:name').index();
 
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex, rowData ) {
@@ -1723,10 +1726,15 @@ function transient_catalog($bones = false) {
 		);
 		function locTableUpdate () {
 			updateLST();
-			if ( document.getElementById('coordobservable').checked || table.column(altColumn).visible() ) {
-				if ( table.column(altColumn).visible() ) {
-					table.cells(altColumn).invalidate();
+			if ( document.getElementById('coordobservable').checked || table.column(altColumn).visible() || table.column(amColumn).visible() ) {
+				if ( table.column(altColumn).visible() || table.column(amColumn).visible() ) {
+					//table.cells('#altitude', {page: 'all'}).invalidate();
+					table.rows().invalidate();
 				}
+				//if ( table.column(amColumn).visible() ) {
+				//	//table.cells('#airmass', {page: 'all'}).invalidate();
+				//	table.rows().invalidate();
+				//}
 				table.draw(false);
 			}
 		}
