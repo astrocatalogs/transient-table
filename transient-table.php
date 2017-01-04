@@ -44,7 +44,10 @@ function datatables_functions() {
 	var raColumn;
 	var decColumn;
 	var altColumn;
+	var aziColumn;
 	var amColumn;
+	var altVisible;
+	var aziVisible;
 	<?php if ( is_front_page() ) {
 		// File from http://www.minorplanetcenter.net/iau/lists/ObsCodes.html
 		$lochtml = json_encode(file_get_contents(__DIR__ . '/ObsCodes.html'));
@@ -54,7 +57,12 @@ function datatables_functions() {
 	var lst = 0.0;
 	var longitude = 0.0;
 	var latitude = 0.0;
-	function updateLST() {
+	var moonAlt = 0.0;
+	var moonAzi = 0.0;
+	var sunAlt = 0.0;
+	var sunAzi = 0.0;
+	var moonPhaseIcon = '';
+	function updateLocation() {
 		var sunmoontxt = document.getElementById("suninfo");
 		var lat = document.getElementById("inplat");
 		var lon = document.getElementById("inplon");
@@ -84,6 +92,8 @@ function datatables_functions() {
 		lst = (100.46 + 0.985647 * j2000d + longitude + 15.0*dechours) % 360.0;
 		if ( lst < 0 ) lst += 360;
 
+		var sunpos = SunCalc.getPosition(seldate, latitude, longitude);
+		var moonpos = SunCalc.getMoonPosition(seldate, latitude, longitude);
 		var moonphase = SunCalc.getMoonIllumination(seldate).phase;
 		var times = SunCalc.getTimes(seldate, latitude, longitude);
 		var start = seldate;
@@ -104,14 +114,14 @@ function datatables_functions() {
 			break;
 		}
 		var moonphases = [
-			[0.035, '🌑 New Moon'],
-			[0.2, '🌒 Waxing crescent'],
-			[0.3, '🌓 First quarter'],
-			[0.465, '🌔 Waxing gibbous'],
-			[0.535, '🌕 Full Moon'],
-			[0.7, '🌖 Waning gibbous'],
-			[0.8, '🌗 Last quarter'],
-			[0.965, '🌘 Waning crescent']
+			[0.035, '🌑', 'New Moon'],
+			[0.2, '🌒', 'Waxing crescent'],
+			[0.3, '🌓', 'First quarter'],
+			[0.465, '🌔', 'Waxing gibbous'],
+			[0.535, '🌕', 'Full Moon'],
+			[0.7, '🌖', 'Waning gibbous'],
+			[0.8, '🌗', 'Last quarter'],
+			[0.965, '🌘', 'Waning crescent']
 		];
 		var moonStr = '🌑 New Moon';
 		for ( var i = moonphases.length - 1; i >= 0; i-- ) {
@@ -119,11 +129,28 @@ function datatables_functions() {
 				continue;
 			}
 			if ( i < moonphases.length - 1) {
-				moonStr = moonphases[i+1][1];
+				moonPhaseIcon = moonphases[i+1][1];
+				moonPhaseDesc = moonphases[i+1][2];
 			}
 			break;
 		}
-		sunmoontxt.innerHTML = sunriseStr + ', ' + moonStr;
+		sunmoontxt.innerHTML = sunriseStr + ', ' + moonPhaseIcon + ' ' + moonPhaseDesc;
+
+		moonAlt = moonpos.altitude;
+		// sunCalc uses SW convention, convert to NE astronomy convention.
+		moonAzi = (moonpos.azimuth < Math.PI) ? Math.PI + moonpos.azimuth : moonpos.azimuth - Math.PI;
+
+		sunAlt = sunpos.altitude;
+		// sunCalc uses SW convention, convert to NE astronomy convention.
+		sunAzi = (sunpos.azimuth < Math.PI) ? Math.PI + sunpos.azimuth : sunpos.azimuth - Math.PI;
+	}
+	function angDist(lon1, lat1, lon2, lat2) {
+		// All angles in rads
+		var dlon = lon2 - lon1;
+		var dlat = lat2 - lat1;
+		var a = Math.pow((Math.sin(0.5*dlat)), 2) + (Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(0.5*dlon), 2));
+		var dist = 2.0 * Math.asin(Math.min(1.0, Math.sqrt(a)));
+		return dist;
 	}
 	function getAlt(rahms, decdms) {
 		var ra = raToDegrees(rahms);
@@ -133,18 +160,18 @@ function datatables_functions() {
 		var lat = latitude*Math.PI/180.0;
 		ha *= Math.PI/180.0;
 		dec *= Math.PI/180.0;
-		// ArcSin needed to get actually angle, but we just need sign.
 		return (180.0/Math.PI)*Math.asin(Math.sin(dec)*Math.sin(lat)+Math.cos(dec)*Math.cos(lat)*Math.cos(ha));
 	}
-	function aboveHorizon(rahms, decdms) {
+	function getAzi(rahms, decdms) {
 		var ra = raToDegrees(rahms);
 		var dec = decToDegrees(decdms);
 		var ha = lst - ra;
-		if ( ha < 0 ) ha += 360;
 		var lat = latitude*Math.PI/180.0;
-		ha *= Math.PI/180.0;
 		dec *= Math.PI/180.0;
-		return Math.sin(dec)*Math.sin(lat)+Math.cos(dec)*Math.cos(lat)*Math.cos(ha) > 0;
+		var alt = Math.asin(Math.sin(dec)*Math.sin(lat)+Math.cos(dec)*Math.cos(lat)*Math.cos(ha));
+		var azi = (180.0/Math.PI)*Math.acos((Math.sin(dec) - Math.sin(alt)*Math.sin(lat))/(Math.cos(alt)*Math.cos(lat)));
+		if (Math.sin(ha) > 0.0) azi = 360 - azi;
+		return azi;
 	}
 	function geoFindMe() {
 		var lat = document.getElementById("inplat");
@@ -169,7 +196,7 @@ function datatables_functions() {
 			message.innerHTML = "🌎  Use my location";
 			locbutt.disabled = false;
 
-			updateLST();
+			updateLocation();
 		}
 
 		function error() {
@@ -292,6 +319,7 @@ function datatables_functions() {
 		return nameSwitcher ( data, type, row, meta, 'name2', 'aliases2' );
 	}
 	function nameSwitcher ( data, type, row, meta, namefield, aliasfield ) {
+		var html = '';
 		if (namefield === undefined) namefield = 'name';
 		if (aliasfield === undefined) aliasfield = 'alias';
 		if ( (type === 'display' || type === 'sort') ) {
@@ -314,7 +342,8 @@ function datatables_functions() {
 							}
 						}
 						if (type === 'sort') {
-							return primaryname;
+							html = primaryname;
+							break;
 						}
 						var otheraliases = [];
 						for (var a = 0; a < alen; a++) {
@@ -323,19 +352,22 @@ function datatables_functions() {
 							}
 							otheraliases.push(noBreak(aliases[a]));
 						}
-						return "<div class='tooltip'><a href='" + urlstem + nameToFilename(row[namefield]) +
+						html = "<div class='tooltip'><a href='" + urlstem + nameToFilename(row[namefield]) +
 							"/' target='_blank'>" + primaryname + "</a><span class='tooltiptext'> " + otheraliases.join(', ') + "</span></div>";
+						break;
 					}
 				}
 			}
-			if (type === 'display') {
-				return nameLinked(row, null, null, null, namefield, aliasfield);
+			if (html === '') {
+				if (type === 'display') {
+					html = nameLinked(row, null, null, null, namefield, aliasfield);
+				} else html = row[namefield];
 			}
-			return row[namefield];
 		} else if (type === 'filter') {
-			return eventAliases(row, null, null, null, aliasfield);
+			html = eventAliases(row, null, null, null, aliasfield);
 		}
-		return row[namefield];
+		if (html === '') html = row[namefield];
+		return html;
 	}
 	function hostLinked ( row, type, val, meta ) {
 		var host = "<a class='" + (('kind' in row.host[0] && row.host[0]['kind'] == 'cluster') ? "hci" : "hhi") +
@@ -989,7 +1021,7 @@ function transient_catalog($bones = false) {
 		var floatColInds = [];
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
 			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffsetang',
-			'hostoffsetdist', 'altitude', 'airmass'];
+			'hostoffsetdist', 'altitude', 'azimuth', 'airmass'];
 		var stringColValDict = {};
 		var stringColValPMDict = {};
 		var stringColInds = [];
@@ -1078,15 +1110,52 @@ function transient_catalog($bones = false) {
 			var data = parseFloat(row.hostoffsetdist[0]['value']);
 			return data;
 		}
-		function altitudeValue ( row, type, val, meta ) {
-			if (!row.ra || !row.dec) {;
+		function getSunMoonStr ( ra, dec, alt, azi ) {
+  			alt = (alt !== null && typeof alt !== 'undefined') ? alt : getAlt(ra, dec);
+  			azi = (azi !== null && typeof azi !== 'undefined') ? azi : getAzi(ra, dec);
+			var moonsunstr = '';
+			if (moonAlt != 0.0 && moonAzi != 0.0 ) {
+				moondist = angDist(Math.PI/180.0*azi, Math.PI/180.0*alt, moonAzi, moonAlt);
+				if (moondist < 5.0*Math.PI/180.0) moonsunstr += '&nbsp;<span title="Object is &lt;5&deg; from the Moon">' + moonPhaseIcon + '</span>';
+			}
+			if (sunAlt != 0.0 && sunAzi != 0.0 ) {
+				sundist = angDist(Math.PI/180.0*azi, Math.PI/180.0*alt, sunAzi, sunAlt);
+				if (sundist < 5.0*Math.PI/180.0) moonsunstr += '&nbsp;<span title="Object is &lt;5&deg; from the Sun">☀️</span>';
+			}
+			return moonsunstr;
+		}
+		function altitudeValue ( row, type, full, meta ) {
+			if (!row.ra || !row.dec) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			return parseFloat(getAlt(row.ra[0]['value'], row.dec[0]['value']).toFixed(3));
+			var ra = row.ra[0]['value'];
+			var dec = row.dec[0]['value'];
+			var alt = getAlt(ra, dec);
+			var altVal = parseFloat(alt.toFixed(3));
+			if (type === 'display') {
+				var moonsunstr = aziVisible ? '' : getSunMoonStr(ra, dec, alt, null);
+				return String(altVal) + moonsunstr;
+			}
+			return altVal;
+		}
+		function azimuthValue ( row, type, val, meta ) {
+			if (!row.ra || !row.dec) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var ra = row.ra[0]['value'];
+			var dec = row.dec[0]['value'];
+			var azi = getAzi(ra, dec);
+			var aziVal = parseFloat(azi.toFixed(3));
+			if (type === 'display') {
+				var moonsunstr = getSunMoonStr(ra, dec, null, azi);
+				return String(aziVal) + moonsunstr;
+			}
+			return aziVal;
 		}
 		function airmassValue ( row, type, val, meta ) {
-			if (!row.ra || !row.dec) {;
+			if (!amVisible || !row.ra || !row.dec) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
@@ -1337,13 +1406,24 @@ function transient_catalog($bones = false) {
             jQuery(this).html( inputstr );
         } );
 		var ajaxURL = '/../../astrocats/astrocats/' + modu + '/output/' + ((bones) ? 'bones' : 'catalog') + '.min.json';
+		jQuery.fn.redraw = function(){
+		  jQuery(this).each(function(){
+			  this.style.display='none';
+			  this.offsetHeight; // no need to store this anywhere, the reference is enough
+			  this.style.display='block';
+		  });
+		};
 		var table = jQuery('#example').DataTable( {
 			ajax: {
 				url: ajaxURL,
-				dataSrc: ''
+				dataSrc: function ( json ) {
+					jQuery('#loadingMessage').html('Generating table...');
+					jQuery('#loadingMessage').toggleClass('force-redraw');
+					return json;
+				}
 			},
 			"language": {
-				"loadingRecords": "<img style='vertical-align:-43%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif'>Loading... (should take a few seconds)"
+				"loadingRecords": "<img style='vertical-align:-43%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif'><span id='loadingMessage'>Loading... (should take a few seconds)</span>"
 			},
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
@@ -1351,22 +1431,22 @@ function transient_catalog($bones = false) {
 				{ "data": {
 					"_": eventAliases,
 					"display": eventAliasesOnly,
-				  }, "type": "string" },
+				  }, "name": "aliases", "type": "string" },
 				{ "data": {
 					"display": discoverDateLinked,
 					"filter": "discoverdate.0.value",
 					"sort": discoverDateValue,
 					"_": "discoverdate[,].value"
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2 },
+				  }, "name": "discoverdate", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2 },
 				{ "data": {
 					"display": maxDateLinked,
 					"filter": "maxdate.0.value",
 					"sort": maxDateValue,
 					"_": "maxdate[,].value"
 				  }, "type": "non-empty-float", "defaultContent": "" },
-				{ "data": "maxappmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
-				{ "data": "maxabsmag.0.value", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
-				{ "data": null, "type": "string", "width":"14%", "render": hostSwitcher },
+				{ "data": "maxappmag.0.value", "name": "maxappmag", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
+				{ "data": "maxabsmag.0.value", "name": "maxabsmag", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
+				{ "data": null, "name": "host", "type": "string", "width":"14%", "render": hostSwitcher },
 				{ "data": {
 					"display": raLinked,
 					"filter": "ra.0.value",
@@ -1384,45 +1464,46 @@ function transient_catalog($bones = false) {
 					"filter": "hostra.0.value",
 					"sort": hostraValue,
 					"_": "hostra[,].value"
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				  }, "name": "hostra", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"display": hostdecLinked,
 					"filter": "hostdec.0.value",
 					"sort": hostdecValue,
 					"_": "hostdec[,].value"
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				  }, "name": "hostdec", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"filter": hostoffsetangValue,
 					"sort": hostoffsetangValue,
 					"_": "hostoffsetang.0.value"
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				  }, "name": "hostoffsetang", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"filter": hostoffsetdistValue,
 					"sort": hostoffsetdistValue,
 					"_": "hostoffsetdist.0.value"
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				  }, "name": "hostoffsetdist", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": null, "name": "altitude", "type": "non-empty-float", "render": altitudeValue, "defaultContent": "" },
+				{ "data": null, "name": "azimuth", "type": "non-empty-float", "render": azimuthValue, "defaultContent": "" },
 				{ "data": null, "name": "airmass", "type": "non-empty-float", "render": airmassValue, "defaultContent": "" },
-				{ "data": "instruments", "type": "string", "defaultContent": "" },
+				{ "data": "instruments", "name": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": {
 					"display": redshiftLinked,
 					"filter": redshiftValue,
 					"sort": redshiftValue,
 					"_": "redshift[,].value"
-				  }, "type": "non-empty-float", "defaultContent": "" },
+				  }, "name": "redshift", "type": "non-empty-float", "defaultContent": "" },
 				{ "data": {
 					"display": velocityLinked,
 					"filter": velocityValue,
 					"sort": velocityValue,
 					"_": "velocity[,].value"
-				  }, "type": "non-empty-float", "defaultContent": "" },
+				  }, "name": "velocity", "type": "non-empty-float", "defaultContent": "" },
 				{ "data": {
 					"display": lumdistLinked,
 					"filter": lumdistValue,
 					"sort": lumdistValue,
 					"_": "lumdist[,].value"
-				  }, "type": "non-empty-float", "defaultContent": "" },
-				{ "data": null, "type": "string", "responsivePriority": 3, "render": typeSwitcher },
+				  }, "name": "lumdist", "type": "non-empty-float", "defaultContent": "" },
+				{ "data": null, "name": "claimedtype", "type": "string", "responsivePriority": 3, "render": typeSwitcher },
 				{ "data": {
 					"display": ebvLinked,
 					"_": ebvValue
@@ -1440,16 +1521,16 @@ function transient_catalog($bones = false) {
 				{ "data": {
 					"display": radioLinked,
 					"_": "radiolink"
-				  }, "type": "num", "defaultContent": "", "responsivePriority": 2, "width":"4%" },
+				  }, "name": "radiolink", "type": "num", "defaultContent": "", "responsivePriority": 2, "width":"4%" },
 				{ "data": {
 					"display": xrayLinked,
 					"_": "xraylink",
-				  }, "type": "num", "defaultContent": "", "responsivePriority": 2 },
+				  }, "name": "xraylink", "type": "num", "defaultContent": "", "responsivePriority": 2 },
 				{ "data": {
 					"display": refLinked,
 					"_": "references"
-				  }, "type": "html", "searchable": false },
-				{ "data": dataLinked, "responsivePriority": 4, "searchable": false },
+				  }, "name": "references", "type": "html", "searchable": false },
+				{ "data": dataLinked, "name": "data", "responsivePriority": 4, "searchable": false },
 				{ "defaultContent": "" },
 			],
             dom: 'Bflprt<"coordfoot">ip',
@@ -1670,7 +1751,12 @@ function transient_catalog($bones = false) {
 		raColumn = table.column('ra:name').index();
 		decColumn = table.column('dec:name').index();
 		altColumn = table.column('altitude:name').index();
+		aziColumn = table.column('azimuth:name').index();
 		amColumn = table.column('airmass:name').index();
+
+		altVisible = table.column(altColumn).visible();
+		aziVisible = table.column(aziColumn).visible();
+		amVisible = table.column(amColumn).visible();
 
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex, rowData ) {
@@ -1690,6 +1776,9 @@ function transient_catalog($bones = false) {
 				}
 				if ( document.getElementById('coordobservable').checked ) {
 					if ( aData[raColumn] === null || aData[decColumn] === null ) return false;
+					if ( aData[altColumn] !== '' ) {
+						if ( aData[altColumn] < 0.0 ) return false;
+					}
 					alt = getAlt(aData[raColumn], aData[decColumn]);
 					if ( alt < 0.0 ) return false;
 				}
@@ -1725,28 +1814,36 @@ function transient_catalog($bones = false) {
 			}
 		);
 		function locTableUpdate () {
-			updateLST();
-			if ( document.getElementById('coordobservable').checked || table.column(altColumn).visible() || table.column(amColumn).visible() ) {
-				if ( table.column(altColumn).visible() || table.column(amColumn).visible() ) {
-					//table.cells('#altitude', {page: 'all'}).invalidate();
-					table.rows().invalidate();
+			updateLocation();
+			if ( document.getElementById('coordobservable').checked || table.column(altColumn).visible() ||
+					table.column(aziColumn).visible() || table.column(amColumn).visible() ) {
+				if ( table.column(altColumn).visible() || table.column(aziColumn).visible() || table.column(amColumn).visible() ) {
+					//table.column(altColumn).cells().invalidate();
+					table.rows().invalidate().draw(false);
 				}
 				//if ( table.column(amColumn).visible() ) {
 				//	//table.cells('#airmass', {page: 'all'}).invalidate();
 				//	table.rows().invalidate();
 				//}
-				table.draw(false);
 			}
 		}
 		table.on( 'search.dt', function () {
 			searchFields = getSearchFields(allSearchCols);
 			table.rows({page:'current'}).invalidate();
 		} );
+		table.on( 'column-visibility.dt', function (e, settings, column, state) {
+			if ( column == altColumn || column == aziColumn || column == amColumn ) {
+				altVisible = table.column(altColumn).visible();
+				aziVisible = table.column(aziColumn).visible();
+				amVisible = table.column(amColumn).visible();
+				table.rows().invalidate();
+			}
+		} );
 		jQuery('#premaxphoto, #postmaxphoto, #premaxspectra, #postmaxspectra').change( function () {
 			table.draw();
 		} );
 		jQuery('#coordobservable').change( function () {
-			updateLST();
+			updateLocation();
 			table.draw();
 		} );
 		jQuery('#inplon, #inplat, #inptime, #inpyear, #inpmon, #inpday, #nowon').change( function () {
@@ -1778,7 +1875,7 @@ function transient_catalog($bones = false) {
 		}, 14400000 );
 		//setInterval( function () {
 		//	if ( jQuery('#nowon').val() === 'now' ) {
-		//		updateLST();
+		//		updateLocation();
 		//	}
 		//}, 5000 );
 		setInterval( function () {
@@ -1786,7 +1883,7 @@ function transient_catalog($bones = false) {
 				table.draw(false);
 			}
 		}, 60000 );
-		updateLST();
+		updateLocation();
 	} );
 	</script>
 <?php
