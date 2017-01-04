@@ -1706,7 +1706,8 @@ function transient_catalog($bones = false) {
 			'<span id="obstime"><select id="nowon" class="obssel"><option value="now">now</option><option value="on">on</option></select>' +
 			'<span id="ondate" style="display:none">' + yearsstr + monsstr + daysstr +
 			' at <input class="coordfield" id="inptime" title="24-hour time (hh:mm:ss)" value="00:00:00" placeholder="hh:mm:ss"> [UTC]</span>' +
-			'<br><span id="suninfo"></span></span></td><td>Has <span id="prepost"><input type="checkbox" id="premaxphoto"> pre- ' +
+			'<br><span id="suninfo"></span></span><br><input type="checkbox" id="farfrommoon" checked> Far from the Moon ' +
+			'<input type="checkbox" id="farfromsun" checked> Far from the Sun</td><td>Has <span id="prepost"><input type="checkbox" id="premaxphoto"> pre- ' +
 			'<input type="checkbox" id="postmaxphoto"> post-max photometry' +
 			'<br><input type="checkbox" id="premaxspectra"> pre- ' +
 			'<input type="checkbox" id="postmaxspectra"> post-max spectroscopy</span>' +
@@ -1781,6 +1782,22 @@ function transient_catalog($bones = false) {
 					}
 					alt = getAlt(aData[raColumn], aData[decColumn]);
 					if ( alt < 0.0 ) return false;
+					if ( document.getElementById('farfrommoon').checked ) {
+						alt = aData[altColumn];
+						azi = aData[aziColumn];
+						if (moonAlt != 0.0 && moonAzi != 0.0 ) {
+							moondist = angDist(Math.PI/180.0*azi, Math.PI/180.0*alt, moonAzi, moonAlt);
+							if (moondist < 5.0*Math.PI/180.0) return false;
+						}
+					}
+					if ( document.getElementById('farfromsun').checked ) {
+						alt = aData[altColumn];
+						azi = aData[aziColumn];
+						if (sunAlt != 0.0 && sunAzi != 0.0 ) {
+							sundist = angDist(Math.PI/180.0*azi, Math.PI/180.0*alt, sunAzi, sunAlt);
+							if (sundist < 5.0*Math.PI/180.0) return false;
+						}
+					}
 				}
 				if ( document.getElementById('premaxphoto').checked ) {
 					if ( !rowData.photolink ) return false;
@@ -1842,7 +1859,7 @@ function transient_catalog($bones = false) {
 		jQuery('#premaxphoto, #postmaxphoto, #premaxspectra, #postmaxspectra').change( function () {
 			table.draw();
 		} );
-		jQuery('#coordobservable').change( function () {
+		jQuery('#coordobservable, #farfrommoon, #farfromsun').change( function () {
 			updateLocation();
 			table.draw();
 		} );
