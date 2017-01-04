@@ -48,12 +48,6 @@ function datatables_functions() {
 	var amColumn;
 	var altVisible;
 	var aziVisible;
-	<?php if ( is_front_page() ) {
-		// File from http://www.minorplanetcenter.net/iau/lists/ObsCodes.html
-		$lochtml = json_encode(file_get_contents(__DIR__ . '/ObsCodes.html'));
-	?>
-	var lochtml = <?php echo $lochtml;?>;
-	<?php } ?>
 	var lst = 0.0;
 	var longitude = 0.0;
 	var latitude = 0.0;
@@ -1649,6 +1643,11 @@ function transient_catalog($bones = false) {
 		} );
 
 		// Set up observable filter widget.
+		<?php 
+			// File from http://www.minorplanetcenter.net/iau/lists/ObsCodes.html
+			$lochtml = json_encode(file_get_contents(__DIR__ . '/ObsCodes.html'));
+		?>
+		var lochtml = <?php echo $lochtml;?>;
 		var htmlsplit = lochtml.split("\n");
 		var observatories = Array();
 		for ( var i = 2; i < htmlsplit.length - 1; i++ ) {
