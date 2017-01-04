@@ -1,10 +1,10 @@
 sne
 supernovae
 sne
-alias,maxdate,velocity,maxabsmag,hostra,hostdec,hostoffsetang,hostoffsetdist,references,instruments,ebv,lumdist,xraylink,altitude,azimuth,airmass
+alias,maxdate,velocity,maxabsmag,hostra,hostdec,hostoffsetang,hostoffsetdist,references,instruments,ebv,lumdist,xraylink,altitude,azimuth,airmass,skybrightness
 maxdate,discoverdate,xraylink
 download,spectralink,photolink,radiolink
 photolink,spectralink,radiolink,xraylink
-23
+24
 10,50,250
 SNe

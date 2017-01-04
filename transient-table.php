@@ -46,8 +46,11 @@ function datatables_functions() {
 	var altColumn;
 	var aziColumn;
 	var amColumn;
+	var sbColumn;
 	var altVisible;
 	var aziVisible;
+	var amVisible;
+	var sbVisible;
 	var lst = 0.0;
 	var longitude = 0.0;
 	var latitude = 0.0;
@@ -55,6 +58,7 @@ function datatables_functions() {
 	var moonAzi = 0.0;
 	var sunAlt = 0.0;
 	var sunAzi = 0.0;
+	var moonPhaseAlpha = 0.0;
 	var moonPhaseIcon = '';
 	function updateLocation() {
 		var sunmoontxt = document.getElementById("suninfo");
@@ -82,16 +86,26 @@ function datatables_functions() {
 		var ut = new Date(seldate.getTime());
 		var j2000d = (ut.getTime() - j2000.getTime())/86400000.0;
 		var dechours = ut.getUTCHours() + ut.getUTCMinutes()/60.0 + ut.getUTCSeconds()/3600.0;
-		console.log(longitude, j2000d, dechours);
 
 		lst = (100.46 + 0.985647 * j2000d + longitude + 15.0*dechours) % 360.0;
 		if ( lst < 0 ) lst += 360;
 
 		var sunpos = SunCalc.getPosition(seldate, latitude, longitude);
 		var moonpos = SunCalc.getMoonPosition(seldate, latitude, longitude);
-		var moonphase = SunCalc.getMoonIllumination(seldate).phase;
+		var moonill = SunCalc.getMoonIllumination(seldate);
+		var moonphase = moonill.phase;
+		moonPhaseAlpha = moonill.angle;
 		var times = SunCalc.getTimes(seldate, latitude, longitude);
 		var start = seldate;
+
+		moonAlt = moonpos.altitude;
+		// sunCalc uses SW convention, convert to NE astronomy convention.
+		moonAzi = (moonpos.azimuth < Math.PI) ? Math.PI + moonpos.azimuth : moonpos.azimuth - Math.PI;
+
+		sunAlt = sunpos.altitude;
+		// sunCalc uses SW convention, convert to NE astronomy convention.
+		sunAzi = (sunpos.azimuth < Math.PI) ? Math.PI + sunpos.azimuth : sunpos.azimuth - Math.PI;
+
 		var timesofday = [
 			[times.nightEnd.getTime(), ' 🌃 Nighttime'],
 			[times.sunrise.getTime(), ' 🌄 Dawn twilight'],
@@ -108,43 +122,43 @@ function datatables_functions() {
 			}
 			break;
 		}
-		var moonphases = [
-			[0.035, '🌑', 'New Moon'],
-			[0.2, '🌒', 'Waxing crescent'],
-			[0.3, '🌓', 'First quarter'],
-			[0.465, '🌔', 'Waxing gibbous'],
-			[0.535, '🌕', 'Full Moon'],
-			[0.7, '🌖', 'Waning gibbous'],
-			[0.8, '🌗', 'Last quarter'],
-			[0.965, '🌘', 'Waning crescent']
-		];
-		var moonStr = '🌑 New Moon';
-		for ( var i = moonphases.length - 1; i >= 0; i-- ) {
-			if ( moonphase < moonphases[i][0] ) {
-				continue;
+		if (moonAlt <= 0.0) {
+			moonPhaseIcon = '◌';
+			moonPhaseDesc = 'No Moon';
+		} else {
+			var moonphases = [
+				[0.035, '🌑', 'New Moon'],
+				[0.2, '🌒', 'Waxing crescent'],
+				[0.3, '🌓', 'First quarter'],
+				[0.465, '🌔', 'Waxing gibbous'],
+				[0.535, '🌕', 'Full Moon'],
+				[0.7, '🌖', 'Waning gibbous'],
+				[0.8, '🌗', 'Last quarter'],
+				[0.965, '🌘', 'Waning crescent']
+			];
+			var moonStr = '🌑 New Moon';
+			for ( var i = moonphases.length - 1; i >= 0; i-- ) {
+				if ( moonphase < moonphases[i][0] ) {
+					continue;
+				}
+				if ( i < moonphases.length - 1) {
+					moonPhaseIcon = moonphases[i+1][1];
+					moonPhaseDesc = moonphases[i+1][2];
+				}
+				break;
 			}
-			if ( i < moonphases.length - 1) {
-				moonPhaseIcon = moonphases[i+1][1];
-				moonPhaseDesc = moonphases[i+1][2];
-			}
-			break;
 		}
 		sunmoontxt.innerHTML = sunriseStr + ', ' + moonPhaseIcon + ' ' + moonPhaseDesc;
-
-		moonAlt = moonpos.altitude;
-		// sunCalc uses SW convention, convert to NE astronomy convention.
-		moonAzi = (moonpos.azimuth < Math.PI) ? Math.PI + moonpos.azimuth : moonpos.azimuth - Math.PI;
-
-		sunAlt = sunpos.altitude;
-		// sunCalc uses SW convention, convert to NE astronomy convention.
-		sunAzi = (sunpos.azimuth < Math.PI) ? Math.PI + sunpos.azimuth : sunpos.azimuth - Math.PI;
 	}
 	function angDist(lon1, lat1, lon2, lat2) {
 		// All angles in rads
-		var dlon = lon2 - lon1;
-		var dlat = lat2 - lat1;
-		var a = Math.pow((Math.sin(0.5*dlat)), 2) + (Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(0.5*dlon), 2));
-		var dist = 2.0 * Math.asin(Math.min(1.0, Math.sqrt(a)));
+		var dlon = Math.abs(lon2 - lon1);
+		var dlat = Math.abs(lat2 - lat1);
+		// var a = Math.pow((Math.sin(0.5*dlat)), 2) + (Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(0.5*dlon), 2));
+		// var dist = 2.0 * Math.asin(Math.min(1.0, Math.sqrt(a)));
+		var dist = Math.abs(Math.atan2(Math.pow(Math.pow(Math.cos(lat2)*Math.sin(dlon), 2) + Math.pow(Math.cos(lat1)*Math.sin(lat2) -
+			Math.sin(lat1)*Math.cos(lat2)*Math.cos(dlon), 2), 0.5),
+			Math.sin(lat1)*Math.sin(lat2)+Math.cos(lat1)*Math.cos(lat2)*Math.cos(dlon)))
 		return dist;
 	}
 	function getAlt(rahms, decdms) {
@@ -1017,7 +1031,7 @@ function transient_catalog($bones = false) {
 		var floatColInds = [];
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
 			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffsetang',
-			'hostoffsetdist', 'altitude', 'azimuth', 'airmass'];
+			'hostoffsetdist', 'altitude', 'azimuth', 'airmass', 'skybrightness'];
 		var stringColValDict = {};
 		var stringColValPMDict = {};
 		var stringColInds = [];
@@ -1179,6 +1193,52 @@ function transient_catalog($bones = false) {
 				return '';
 			}
 			return parseFloat(airmass.toFixed(3));
+		}
+		function skyBrightnessValue ( row, type, val, meta ) {
+			if (!((row.ra && row.dec) || (row.hostra && row.hostdec))) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			if (row.ra && row.dec) {
+				var ra = row.ra[0]['value'];
+				var dec = row.dec[0]['value'];
+			} else {
+				var ra = row.hostra[0]['value'];
+				var dec = row.hostdec[0]['value'];
+			}
+			var alt = getAlt(ra, dec);
+			var azi = getAzi(ra, dec);
+			if ( alt <= 0.0 ) return (type === 'sort') ? NaN : '';
+			var zen = Math.PI/180.0*(90.0 - alt);
+			// From Krisciunas and Schaefer 1991
+			// Background sky
+			var bzen = 79.0;
+			var aX = Math.pow(1.0 - 0.96*Math.pow(Math.sin(zen), 2), -0.5);
+			var k = 0.172;
+			var b = bzen*Math.pow(10.0, -0.4*k*(aX-1.0))*aX;
+			// Moon
+			var bmoon = 0.0;
+			if ( moonAlt > 0.0 ) {
+				var zenm = Math.PI/2.0 - moonAlt;
+				var aXm = Math.pow(1.0 - 0.96*Math.pow(Math.sin(Math.min(zenm, Math.PI/2.0)), 2), -0.5);
+				var rhom = angDist(Math.PI/180.0*azi, Math.PI/180.0*alt, moonAzi, moonAlt);
+				var istarm = Math.pow(10.0, -0.4*(3.84 + 0.026*moonPhaseAlpha + 4.0e-9*Math.pow(moonPhaseAlpha, 4.0)));
+				var frhom = Math.pow(10.0, 5.36) * (1.06 + Math.pow(Math.cos(rhom), 2)) + Math.pow(10.0, 6.15 - 180.0/Math.PI*rhom/40.0);
+				bmoon = frhom*istarm*Math.pow(10.0, -0.4*k*aXm) * (1.0 - Math.pow(10.0, -0.4*k*aX));
+			}
+			// Sun (same as moon but with no phase and much larger app. mag.)
+			var bsun = 0.0;
+			if ( sunAlt > 0.0 ) {
+				var zens = Math.PI/2.0 - sunAlt;
+				var aXs = Math.pow(1.0 - 0.96*Math.pow(Math.sin(Math.min(zens, Math.PI/2.0)), 2), -0.5);
+				var rhos = angDist(Math.PI/180.0*azi, Math.PI/180.0*alt, sunAzi, sunAlt);
+				var istars = Math.pow(10.0, -0.4*(3.84 + 12.6 - 26.7));
+				var frhos = Math.pow(10.0, 5.36) * (1.06 + Math.pow(Math.cos(rhos), 2)) + Math.pow(10.0, 6.15 - 180.0/Math.PI*rhos/40.0);
+				bsun = frhos*istars*Math.pow(10.0, -0.4*k*aXs) * (1.0 - Math.pow(10.0, -0.4*k*aX));
+			}
+			// Total mags
+			var sb = 22.49989 - 1.08573*Math.log(0.02934*(b + bmoon + bsun));
+			return parseFloat(sb.toFixed(3));
 		}
 		function redshiftValue ( row, type, val, meta ) {
 			if (!row.redshift) {
@@ -1497,6 +1557,7 @@ function transient_catalog($bones = false) {
 				{ "data": null, "name": "altitude", "type": "non-empty-float", "render": altitudeValue, "defaultContent": "" },
 				{ "data": null, "name": "azimuth", "type": "non-empty-float", "render": azimuthValue, "defaultContent": "" },
 				{ "data": null, "name": "airmass", "type": "non-empty-float", "render": airmassValue, "defaultContent": "" },
+				{ "data": null, "name": "skybrightness", "type": "non-empty-float", "render": skyBrightnessValue, "defaultContent": "" },
 				{ "data": "instruments", "name": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": {
 					"display": redshiftLinked,
@@ -1715,8 +1776,8 @@ function transient_catalog($bones = false) {
 		daysstr += '</select>';
 
 		var footstring = 
-			'<table id="advancedtab"><tr><td><div id="obsfrom"><input type="checkbox" id="coordobservable">' +
-			'Observable from </div><span id="lonlat">' + 
+			'<table id="advancedtab"><tr><td><div id="obsfrom"><label><input type="checkbox" id="coordobservable">' +
+			'Observable from</label> </div><span id="lonlat">' + 
 			'<input class="coordfield" id="inplon" incremental="incremental" title="Longitude (deg.)" placeholder="Longitude">, ' +
 			'<input class="coordfield" id="inplat" incremental="incremental" title="Latitude (deg.)" placeholder="Latitude"><br>' +
 			'<button type="button" id="locbutt" onclick="geoFindMe()"><span id="inpmessage">🌎 Use my location</span></button>' +
@@ -1725,12 +1786,13 @@ function transient_catalog($bones = false) {
 			'<span id="ondate" style="display:none">' + yearsstr + monsstr + daysstr +
 			' at <input class="coordfield" id="inptime" title="24-hour time (hh:mm:ss)" value="00:00:00" placeholder="hh:mm:ss"> [UTC]</span>' +
 			'<br><span id="suninfo"></span></span><br><span title="Exclude objects closer than 5&deg; from the Moon">' +
-			'<input type="checkbox" id="farfrommoon" checked> Far from the Moon</span> ' +
-			'<span title="Exclude objects closer than 5&deg; from the Sun"><input type="checkbox" id="farfromsun" checked> Far from the Sun</span>' +
-			'</td><td>Has <span id="prepost"><input type="checkbox" id="premaxphoto"> pre- ' +
-			'<input type="checkbox" id="postmaxphoto"> post-max photometry' +
-			'<br><input type="checkbox" id="premaxspectra"> pre- ' +
-			'<input type="checkbox" id="postmaxspectra"> post-max spectroscopy</span>' +
+			'<label><input type="checkbox" id="farfrommoon"> Far from the Moon</label></span> ' +
+			'<span title="Exclude objects closer than 5&deg; from the Sun">' +
+			'<label><input type="checkbox" id="farfromsun"> Far from the Sun</label></span>' +
+			'</td><td>Has <span id="prepost"><label><input type="checkbox" id="premaxphoto"> pre-</label> ' +
+			'<label><input type="checkbox" id="postmaxphoto"> post-max</label> photometry' +
+			'<br><label><input type="checkbox" id="premaxspectra"> pre-</label> ' +
+			'<label><input type="checkbox" id="postmaxspectra"> post-max</label> spectroscopy</span>' +
 			'</td></tr></table>';
 		jQuery("div.coordfoot").html(footstring);
         table.columns().every( function ( index ) {
@@ -1774,10 +1836,12 @@ function transient_catalog($bones = false) {
 		altColumn = table.column('altitude:name').index();
 		aziColumn = table.column('azimuth:name').index();
 		amColumn = table.column('airmass:name').index();
+		sbColumn = table.column('skybrightness:name').index();
 
 		altVisible = table.column(altColumn).visible();
 		aziVisible = table.column(aziColumn).visible();
 		amVisible = table.column(amColumn).visible();
+		sbVisible = table.column(sbColumn).visible();
 
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex, rowData ) {
@@ -1802,21 +1866,21 @@ function transient_catalog($bones = false) {
 					}
 					alt = getAlt(aData[raColumn], aData[decColumn]);
 					if ( alt < 0.0 ) return false;
-					if ( document.getElementById('farfrommoon').checked ) {
-						alt = aData[altColumn];
-						azi = aData[aziColumn];
-						if (moonAlt != 0.0 && moonAzi != 0.0 ) {
-							moondist = angDist(Math.PI/180.0*azi, Math.PI/180.0*alt, moonAzi, moonAlt);
-							if (moondist < 5.0*Math.PI/180.0) return false;
-						}
+				}
+				if ( document.getElementById('farfrommoon').checked ) {
+					alt = aData[altColumn];
+					azi = aData[aziColumn];
+					if (moonAlt != 0.0 && moonAzi != 0.0 ) {
+						moondist = angDist(Math.PI/180.0*azi, Math.PI/180.0*alt, moonAzi, moonAlt);
+						if (moondist < 5.0*Math.PI/180.0) return false;
 					}
-					if ( document.getElementById('farfromsun').checked ) {
-						alt = aData[altColumn];
-						azi = aData[aziColumn];
-						if (sunAlt != 0.0 && sunAzi != 0.0 ) {
-							sundist = angDist(Math.PI/180.0*azi, Math.PI/180.0*alt, sunAzi, sunAlt);
-							if (sundist < 5.0*Math.PI/180.0) return false;
-						}
+				}
+				if ( document.getElementById('farfromsun').checked ) {
+					alt = aData[altColumn];
+					azi = aData[aziColumn];
+					if (sunAlt != 0.0 && sunAzi != 0.0 ) {
+						sundist = angDist(Math.PI/180.0*azi, Math.PI/180.0*alt, sunAzi, sunAlt);
+						if (sundist < 5.0*Math.PI/180.0) return false;
 					}
 				}
 				if ( document.getElementById('premaxphoto').checked ) {
@@ -1852,9 +1916,9 @@ function transient_catalog($bones = false) {
 		);
 		function locTableUpdate () {
 			updateLocation();
-			if ( document.getElementById('coordobservable').checked || table.column(altColumn).visible() ||
-					table.column(aziColumn).visible() || table.column(amColumn).visible() ) {
-				if ( table.column(altColumn).visible() || table.column(aziColumn).visible() || table.column(amColumn).visible() ) {
+			if ( document.getElementById('coordobservable').checked || altVisible ||
+					aziVisible || amVisible || sbVisible ) {
+				if ( altVisible || aziVisible || amVisible || sbVisible ) {
 					//table.column(altColumn).cells().invalidate();
 					table.rows().invalidate().draw(false);
 				}
@@ -1869,10 +1933,11 @@ function transient_catalog($bones = false) {
 			table.rows({page:'current'}).invalidate();
 		} );
 		table.on( 'column-visibility.dt', function (e, settings, column, state) {
-			if ( column == altColumn || column == aziColumn || column == amColumn ) {
+			if ( column == altColumn || column == aziColumn || column == amColumn || column == sbColumn ) {
 				altVisible = table.column(altColumn).visible();
 				aziVisible = table.column(aziColumn).visible();
 				amVisible = table.column(amColumn).visible();
+				sbVisible = table.column(sbColumn).visible();
 				table.rows().invalidate();
 			}
 		} );
