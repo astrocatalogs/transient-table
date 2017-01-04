@@ -88,6 +88,7 @@ function datatables_functions() {
 		var ut = new Date(seldate.getTime());
 		var j2000d = (ut.getTime() - j2000.getTime())/86400000.0;
 		var dechours = ut.getUTCHours() + ut.getUTCMinutes()/60.0 + ut.getUTCSeconds()/3600.0;
+		console.log(longitude, j2000d, dechours);
 
 		lst = (100.46 + 0.985647 * j2000d + longitude + 15.0*dechours) % 360.0;
 		if ( lst < 0 ) lst += 360;
@@ -167,6 +168,7 @@ function datatables_functions() {
 		var dec = decToDegrees(decdms);
 		var ha = lst - ra;
 		var lat = latitude*Math.PI/180.0;
+		ha *= Math.PI/180.0;
 		dec *= Math.PI/180.0;
 		var alt = Math.asin(Math.sin(dec)*Math.sin(lat)+Math.cos(dec)*Math.cos(lat)*Math.cos(ha));
 		var azi = (180.0/Math.PI)*Math.acos((Math.sin(dec) - Math.sin(alt)*Math.sin(lat))/(Math.cos(alt)*Math.cos(lat)));
@@ -1125,12 +1127,17 @@ function transient_catalog($bones = false) {
 			return moonsunstr;
 		}
 		function altitudeValue ( row, type, full, meta ) {
-			if (!row.ra || !row.dec) {
+			if (!((row.ra && row.dec) || (row.hostra && row.hostdec))) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			var ra = row.ra[0]['value'];
-			var dec = row.dec[0]['value'];
+			if (row.ra && row.dec) {
+				var ra = row.ra[0]['value'];
+				var dec = row.dec[0]['value'];
+			} else {
+				var ra = row.hostra[0]['value'];
+				var dec = row.hostdec[0]['value'];
+			}
 			var alt = getAlt(ra, dec);
 			var altVal = parseFloat(alt.toFixed(3));
 			if (type === 'display') {
@@ -1140,12 +1147,17 @@ function transient_catalog($bones = false) {
 			return altVal;
 		}
 		function azimuthValue ( row, type, val, meta ) {
-			if (!row.ra || !row.dec) {
+			if (!((row.ra && row.dec) || (row.hostra && row.hostdec))) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			var ra = row.ra[0]['value'];
-			var dec = row.dec[0]['value'];
+			if (row.ra && row.dec) {
+				var ra = row.ra[0]['value'];
+				var dec = row.dec[0]['value'];
+			} else {
+				var ra = row.hostra[0]['value'];
+				var dec = row.hostdec[0]['value'];
+			}
 			var azi = getAzi(ra, dec);
 			var aziVal = parseFloat(azi.toFixed(3));
 			if (type === 'display') {
@@ -1155,11 +1167,18 @@ function transient_catalog($bones = false) {
 			return aziVal;
 		}
 		function airmassValue ( row, type, val, meta ) {
-			if (!amVisible || !row.ra || !row.dec) {
+			if (!((row.ra && row.dec) || (row.hostra && row.hostdec))) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			var alt = getAlt(row.ra[0]['value'], row.dec[0]['value']);
+			if (row.ra && row.dec) {
+				var ra = row.ra[0]['value'];
+				var dec = row.dec[0]['value'];
+			} else {
+				var ra = row.hostra[0]['value'];
+				var dec = row.hostdec[0]['value'];
+			}
+			var alt = getAlt(ra, dec);
 			var airmass = 1.0 / Math.sin(Math.PI / 180.0 * (alt + 244.0/(165.0 + 47.0*Math.pow(alt, 1.1))));
 			if (isNaN(airmass)) {
 				if (type === 'sort') return NaN;
