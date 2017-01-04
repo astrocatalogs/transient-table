@@ -1706,8 +1706,10 @@ function transient_catalog($bones = false) {
 			'<span id="obstime"><select id="nowon" class="obssel"><option value="now">now</option><option value="on">on</option></select>' +
 			'<span id="ondate" style="display:none">' + yearsstr + monsstr + daysstr +
 			' at <input class="coordfield" id="inptime" title="24-hour time (hh:mm:ss)" value="00:00:00" placeholder="hh:mm:ss"> [UTC]</span>' +
-			'<br><span id="suninfo"></span></span><br><input type="checkbox" id="farfrommoon" checked> Far from the Moon ' +
-			'<input type="checkbox" id="farfromsun" checked> Far from the Sun</td><td>Has <span id="prepost"><input type="checkbox" id="premaxphoto"> pre- ' +
+			'<br><span id="suninfo"></span></span><br><span title="Exclude objects closer than 5&deg; from the Moon">' +
+			'<input type="checkbox" id="farfrommoon" checked> Far from the Moon</span> ' +
+			'<span title="Exclude objects closer than 5&deg; from the Sun"><input type="checkbox" id="farfromsun" checked> Far from the Sun</span>' +
+			'</td><td>Has <span id="prepost"><input type="checkbox" id="premaxphoto"> pre- ' +
 			'<input type="checkbox" id="postmaxphoto"> post-max photometry' +
 			'<br><input type="checkbox" id="premaxspectra"> pre- ' +
 			'<input type="checkbox" id="postmaxspectra"> post-max spectroscopy</span>' +
