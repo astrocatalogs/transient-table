@@ -190,6 +190,11 @@
 	white-space:nowrap;
 }
 
+#example tr td {
+    border-right:1px solid #777!important;
+    color:#000!important;
+} 
+
 #example tr th, #example thead th, #example tfoot th {
 	white-space:nowrap;
     font-size:12px!important;
