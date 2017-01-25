@@ -1914,10 +1914,13 @@ function transient_catalog($bones = false) {
 			sbVisible = table.column(sbColumn).visible();
 			if ( document.getElementById('coordobservable').checked || altVisible ||
 					aziVisible || amVisible || sbVisible ) {
-				table.cells(null, altColumn).invalidate('data');
-				table.cells(null, aziColumn).invalidate('data');
-				table.cells(null, amColumn).invalidate('data');
-				table.cells(null, sbColumn).invalidate('data');
+				table.rows().every( function () {
+					var d = this.data();
+					delete d.altitude;
+					delete d.azimuth;
+					delete d.airmass;
+					//delete d.skybrightness;
+				} );
 				table.draw();
 			}
 		}
