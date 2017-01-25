@@ -1140,7 +1140,7 @@ function transient_catalog($bones = false) {
 			return data;
 		}
 		function altitudeValue ( row, type, set, meta ) {
-			if ('altitude' in row && row.altitude !== '') return row.altitude;
+			if ('altitude' in row) return row.altitude;
 			if (row.ra && row.dec) {
 				var ra = row.ra[0]['value'];
 				var dec = row.dec[0]['value'];
@@ -1155,7 +1155,7 @@ function transient_catalog($bones = false) {
 			return row.altitude;
 		}
 		function azimuthValue ( row, type, set, meta ) {
-			if ('azimuth' in row && row.azimuth !== '') return row.azimuth;
+			if ('azimuth' in row) return row.azimuth;
 			if (row.ra && row.dec) {
 				var ra = row.ra[0]['value'];
 				var dec = row.dec[0]['value'];
@@ -1169,27 +1169,26 @@ function transient_catalog($bones = false) {
 			row.azimuth = getAzi(ra, dec);
 			return row.azimuth;
 		}
-		function airmassValue ( row, type, full, meta ) {
-			if (full.ra && full.dec) {
-				var ra = full.ra[0]['value'];
-				var dec = full.dec[0]['value'];
-			} else if (full.hostra && full.hostdec) {
-				var ra = full.hostra[0]['value'];
-				var dec = full.hostdec[0]['value'];
+		function airmassValue ( row, type, set, meta ) {
+			if ('airmass' in row) return row.airmass;
+			if (row.ra && row.dec) {
+				var ra = row.ra[0]['value'];
+				var dec = row.dec[0]['value'];
+			} else if (row.hostra && row.hostdec) {
+				var ra = row.hostra[0]['value'];
+				var dec = row.hostdec[0]['value'];
 			} else {
-				if (type === 'sort') return NaN;
-				return '';
+				row.airmass = '';
+				return row.airmass;
 			}
-			var alt = getAlt(ra, dec);
+			var alt = altitudeValue(row, type, set, meta);
 			var airmass = 1.0 / Math.sin(Math.PI / 180.0 * (alt + 244.0/(165.0 + 47.0*Math.pow(alt, 1.1))));
 			if (isNaN(airmass)) {
-				if (type === 'sort') return NaN;
-				return '';
+				row.airmass = '';
+				return row.airmass;
 			}
-			if (type === 'display') {
-				return airmass.toFixed(3);
-			}
-			return airmass;
+			row.airmass = airmass;
+			return row.airmass;
 		}
 		function skyBrightnessValue ( row, type, full, meta ) {
 			if (full.ra && full.dec) {
@@ -1553,7 +1552,7 @@ function transient_catalog($bones = false) {
 				  }, "name": "hostoffsetdist", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": altitudeValue, "name": "altitude", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
 				{ "data": azimuthValue, "name": "azimuth", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
-				{ "data": null, "name": "airmass", "type": "non-empty-float", "render": airmassValue, "defaultContent": "" },
+				{ "data": airmassValue, "name": "airmass", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
 				{ "data": null, "name": "skybrightness", "type": "non-empty-float", "render": skyBrightnessValue, "defaultContent": "" },
 				{ "data": "instruments", "name": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": {
@@ -1928,7 +1927,7 @@ function transient_catalog($bones = false) {
 		} );
 		table.on( 'column-visibility.dt', function (e, settings, column, state) {
 			if ( column == altColumn || column == aziColumn || column == amColumn || column == sbColumn ) {
-				table.cells(null, column).invalidate();
+				if ( state ) table.cells(null, column).invalidate();
 			}
 		} );
 		jQuery('#premaxphoto, #postmaxphoto, #premaxspectra, #postmaxspectra').change( function () {
