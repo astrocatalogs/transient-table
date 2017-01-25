@@ -47,10 +47,6 @@ function datatables_functions() {
 	var aziColumn;
 	var amColumn;
 	var sbColumn;
-	var altVisible;
-	var aziVisible;
-	var amVisible;
-	var sbVisible;
 	var lst = 0.0;
 	var longitude = 0.0;
 	var latitude = 0.0;
@@ -279,13 +275,13 @@ function datatables_functions() {
 		}
 		return aliases;
 	}
-	function eventAliases ( row, type, val, meta, field ) {
+	function eventAliases ( row, type, full, meta, field ) {
 		if (field === undefined) field = 'alias';
 		if (!row[field]) return '';
 		var aliases = getAliases(row, field);
 		return aliases.join(', ');
 	}
-	function eventAliasesOnly ( row, type, val, meta, field ) {
+	function eventAliasesOnly ( row, type, full, meta, field ) {
 		if (field === undefined) field = 'alias';
 		if (!row[field]) return '';
 		if (row[field].length > 1) {
@@ -299,16 +295,16 @@ function datatables_functions() {
 
 		window.open(urlstem + encodeURIComponent(selectedVal) + '/', '_blank');
 	}
-	function nameLinkedName ( row, type, val, meta ) {
-		return nameLinked ( row, type, val, meta, 'name', 'alias' );
+	function nameLinkedName ( row, type, full, meta ) {
+		return nameLinked ( row, type, full, meta, 'name', 'alias' );
 	}
-	function nameLinkedName1 ( row, type, val, meta ) {
-		return nameLinked ( row, type, val, meta, 'name1', 'aliases1' );
+	function nameLinkedName1 ( row, type, full, meta ) {
+		return nameLinked ( row, type, full, meta, 'name1', 'aliases1' );
 	}
-	function nameLinkedName2 ( row, type, val, meta ) {
-		return nameLinked ( row, type, val, meta, 'name2', 'aliases2' );
+	function nameLinkedName2 ( row, type, full, meta ) {
+		return nameLinked ( row, type, full, meta, 'name2', 'aliases2' );
 	}
-	function nameLinked ( row, type, val, meta, namefield, aliasfield ) {
+	function nameLinked ( row, type, full, meta, namefield, aliasfield ) {
 		if (namefield === undefined) namefield = 'name';
 		if (aliasfield === undefined) aliasfield = 'alias';
 		if (row[aliasfield].length > 1) {
@@ -379,7 +375,7 @@ function datatables_functions() {
 		if (html === '') html = row[namefield];
 		return html;
 	}
-	function hostLinked ( row, type, val, meta ) {
+	function hostLinked ( row, type, full, meta ) {
 		var host = "<a class='" + (('kind' in row.host[0] && row.host[0]['kind'] == 'cluster') ? "hci" : "hhi") +
 			"' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a>&nbsp;";
 		var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" + 
@@ -466,7 +462,7 @@ function datatables_functions() {
 		if (!row.host[0]) return '';
 		return row.host[0].value;
 	}
-	function typeLinked ( row, type, val, meta ) {
+	function typeLinked ( row, type, full, meta ) {
 		var clen = row.claimedtype.length;
 		if (clen > 1) {
 			var altTypes = '';
@@ -1045,18 +1041,18 @@ function transient_catalog($bones = false) {
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
 		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
-		function ebvValue ( row, type, val, meta ) {
+		function ebvValue ( row, type, full, meta ) {
 			if (!row.ebv) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
 			return parseFloat(row.ebv[0]['value']);
 		}
-		function ebvLinked ( row, type, val, meta ) {
+		function ebvLinked ( row, type, full, meta ) {
 			if (!row.ebv) return '';
 			return row.ebv[0]['value']; 
 		}
-		function photoLinked ( row, type, val, meta ) {
+		function photoLinked ( row, type, full, meta ) {
 			if (!row.photolink) return '';
 			if (row.photolink.indexOf(',') !== -1) {
 				var photosplit = row.photolink.split(',');
@@ -1072,11 +1068,11 @@ function transient_catalog($bones = false) {
 			if (!row.photolink) return NaN;
 			return parseInt(row.photolink.split(',')[0]);
 		}
-		function photoValue ( row, type, val, meta ) {
+		function photoValue ( row, type, full, meta ) {
 			if (!row.photolink) return '';
 			return parseInt(row.photolink.split(',')[0]);
 		}
-		function spectraLinked ( row, type, val, meta ) {
+		function spectraLinked ( row, type, full, meta ) {
 			if (!row.spectralink) return '';
 			if (row.spectralink.indexOf(',') !== -1) {
 				var spectrasplit = row.spectralink.split(',');
@@ -1092,19 +1088,19 @@ function transient_catalog($bones = false) {
 			if (!row.spectralink) return NaN;
 			return parseInt(row.spectralink.split(',')[0]);
 		}
-		function spectraValue ( row, type, val, meta ) {
+		function spectraValue ( row, type, full, meta ) {
 			if (!row.spectralink) return '';
 			return parseInt(row.spectralink.split(',')[0]);
 		}
-		function radioLinked ( row, type, val, meta ) {
+		function radioLinked ( row, type, full, meta ) {
 			if (!row.radiolink) return '';
 			return "<a class='rci' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a> " + row.radiolink; 
 		}
-		function xrayLinked ( row, type, val, meta ) {
+		function xrayLinked ( row, type, full, meta ) {
 			if (!row.xraylink) return '';
 			return "<a class='xci' href='" + urlstem + nameToFilename(row.name) + "/' target='_blank'></a> " + row.xraylink; 
 		}
-		function hostoffsetangValue ( row, type, val, meta ) {
+		function hostoffsetangValue ( row, type, full, meta ) {
 			if (!row.hostoffsetang) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -1112,7 +1108,7 @@ function transient_catalog($bones = false) {
 			var data = parseFloat(row.hostoffsetang[0]['value']);
 			return data;
 		}
-		function hostoffsetdistValue ( row, type, val, meta ) {
+		function hostoffsetdistValue ( row, type, full, meta ) {
 			if (!row.hostoffsetdist) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -1120,9 +1116,7 @@ function transient_catalog($bones = false) {
 			var data = parseFloat(row.hostoffsetdist[0]['value']);
 			return data;
 		}
-		function getSunMoonStr ( ra, dec, alt, azi ) {
-  			alt = (alt !== null && typeof alt !== 'undefined') ? alt : getAlt(ra, dec);
-  			azi = (azi !== null && typeof azi !== 'undefined') ? azi : getAzi(ra, dec);
+		function getSunMoonStr ( alt, azi ) {
 			var moonsunstr = '';
 			if (moonAlt != 0.0 && moonAzi != 0.0 ) {
 				moondist = angDist(Math.PI/180.0*azi, Math.PI/180.0*alt, moonAzi, moonAlt);
@@ -1134,57 +1128,57 @@ function transient_catalog($bones = false) {
 			}
 			return moonsunstr;
 		}
-		function altitudeValue ( row, type, full, meta ) {
-			if (!((row.ra && row.dec) || (row.hostra && row.hostdec))) {
+		function renderObsValue ( data, type, row ) {
+			if (data === '') {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			if (row.ra && row.dec) {
-				var ra = row.ra[0]['value'];
-				var dec = row.dec[0]['value'];
-			} else {
-				var ra = row.hostra[0]['value'];
-				var dec = row.hostdec[0]['value'];
-			}
-			var alt = getAlt(ra, dec);
-			var altVal = parseFloat(alt.toFixed(3));
 			if (type === 'display') {
-				var moonsunstr = aziVisible ? '' : getSunMoonStr(ra, dec, alt, null);
-				return String(altVal) + moonsunstr;
+				var moonsunstr = getSunMoonStr(row.altitude, row.azimuth);
+				return String(data.toFixed(3)) + moonsunstr;
 			}
-			return altVal;
+			return data;
 		}
-		function azimuthValue ( row, type, val, meta ) {
-			if (!((row.ra && row.dec) || (row.hostra && row.hostdec))) {
-				if (type === 'sort') return NaN;
-				return '';
-			}
+		function altitudeValue ( row, type, set, meta ) {
+			if ('altitude' in row && row.altitude !== '') return row.altitude;
 			if (row.ra && row.dec) {
 				var ra = row.ra[0]['value'];
 				var dec = row.dec[0]['value'];
-			} else {
+			} else if (row.hostra && row.hostdec) {
 				var ra = row.hostra[0]['value'];
 				var dec = row.hostdec[0]['value'];
+			} else {
+				row.altitude = '';
+				return row.altitude;
 			}
-			var azi = getAzi(ra, dec);
-			var aziVal = parseFloat(azi.toFixed(3));
-			if (type === 'display') {
-				var moonsunstr = getSunMoonStr(ra, dec, null, azi);
-				return String(aziVal) + moonsunstr;
-			}
-			return aziVal;
+			row.altitude = getAlt(ra, dec);
+			return row.altitude;
 		}
-		function airmassValue ( row, type, val, meta ) {
-			if (!((row.ra && row.dec) || (row.hostra && row.hostdec))) {
-				if (type === 'sort') return NaN;
-				return '';
-			}
+		function azimuthValue ( row, type, set, meta ) {
+			if ('azimuth' in row && row.azimuth !== '') return row.azimuth;
 			if (row.ra && row.dec) {
 				var ra = row.ra[0]['value'];
 				var dec = row.dec[0]['value'];
-			} else {
+			} else if (row.hostra && row.hostdec) {
 				var ra = row.hostra[0]['value'];
 				var dec = row.hostdec[0]['value'];
+			} else {
+				row.azimuth = '';
+				return row.azimuth;
+			}
+			row.azimuth = getAzi(ra, dec);
+			return row.azimuth;
+		}
+		function airmassValue ( row, type, full, meta ) {
+			if (full.ra && full.dec) {
+				var ra = full.ra[0]['value'];
+				var dec = full.dec[0]['value'];
+			} else if (full.hostra && full.hostdec) {
+				var ra = full.hostra[0]['value'];
+				var dec = full.hostdec[0]['value'];
+			} else {
+				if (type === 'sort') return NaN;
+				return '';
 			}
 			var alt = getAlt(ra, dec);
 			var airmass = 1.0 / Math.sin(Math.PI / 180.0 * (alt + 244.0/(165.0 + 47.0*Math.pow(alt, 1.1))));
@@ -1192,19 +1186,21 @@ function transient_catalog($bones = false) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			return parseFloat(airmass.toFixed(3));
+			if (type === 'display') {
+				return airmass.toFixed(3);
+			}
+			return airmass;
 		}
-		function skyBrightnessValue ( row, type, val, meta ) {
-			if (!((row.ra && row.dec) || (row.hostra && row.hostdec))) {
+		function skyBrightnessValue ( row, type, full, meta ) {
+			if (full.ra && full.dec) {
+				var ra = full.ra[0]['value'];
+				var dec = full.dec[0]['value'];
+			} else if (full.hostra && full.hostdec) {
+				var ra = full.hostra[0]['value'];
+				var dec = full.hostdec[0]['value'];
+			} else {
 				if (type === 'sort') return NaN;
 				return '';
-			}
-			if (row.ra && row.dec) {
-				var ra = row.ra[0]['value'];
-				var dec = row.dec[0]['value'];
-			} else {
-				var ra = row.hostra[0]['value'];
-				var dec = row.hostdec[0]['value'];
 			}
 			var alt = getAlt(ra, dec);
 			var azi = getAzi(ra, dec);
@@ -1240,7 +1236,7 @@ function transient_catalog($bones = false) {
 			var sb = 22.49989 - 1.08573*Math.log(0.02934*(b + bmoon + bsun));
 			return parseFloat(sb.toFixed(3));
 		}
-		function redshiftValue ( row, type, val, meta ) {
+		function redshiftValue ( row, type, full, meta ) {
 			if (!row.redshift) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -1248,7 +1244,7 @@ function transient_catalog($bones = false) {
 			var data = parseFloat(row.redshift[0]['value']);
 			return data;
 		}
-		function velocityValue ( row, type, val, meta ) {
+		function velocityValue ( row, type, full, meta ) {
 			if (!row.velocity) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -1256,7 +1252,7 @@ function transient_catalog($bones = false) {
 			var data = parseFloat(row.velocity[0]['value']);
 			return data;
 		}
-		function lumdistValue ( row, type, val, meta ) {
+		function lumdistValue ( row, type, full, meta ) {
 			if (!row.lumdist) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -1264,7 +1260,7 @@ function transient_catalog($bones = false) {
 			var data = parseFloat(row.lumdist[0]['value']);
 			return data;
 		}
-		function redshiftLinked ( row, type, val, meta ) {
+		function redshiftLinked ( row, type, full, meta ) {
 			if (!row.redshift) return '';
 			var data = row.redshift[0]['value'];
 			var maxdiff = 0.0;
@@ -1281,7 +1277,7 @@ function transient_catalog($bones = false) {
 			}
 			return data;
 		}
-		function velocityLinked ( row, type, val, meta ) {
+		function velocityLinked ( row, type, full, meta ) {
 			if (!row.velocity) return '';
 			var data = row.velocity[0]['value'];
 			if (row.velocity[0]['kind']) {
@@ -1290,7 +1286,7 @@ function transient_catalog($bones = false) {
 			}
 			return data;
 		}
-		function lumdistLinked ( row, type, val, meta ) {
+		function lumdistLinked ( row, type, full, meta ) {
 			if (!row.lumdist) return '';
 			var data = row.lumdist[0]['value'];
 			if (row.lumdist[0]['kind']) {
@@ -1299,7 +1295,7 @@ function transient_catalog($bones = false) {
 			}
 			return data;
 		}
-		function raValue ( row, type, val, meta ) {
+		function raValue ( row, type, full, meta ) {
 			if (!row.ra) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -1307,7 +1303,7 @@ function transient_catalog($bones = false) {
 			var data = row.ra[0]['value'];
 			return raToDegrees(data);
 		}
-		function decValue ( row, type, val, meta ) {
+		function decValue ( row, type, full, meta ) {
 			if (!row.dec) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -1315,19 +1311,19 @@ function transient_catalog($bones = false) {
 			var data = row.dec[0]['value'];
 			return decToDegrees(data);
 		}
-		function raLinked ( row, type, val, meta ) {
+		function raLinked ( row, type, full, meta ) {
 			if (!row.ra) return '';
 			var data = row.ra[0]['value'];
 			var degrees = raToDegrees(data).toFixed(5);
 			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
 		}
-		function decLinked ( row, type, val, meta ) {
+		function decLinked ( row, type, full, meta ) {
 			if (!row.dec) return '';
 			var data = row.dec[0]['value'];
 			var degrees = decToDegrees(data).toFixed(5);
 			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
 		}
-		function hostraValue ( row, type, val, meta ) {
+		function hostraValue ( row, type, full, meta ) {
 			if (!row.hostra) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -1335,7 +1331,7 @@ function transient_catalog($bones = false) {
 			var data = row.hostra[0]['value'];
 			return raToDegrees(data);
 		}
-		function hostdecValue ( row, type, val, meta ) {
+		function hostdecValue ( row, type, full, meta ) {
 			if (!row.hostdec) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -1343,13 +1339,13 @@ function transient_catalog($bones = false) {
 			var data = row.hostdec[0]['value'];
 			return decToDegrees(data);
 		}
-		function hostraLinked ( row, type, val, meta ) {
+		function hostraLinked ( row, type, full, meta ) {
 			if (!row.hostra) return '';
 			var data = row.hostra[0]['value'];
 			var degrees = raToDegrees(data).toFixed(5);
 			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
 		}
-		function hostdecLinked ( row, type, val, meta ) {
+		function hostdecLinked ( row, type, full, meta ) {
 			if (!row.hostdec) return '';
 			var data = row.hostdec[0]['value'];
 			var degrees = decToDegrees(data).toFixed(5);
@@ -1358,7 +1354,7 @@ function transient_catalog($bones = false) {
 		Date.prototype.getJulian = function() {
 			return Math.round((this / 86400000) - (this.getTimezoneOffset()/1440) + 2440587.5, 0.1);
 		}
-		function maxDateValue ( row, type, val, meta ) {
+		function maxDateValue ( row, type, full, meta ) {
 			if (!row.maxdate) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -1366,7 +1362,7 @@ function transient_catalog($bones = false) {
 			var mydate = new Date(row.maxdate[0]['value']);
 			return mydate.getTime();
 		}
-		function discoverDateValue ( row, type, val, meta ) {
+		function discoverDateValue ( row, type, full, meta ) {
 			if (!row.discoverdate) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -1374,17 +1370,17 @@ function transient_catalog($bones = false) {
 			var mydate = new Date(row.discoverdate[0]['value']);
 			return mydate.getTime();
 		}
-		function maxDateLinked ( row, type, val, meta ) {
+		function maxDateLinked ( row, type, full, meta ) {
 			if (!row.maxdate) return '';
 			var mjd = String(dateToMJD(row.maxdate[0]['value']));
 			return "<div class='tooltip'>" + row.maxdate[0]['value'] + "<span class='tooltiptext'> MJD: " + mjd + "</span></div>";
 		}
-		function discoverDateLinked ( row, type, val, meta ) {
+		function discoverDateLinked ( row, type, full, meta ) {
 			if (!row.discoverdate) return '';
 			var mjd = String(dateToMJD(row.discoverdate[0]['value']));
 			return "<div class='tooltip'>" + row.discoverdate[0]['value'] + "<span class='tooltiptext'> MJD: " + mjd + "</span></div>";
 		}
-		function dataLinked ( row, type, val, meta ) {
+		function dataLinked ( row, type, full, meta ) {
 			var fileeventname = nameToFilename(row.name);
 			var datalink = "<a class='dci' title='Download Data' href='" + urlstem + fileeventname + ".json' download></a>"
 			if (!row.download || row.download != 'e') {
@@ -1394,7 +1390,7 @@ function transient_catalog($bones = false) {
 					+ fileeventname + ".json' target='_blank'></a>")
 			}
 		}
-		function refLinked ( row, type, val, meta ) {
+		function refLinked ( row, type, full, meta ) {
 			if (!row.references) return '';
 			var references = row.references.split(',');
 			var refstr = '';
@@ -1554,8 +1550,8 @@ function transient_catalog($bones = false) {
 					"sort": hostoffsetdistValue,
 					"_": "hostoffsetdist.0.value"
 				  }, "name": "hostoffsetdist", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
-				{ "data": null, "name": "altitude", "type": "non-empty-float", "render": altitudeValue, "defaultContent": "" },
-				{ "data": null, "name": "azimuth", "type": "non-empty-float", "render": azimuthValue, "defaultContent": "" },
+				{ "data": altitudeValue, "name": "altitude", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
+				{ "data": azimuthValue, "name": "azimuth", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
 				{ "data": null, "name": "airmass", "type": "non-empty-float", "render": airmassValue, "defaultContent": "" },
 				{ "data": null, "name": "skybrightness", "type": "non-empty-float", "render": skyBrightnessValue, "defaultContent": "" },
 				{ "data": "instruments", "name": "instruments", "type": "string", "defaultContent": "" },
@@ -1838,11 +1834,6 @@ function transient_catalog($bones = false) {
 		amColumn = table.column('airmass:name').index();
 		sbColumn = table.column('skybrightness:name').index();
 
-		altVisible = table.column(altColumn).visible();
-		aziVisible = table.column(aziColumn).visible();
-		amVisible = table.column(amColumn).visible();
-		sbVisible = table.column(sbColumn).visible();
-
 		jQuery.fn.dataTable.ext.search.push(
 			function( oSettings, aData, iDataIndex, rowData ) {
 				var alen = aData.length;
@@ -1916,16 +1907,17 @@ function transient_catalog($bones = false) {
 		);
 		function locTableUpdate () {
 			updateLocation();
+			altVisible = table.column(altColumn).visible();
+			aziVisible = table.column(aziColumn).visible();
+			amVisible = table.column(amColumn).visible();
+			sbVisible = table.column(sbColumn).visible();
 			if ( document.getElementById('coordobservable').checked || altVisible ||
 					aziVisible || amVisible || sbVisible ) {
-				if ( altVisible || aziVisible || amVisible || sbVisible ) {
-					//table.column(altColumn).cells().invalidate();
-					table.rows().invalidate().draw(false);
-				}
-				//if ( table.column(amColumn).visible() ) {
-				//	//table.cells('#airmass', {page: 'all'}).invalidate();
-				//	table.rows().invalidate();
-				//}
+				table.cells(null, altColumn).invalidate('data');
+				table.cells(null, aziColumn).invalidate('data');
+				table.cells(null, amColumn).invalidate('data');
+				table.cells(null, sbColumn).invalidate('data');
+				table.draw();
 			}
 		}
 		table.on( 'search.dt', function () {
@@ -1934,11 +1926,7 @@ function transient_catalog($bones = false) {
 		} );
 		table.on( 'column-visibility.dt', function (e, settings, column, state) {
 			if ( column == altColumn || column == aziColumn || column == amColumn || column == sbColumn ) {
-				altVisible = table.column(altColumn).visible();
-				aziVisible = table.column(aziColumn).visible();
-				amVisible = table.column(amColumn).visible();
-				sbVisible = table.column(sbColumn).visible();
-				table.rows().invalidate();
+				table.cells(null, column).invalidate();
 			}
 		} );
 		jQuery('#premaxphoto, #postmaxphoto, #premaxspectra, #postmaxspectra').change( function () {
@@ -2010,35 +1998,35 @@ function duplicate_table() {
 		var dateColInds = [];
 		var dateSearchCols = [ ];
 		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
-		function distDegValue ( row, type, val, meta ) {
+		function distDegValue ( row, type, full, meta ) {
 			if (!row.distdeg) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
 			return parseFloat((parseFloat(row.distdeg)*3600.).toFixed(5));
 		}
-		function maxDiffYearValue ( row, type, val, meta ) {
+		function maxDiffYearValue ( row, type, full, meta ) {
 			if (!row.maxdiffyear) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
 			return parseFloat((parseFloat(row.maxdiffyear)*365.25).toFixed(3));
 		}
-		function discDiffYearValue ( row, type, val, meta ) {
+		function discDiffYearValue ( row, type, full, meta ) {
 			if (!row.discdiffyear) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
 			return parseFloat((parseFloat(row.discdiffyear)*365.25).toFixed(3));
 		}
-		function performGoogleSearch ( row, type, val, meta ) {
+		function performGoogleSearch ( row, type, full, meta ) {
 			var namearr = row.aliases1.concat(row.aliases2);
 			return "<button class='googleit' type='button' onclick='googleNames(\"" + namearr.join(',') + "\")'>Google all names</button>"
 		}
-		function markAsDuplicate ( row, type, val, meta ) {
+		function markAsDuplicate ( row, type, full, meta ) {
 			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\")'>These are the same</button>"
 		}
-		function markAsDistinct ( row, type, val, meta ) {
+		function markAsDistinct ( row, type, full, meta ) {
 			return "<button class='diffevent' type='button' onclick='markDiff(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\")'>These are different</button>"
 		}
         jQuery('#example tfoot th').each( function ( index ) {
@@ -2283,14 +2271,14 @@ function bibliography() {
 			}
             jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
-		function bibcodeLinked ( row, type, val, meta ) {
+		function bibcodeLinked ( row, type, full, meta ) {
 			var html = '';
 			if (row.authors) {
 				html += row.authors + '<br>';
 			}
 			return html + "<a href='http://adsabs.harvard.edu/abs/" + row.bibcode + "'>" + row.bibcode + "</a>";
 		}
-		function eventsDropdown ( row, type, val, meta ) {
+		function eventsDropdown ( row, type, full, meta ) {
 			var elen = row.events.length;
 			var html = String(elen) + ' ' + shrt + ': ';
 			if (elen == 1) {
@@ -2314,7 +2302,7 @@ function bibliography() {
 			} 
 			return html;
 		}
-		function allAuthors ( row, type, val, meta ) {
+		function allAuthors ( row, type, full, meta ) {
 			var html = '';
 			if (!row.allauthors) return '';
 			var alen = row.allauthors.length;
@@ -2324,13 +2312,13 @@ function bibliography() {
 			}
 			return html;
 		}
-		function eventsDropdownType ( row, type, val, meta ) {
+		function eventsDropdownType ( row, type, full, meta ) {
 			if (type == "sort") {
 				return "num";
 			}
 			return "string";
 		}
-		function eventsCount ( row, type, val, meta ) {
+		function eventsCount ( row, type, full, meta ) {
 			return row.events.length;
 		}
 		var table = jQuery('#example').DataTable( {
@@ -2525,14 +2513,14 @@ function sentinel() {
 			}
             jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
-		function bibcodeLinked ( row, type, val, meta ) {
+		function bibcodeLinked ( row, type, full, meta ) {
 			var html = '';
 			if (row.authors) {
 				html += row.authors + '<br>';
 			}
 			return html + "<a href='http://adsabs.harvard.edu/abs/" + row.bibcode + "'>" + row.bibcode + "</a>";
 		}
-		function eventsDropdown ( row, type, val, meta ) {
+		function eventsDropdown ( row, type, full, meta ) {
 			var elen = row.events.length;
 			var html = String(elen) + ' ' + shrt + ': ';
 			if (elen == 1) {
@@ -2556,7 +2544,7 @@ function sentinel() {
 			} 
 			return html;
 		}
-		function allAuthors ( row, type, val, meta ) {
+		function allAuthors ( row, type, full, meta ) {
 			var html = '';
 			if (!row.allauthors) return '';
 			var alen = row.allauthors.length;
@@ -2566,13 +2554,13 @@ function sentinel() {
 			}
 			return html;
 		}
-		function eventsDropdownType ( row, type, val, meta ) {
+		function eventsDropdownType ( row, type, full, meta ) {
 			if (type == "sort") {
 				return "num";
 			}
 			return "string";
 		}
-		function eventsCount ( row, type, val, meta ) {
+		function eventsCount ( row, type, full, meta ) {
 			return row.events.length;
 		}
 		var table = jQuery('#example').DataTable( {
@@ -2754,7 +2742,7 @@ function hosts() {
 			}
             jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
-		function hostraValue ( row, type, val, meta ) {
+		function hostraValue ( row, type, full, meta ) {
 			if (!row.hostra) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -2762,7 +2750,7 @@ function hosts() {
 			var data = row.hostra;
 			return raToDegrees(data);
 		}
-		function hostdecValue ( row, type, val, meta ) {
+		function hostdecValue ( row, type, full, meta ) {
 			if (!row.hostdec) {
 				if (type === 'sort') return NaN;
 				return '';
@@ -2770,47 +2758,47 @@ function hosts() {
 			var data = row.hostdec;
 			return decToDegrees(data);
 		}
-		function hostraLinked ( row, type, val, meta ) {
+		function hostraLinked ( row, type, full, meta ) {
 			if (!row.hostra) return '';
 			var data = row.hostra;
 			var degrees = raToDegrees(data).toFixed(5);
 			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
 		}
-		function hostdecLinked ( row, type, val, meta ) {
+		function hostdecLinked ( row, type, full, meta ) {
 			if (!row.hostdec) return '';
 			var data = row.hostdec;
 			var degrees = decToDegrees(data).toFixed(5);
 			return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + degrees + "&deg;</span></div>";
 		}
-		function redshiftValue ( row, type, val, meta ) {
+		function redshiftValue ( row, type, full, meta ) {
 			if (!row.redshift) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
 			return parseFloat(row.redshift.replace('*',''));
 		}
-		function lumdistValue ( row, type, val, meta ) {
+		function lumdistValue ( row, type, full, meta ) {
 			if (!row.lumdist) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
 			return parseFloat(row.lumdist.replace('*',''));
 		}
-		function rateValue ( row, type, val, meta ) {
+		function rateValue ( row, type, full, meta ) {
 			if (!row.rate) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
 			return parseFloat(row.rate.split(',')[0]);
 		}
-		function rateDisplay ( row, type, val, meta ) {
+		function rateDisplay ( row, type, full, meta ) {
 			if (!row.rate) return '';
 			return row.rate.split(',')[0] + ' ± ' + row.rate.split(',')[1];
 		}
 		function hostNameFormat ( str, name ) {
 			return str.replace(/%name/g, noBreak(name)).replace(/%link/g, encodeURIComponent(name));
 		}
-		function hostUnlinked ( row, type, val, meta ) {
+		function hostUnlinked ( row, type, full, meta ) {
 			if (!row.host) return '';
 			var host = "<a class='" + (row.kind == 'cluster' ? "hci" : "hhi") + "' href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=" +
 				"%link&submit=SIMBAD+search' target='_blank'></a> "; 
@@ -2849,7 +2837,7 @@ function hosts() {
 			text = text + "</div>";
 			return text;
 		}
-		function eventsDropdown ( row, type, val, meta ) {
+		function eventsDropdown ( row, type, full, meta ) {
 			var html = String(row.events.length) + ' ' + shrt + ': ';
 			if (row.events.length == 1) {
 				html += "<a href='" + urlstem + row.events[0].name + "/' target='_blank'>" + row.events[0].name + "</a>";
@@ -2872,13 +2860,13 @@ function hosts() {
 			} 
 			return html;
 		}
-		function eventsDropdownType ( row, type, val, meta ) {
+		function eventsDropdownType ( row, type, full, meta ) {
 			if (type == "sort") {
 				return "num";
 			}
 			return "string";
 		}
-		function eventsCount ( row, type, val, meta ) {
+		function eventsCount ( row, type, full, meta ) {
 			return row.events.length;
 		}
 		var table = jQuery('#example').DataTable( {
@@ -3052,7 +3040,7 @@ function conflict_table() {
 		var dateColInds = [];
 		var dateSearchCols = [];
 		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
-		function actionButtons ( row, type, val, meta ) {
+		function actionButtons ( row, type, full, meta ) {
 			var html = '';
 			var quantityStr = '';
 			for (i = 0; i < row.values.length; i++) {
@@ -3286,14 +3274,14 @@ function errata() {
 			}
             jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
         } );
-		function bibcodeLinked ( row, type, val, meta ) {
+		function bibcodeLinked ( row, type, full, meta ) {
 			var html = '';
 			if (row.authors) {
 				html += row.authors + '<br>';
 			}
 			return html + "<a href='http://adsabs.harvard.edu/abs/" + row.bibcode + "'>" + row.bibcode + "</a>";
 		}
-		function eventsDropdown ( row, type, val, meta ) {
+		function eventsDropdown ( row, type, full, meta ) {
 			var html = String(row.events.length) + ' ' + shrt + ': ';
 			if (row.events.length == 1) {
 				html += "<a href='" + urlstem + row.events[0] + "/' target='_blank'>" + row.events[0] + "</a>";
@@ -3316,7 +3304,7 @@ function errata() {
 			} 
 			return html;
 		}
-		function allAuthors ( row, type, val, meta ) {
+		function allAuthors ( row, type, full, meta ) {
 			var html = '';
 			if (!row.allauthors) return '';
 			for (i = 0; i < row.allauthors.length; i++) {
@@ -3325,13 +3313,13 @@ function errata() {
 			}
 			return html;
 		}
-		function eventsDropdownType ( row, type, val, meta ) {
+		function eventsDropdownType ( row, type, full, meta ) {
 			if (type == "sort") {
 				return "num";
 			}
 			return "string";
 		}
-		function eventsCount ( row, type, val, meta ) {
+		function eventsCount ( row, type, full, meta ) {
 			return row.events.length;
 		}
 		var table = jQuery('#example').DataTable( {
