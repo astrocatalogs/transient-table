@@ -157,9 +157,7 @@ function datatables_functions() {
 			Math.sin(lat1)*Math.sin(lat2)+Math.cos(lat1)*Math.cos(lat2)*Math.cos(dlon)))
 		return dist;
 	}
-	function getAlt(rahms, decdms) {
-		var ra = raToDegrees(rahms);
-		var dec = decToDegrees(decdms);
+	function getAlt(ra, dec) {
 		var ha = lst - ra;
 		if ( ha < 0 ) ha += 360;
 		var lat = latitude*Math.PI/180.0;
@@ -167,9 +165,7 @@ function datatables_functions() {
 		dec *= Math.PI/180.0;
 		return (180.0/Math.PI)*Math.asin(Math.sin(dec)*Math.sin(lat)+Math.cos(dec)*Math.cos(lat)*Math.cos(ha));
 	}
-	function getAzi(rahms, decdms) {
-		var ra = raToDegrees(rahms);
-		var dec = decToDegrees(decdms);
+	function getAzi(ra, dec) {
 		var ha = lst - ra;
 		var lat = latitude*Math.PI/180.0;
 		ha *= Math.PI/180.0;
@@ -1139,45 +1135,43 @@ function transient_catalog($bones = false) {
 			}
 			return data;
 		}
+		function setObsRaDec ( row ) {
+			if ('obs_ra' in row && 'obs_dec' in row) return;
+			if (row.ra && row.dec) {
+				row.obs_ra = raToDegrees(row.ra[0]['value']);
+				row.obs_dec = decToDegrees(row.dec[0]['value']);
+			} else if (row.hostra && row.hostdec) {
+				row.obs_ra = raToDegrees(row.hostra[0]['value']);
+				row.obs_dec = decToDegrees(row.hostdec[0]['value']);
+			} else {
+				row.obs_ra = '';
+				row.obs_dec = '';
+			}
+		}
 		function altitudeValue ( row, type, set, meta ) {
 			if ('altitude' in row) return row.altitude;
-			if (row.ra && row.dec) {
-				var ra = row.ra[0]['value'];
-				var dec = row.dec[0]['value'];
-			} else if (row.hostra && row.hostdec) {
-				var ra = row.hostra[0]['value'];
-				var dec = row.hostdec[0]['value'];
-			} else {
+			setObsRaDec(row);
+			if (row.obs_ra === '' || row.obs_dec === '') {
 				row.altitude = '';
 				return row.altitude;
 			}
-			row.altitude = getAlt(ra, dec);
+			row.altitude = getAlt(row.obs_ra, row.obs_dec);
 			return row.altitude;
 		}
 		function azimuthValue ( row, type, set, meta ) {
 			if ('azimuth' in row) return row.azimuth;
-			if (row.ra && row.dec) {
-				var ra = row.ra[0]['value'];
-				var dec = row.dec[0]['value'];
-			} else if (row.hostra && row.hostdec) {
-				var ra = row.hostra[0]['value'];
-				var dec = row.hostdec[0]['value'];
-			} else {
+			setObsRaDec(row);
+			if (row.obs_ra === '' || row.obs_dec === '') {
 				row.azimuth = '';
 				return row.azimuth;
 			}
-			row.azimuth = getAzi(ra, dec);
+			row.azimuth = getAzi(row.obs_ra, row.obs_dec);
 			return row.azimuth;
 		}
 		function airmassValue ( row, type, set, meta ) {
 			if ('airmass' in row) return row.airmass;
-			if (row.ra && row.dec) {
-				var ra = row.ra[0]['value'];
-				var dec = row.dec[0]['value'];
-			} else if (row.hostra && row.hostdec) {
-				var ra = row.hostra[0]['value'];
-				var dec = row.hostdec[0]['value'];
-			} else {
+			setObsRaDec(row);
+			if (row.obs_ra === '' || row.obs_dec === '') {
 				row.airmass = '';
 				return row.airmass;
 			}
@@ -1190,19 +1184,15 @@ function transient_catalog($bones = false) {
 			row.airmass = airmass;
 			return row.airmass;
 		}
-		function skyBrightnessValue ( row, type, full, meta ) {
-			if (full.ra && full.dec) {
-				var ra = full.ra[0]['value'];
-				var dec = full.dec[0]['value'];
-			} else if (full.hostra && full.hostdec) {
-				var ra = full.hostra[0]['value'];
-				var dec = full.hostdec[0]['value'];
-			} else {
-				if (type === 'sort') return NaN;
-				return '';
+		function skyBrightnessValue ( row, type, set, meta ) {
+			if ('skybrightness' in row) return row.skybrightness;
+			setObsRaDec(row);
+			if (row.obs_ra === '' || row.obs_dec === '') {
+				row.skybrightness = '';
+				return row.skybrightness;
 			}
-			var alt = getAlt(ra, dec);
-			var azi = getAzi(ra, dec);
+			var alt = altitudeValue(row, type, set, meta);
+			var azi = azimuthValue(row, type, set, meta);
 			if ( alt <= 0.0 ) return (type === 'sort') ? NaN : '';
 			var zen = Math.PI/180.0*(90.0 - alt);
 			// From Krisciunas and Schaefer 1991
@@ -1233,7 +1223,8 @@ function transient_catalog($bones = false) {
 			}
 			// Total mags
 			var sb = 22.49989 - 1.08573*Math.log(0.02934*(b + bmoon + bsun));
-			return parseFloat(sb.toFixed(3));
+			row.skybrightness = sb;
+			return row.skybrightness;
 		}
 		function redshiftValue ( row, type, full, meta ) {
 			if (!row.redshift) {
@@ -1553,7 +1544,7 @@ function transient_catalog($bones = false) {
 				{ "data": altitudeValue, "name": "altitude", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
 				{ "data": azimuthValue, "name": "azimuth", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
 				{ "data": airmassValue, "name": "airmass", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
-				{ "data": null, "name": "skybrightness", "type": "non-empty-float", "render": skyBrightnessValue, "defaultContent": "" },
+				{ "data": skyBrightnessValue, "name": "skybrightness", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
 				{ "data": "instruments", "name": "instruments", "type": "string", "defaultContent": "" },
 				{ "data": {
 					"display": redshiftLinked,
@@ -1914,14 +1905,19 @@ function transient_catalog($bones = false) {
 			sbVisible = table.column(sbColumn).visible();
 			if ( document.getElementById('coordobservable').checked || altVisible ||
 					aziVisible || amVisible || sbVisible ) {
-				table.rows().every( function () {
+				//table.rows().invalidate('data').draw();
+				table.rows().invalidate('data').every( function () {
 					var d = this.data();
 					delete d.altitude;
 					delete d.azimuth;
 					delete d.airmass;
-					//delete d.skybrightness;
-				} );
-				table.draw();
+					delete d.skybrightness;
+				} ).draw(false);
+				//table.cells(null, altColumn).invalidate();
+				//table.cells(null, aziColumn).invalidate();
+				//table.cells(null, amColumn).invalidate();
+				//table.cells(null, sbColumn).invalidate();
+				//table.draw(false);
 			}
 		}
 		table.on( 'search.dt', function () {
@@ -1929,9 +1925,9 @@ function transient_catalog($bones = false) {
 			table.rows({page:'current'}).invalidate();
 		} );
 		table.on( 'column-visibility.dt', function (e, settings, column, state) {
-			if ( column == altColumn || column == aziColumn || column == amColumn || column == sbColumn ) {
-				if ( state ) table.cells(null, column).invalidate();
-			}
+			//if ( column == altColumn || column == aziColumn || column == amColumn || column == sbColumn ) {
+			//	if ( state ) table.cells(null, column).invalidate();
+			//}
 		} );
 		jQuery('#premaxphoto, #postmaxphoto, #premaxspectra, #postmaxspectra').change( function () {
 			table.draw();
