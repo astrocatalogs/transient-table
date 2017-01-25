@@ -1382,7 +1382,7 @@ function transient_catalog($bones = false) {
 		}
 		function dataLinked ( row, type, full, meta ) {
 			var fileeventname = nameToFilename(row.name);
-			var datalink = "<a class='dci' title='Download Data' href='" + urlstem + fileeventname + ".json' download></a>"
+			var datalink = "<a class='dci' title='Download Data' href='" + stem + '/' + fileeventname + ".json' download></a>"
 			if (!row.download || row.download != 'e') {
 				return (datalink + "<a class='eci' title='Edit Data' onclick='eSN(\"" + row.name + "\",\"" + fileeventname + "\",\"" + stem + "\")'></a>") 
 			} else {
@@ -1456,10 +1456,11 @@ function transient_catalog($bones = false) {
 			}
 			if (classname == 'name') {
 				jQuery(this).attr('colspan', 2);
-			}
-			var getval = (classname in $_GET) ? $_GET[classname] : '';
+				gclassname = 'event';
+			} else gclassname = classname;
+			var getval = (gclassname in $_GET) ? $_GET[gclassname] : '';
 			var classnamepm = classname + '-pm'
-			var getpmval = ((classnamepm) in $_GET) ? $_GET[classnamepm] : '';
+			var getpmval = ((classnamepm) in $_GET) ? $_GET[gclassnamepm] : '';
 			var inputstr = '<input class="colsearch" type="search" incremental="incremental" id="'+classname+'" placeholder="'+title+'" value="' + getval + '" />';
 			if (['ra', 'dec', 'hostra', 'hostdec'].indexOf(classname) >= 0) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="± degs" value="' + getpmval + '" />';
@@ -1492,7 +1493,7 @@ function transient_catalog($bones = false) {
 				}
 			},
 			"language": {
-				"loadingRecords": "<img style='vertical-align:-43%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif'><span id='loadingMessage'>Loading... (should take a few seconds)</span>"
+				"loadingRecords": "<img style='vertical-align:-43%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif' title='Please wait!'><span id='loadingMessage'>Loading... (should take a few seconds)</span>"
 			},
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
@@ -1648,7 +1649,8 @@ function transient_catalog($bones = false) {
 							var cs = colsearches[i];
 							if (cs.value !== '') {
 								qpref = (querystring === '') ? '?' : '&';
-								querystring += qpref + cs.id + '=' + encodeURIComponent(cs.value);
+								var csid = (cs.id === 'name') ? 'event' : cs.id;
+								querystring += qpref + csid + '=' + encodeURIComponent(cs.value.replace(/"/g, '&quot;'));
 							}
 						}
 						var visiblestring = '';
@@ -1933,7 +1935,6 @@ function transient_catalog($bones = false) {
 			table.draw();
 		} );
 		jQuery('#coordobservable, #farfrommoon, #farfromsun').change( function () {
-			updateLocation();
 			table.draw();
 		} );
 		jQuery('#inplon, #inplat, #inptime, #inpyear, #inpmon, #inpday, #nowon').change( function () {
@@ -1956,7 +1957,6 @@ function transient_catalog($bones = false) {
 			} else {
 				jQuery('#ondate').hide();
 			}
-			locTableUpdate();
 		} );
 		searchFields = getSearchFields(allSearchCols);
 		setInterval( function () {
