@@ -259,6 +259,14 @@ table.dataTable tr.selected td.select-checkbox:after {
 	padding-top:0 !important;
 }
 
+.entry-content ul>li {
+	list-style:none !important;
+}
+
+.dataTables_filter input {
+	line-height:20px !important;
+}
+
 .dataTables_wrapper .paginate_button {
 	padding:0em 1em !important;
 }
@@ -558,4 +566,15 @@ input[type="search"].colsearch:hover {
 	display:inline-block;
 	padding-right:5px;
 	vertical-align:top;
+}
+
+.dataTable pre {
+	font-size:9px!important;
+	line-height:10px!important;
+	padding-top:0!important;
+	white-space:pre-wrap!important;
+}
+
+.dataTable ul {
+	margin-bottom:0!important;
 }

@@ -1906,6 +1906,7 @@ function transient_catalog($bones = false) {
 			if ( document.getElementById('coordobservable').checked || altVisible ||
 					aziVisible || amVisible || sbVisible ) {
 				//table.rows().invalidate('data').draw();
+				console.log(table);
 				table.rows().invalidate('data').every( function () {
 					var d = this.data();
 					delete d.altitude;
@@ -2412,6 +2413,200 @@ function bibliography() {
                 selector: 'td:first-child'
             },
             order: [[ 6, "desc" ]]
+		} );
+        table.columns().every( function ( index ) {
+            var that = this;
+
+            jQuery( 'input', that.footer() ).on( 'input', function () {
+				if (( floatColInds.indexOf(index) === -1 ) &&
+				    ( stringColInds.indexOf(index) === -1 ) &&
+					( dateColInds.indexOf(index) === -1 ) &&
+					( raDecColInds.indexOf(index) === -1 ) ) {
+					if ( that.search() !== this.value ) {
+						that.search( this.value );
+					}
+				}
+				that.draw();
+            } );
+        } );
+		jQuery.fn.dataTable.ext.search.push(
+			function( oSettings, aData, iDataIndex ) {
+				var alen = aData.length;
+				for ( var i = 0; i < alen; i++ )
+				{
+					if ( floatColInds.indexOf(i) !== -1 ) {
+						if ( !advancedFloatFilter( aData[i], floatColValDict[i] ) ) return false;
+					} else if ( stringColInds.indexOf(i) !== -1 ) {
+						if ( !advancedStringFilter( aData[i], stringColValDict[i] ) ) return false;
+					} else if ( dateColInds.indexOf(i) !== -1 ) {
+						if ( !advancedDateFilter( aData[i], dateColValDict[i] ) ) return false;
+					} else if ( raDecColInds.indexOf(i) !== -1 ) {
+						if ( !advancedRaDecFilter( aData[i], raDecColValDict[i] ) ) return false;
+					}
+				}
+				return true;
+			}
+		);
+	} );
+	</script>
+<?php
+}
+
+function atels() {
+	global $modu;
+	readfile("/root/better-atel/atels.html");
+?>
+	<script>
+	jQuery(document).ready(function() {
+		var floatColValDict = {};
+		var floatColInds = [];
+		var floatSearchCols = ['num'];
+		var stringColValDict = {};
+		var stringColInds = [];
+		var stringSearchCols = ['body'];
+		var raDecColValDict = {};
+		var raDecColInds = [];
+		var raDecSearchCols = [ ];
+		var dateColValDict = {};
+		var dateColInds = [];
+		var dateSearchCols = [ ];
+		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
+        jQuery('#example tfoot th').each( function ( index ) {
+			var title = jQuery(this).text();
+			var classname = jQuery(this).attr('class').split(' ')[0];
+			if (['check', 'responsive'].indexOf(classname) >= 0) {
+				jQuery(this).html( '' );
+			}
+			if (['check', 'responsive'].indexOf(classname) >= 0) return;
+			var fslen = floatSearchCols.length;
+			for (i = 0; i < fslen; i++) {
+				if (jQuery(this).hasClass(floatSearchCols[i])) {
+					floatColValDict[index] = floatSearchCols[i];
+					floatColInds.push(index);
+					break;
+				}
+			}
+			var sslen = stringSearchCols.length;
+			for (i = 0; i < sslen; i++) {
+				if (jQuery(this).hasClass(stringSearchCols[i])) {
+					stringColValDict[index] = stringSearchCols[i];
+					stringColInds.push(index);
+					break;
+				}
+			}
+			var dslen = dateSearchCols.length;
+			for (i = 0; i < dslen; i++) {
+				if (jQuery(this).hasClass(dateSearchCols[i])) {
+					dateColValDict[index] = dateSearchCols[i];
+					dateColInds.push(index);
+					break;
+				}
+			}
+			var rdlen = raDecSearchCols.length;
+			for (i = 0; i < rdlen; i++) {
+				if (jQuery(this).hasClass(raDecSearchCols[i])) {
+					raDecColValDict[index] = raDecSearchCols[i];
+					raDecColInds.push(index);
+					break;
+				}
+			}
+            jQuery(this).html( '<input class="colsearch" type="search" id="'+classname+'" placeholder="'+title+'" />' );
+        } );
+		function numLinked ( row, type, full, meta ) {
+			return '<a href="http://astronomerstelegram.org/?read=' + String(row['num']) + '" target="_blank">' + String(row['num']) + '</a>';
+		}
+		function bodyRender ( data, type, full, meta ) {
+			if (!data) return '';
+			return data;
+		}
+		function dateLinked ( row, type, full, meta ) {
+			var atelDate = new Date(row['date']);
+			return String(atelDate.getFullYear()) + '/' + ("0" + (atelDate.getMonth() + 1)).slice(-2) + '/' + ("0" + atelDate.getDate()).slice(-2) +
+				'<br>' + ("0" + (atelDate.getHours() + 1)).slice(-2) + ':' + ("0" + (atelDate.getMinutes() + 1)).slice(-2);
+		}
+		var table = jQuery('#example').DataTable( {
+			ajax: {
+				url: '/../../better-atel/atels.json',
+				dataSrc: ''
+			},
+			columns: [
+				{ "defaultContent": "" },
+				{ "data": {
+					"_": "num",
+					"display": numLinked
+				  }, "type": "num" },
+			    { "data": {
+					"_": "date",
+					"display": dateLinked
+			      }, "type": "date" },
+				{ "data": {
+					"_": "title"
+				  }, "type": "string", "defaultContent": "", "width": "30%" },
+				{ "data": {
+					"_": "authors[; ]"
+				  }, "type": "string", "defaultContent": "" },
+				{ "data": {
+					"_": "subjects[; ]"
+				  }, "type": "string", "defaultContent": "" },
+				{ "data": {
+					"_": "body"
+				  }, "type": "string", "defaultContent": "", "render": bodyRender, "className": "none" },
+				{ "defaultContent": "" },
+			],
+            dom: 'Bflprtip',
+            //colReorder: true,
+			orderMulti: false,
+            pagingType: 'simple_numbers',
+            pageLength: 10,
+			searchDelay: 400,
+			responsive: {
+				details: {
+					type: 'column',
+					target: -1,
+					display: jQuery.fn.dataTable.Responsive.display.childRowImmediate
+				}
+			},
+            select: true,
+            lengthMenu: [ [10, 20, 50], [10, 20, 50] ],
+            deferRender: true,
+            autoWidth: false,
+            buttons: [
+                {
+                    action: function ( e, dt, button, config ) {
+                        table.rows( { filter: 'applied' } ).select();
+                    },
+                    text: 'Select all'
+                },
+                'selectNone',
+                {
+                    extend: 'colvis',
+                    columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2))'
+                },
+                {
+                    extend: 'csv',
+                    text: 'Export selected to CSV',
+                    exportOptions: {
+                        modifier: { selected: true },
+                        columns: ':not(:first-child):not(:last-child)',
+						orthogonal: 'export'
+                    }
+				}
+            ],
+            columnDefs: [ {
+                targets: 0,
+                orderable: false,
+                className: 'select-checkbox'
+			}, {
+				className: 'control',
+				orderable: false,
+				width: "2%",
+				targets: -1
+			} ],
+            select: {
+                style:    'os',
+                selector: 'td:first-child'
+            },
+            order: [[ 1, "desc" ]]
 		} );
         table.columns().every( function ( index ) {
             var that = this;
@@ -3435,7 +3630,7 @@ function errata() {
 
 function transient_table_scripts() {
 	global $stem, $modu, $subd;
-	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'graveyard')) || is_search()) {
+	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'graveyard', 'atel')) || is_search()) {
 		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('datatables-css'));
 		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('parent-style'));
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
