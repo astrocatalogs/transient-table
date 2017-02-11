@@ -1,16 +1,26 @@
-function eSN(name, filename, stem) {
-	var value = encodeURIComponent(
+function eSN(name, filename, stem, bibcode) {
+	var value = 
 		'{\n' +
 		'\t"' + name + '":{\n' + 
-		'\t\t"name":"' + name + '",\n' +
+		'\t\t"name":"' + name + '",\n';
+	if (bibcode !== undefined) {
+		value +=
+			'\t\t"sources":[\n' +
+			'\t\t\t{\n' +
+			'\t\t\t\t"bibcode":"' + bibcode + '"\n' +
+			'\t\t\t}\n' +
+			'\t\t],\n';
+	}
+	value +=
 		'\t\t"alias":[\n' +
 		'\t\t\t{\n' +
 		'\t\t\t\t"value":"' + name + '"\n' +
 		'\t\t\t}\n' +
 		'\t\t]\n' +
 		'\t}\n' +
-		'}')
-	var instructions = 'PLEASE READ: Welcome to the new JSON page for ' + name + '! Before editing this file, please read our JSON format guidelines [https://github.com/astrocatalogs/sne-internal/blob/master/OSC-JSON-format.md]. Please delete this message before committing.'
+		'}';
+	value = encodeURIComponent(value);
+	var instructions = 'PLEASE READ: Welcome to the new JSON page for ' + name + '! Before editing this file, please look at our JSON schema [https://github.com/astrocatalogs/supernovae/blob/master/SCHEMA.md]. Please replace this message with your own comments before committing.'
 	var win  = window.open('https://github.com/astrocatalogs/' + stem + '-internal/new/master/?filename=' +
 		encodeURIComponent(filename) + '.json&value=' + value + '&description=' + instructions, '_blank')
 	win.focus();
@@ -29,7 +39,7 @@ function markSame(name1, name2, edit) {
 		codemessage += '### Delete all lines preceded by a # before committing any changes to the file\n';
 		codemessage += '### located at the above URL.\n';
 	} else {
-		codemessage = '### DELETE THIS LINE TO ENABLE COMMIT BUTTON\n';
+		codemessage = '';
 	}
 	var value = encodeURIComponent(
 		codemessage +
@@ -65,7 +75,7 @@ function markDiff(name1, name2, edit) {
 		codemessage += '### Delete all lines preceded by a # before committing any changes to the file\n';
 		codemessage += '### located at the above URL.\n';
 	} else {
-		codemessage = '### DELETE THIS LINE TO ENABLE COMMIT BUTTON\n';
+		codemessage = '';
 	}
 	var value = encodeURIComponent(
 		codemessage +
@@ -110,7 +120,7 @@ function markError(name, quantity, sourcekind, source, edit) {
 		codemessage += '### Delete all lines preceded by a # before committing any changes to the file\n';
 		codemessage += '### located at the above URL.\n';
 	} else {
-		codemessage = '### DELETE THIS LINE TO ENABLE COMMIT BUTTON\n';
+		codemessage = '';
 	}
 	var value = encodeURIComponent(
 		codemessage +
@@ -141,7 +151,7 @@ function addQuantity(name, quantity, edit) {
 		codemessage += '### Delete all lines preceded by a # before committing any changes to the file\n';
 		codemessage += '### located at the above URL.\n';
 	} else {
-		codemessage = '### DELETE THIS LINE TO ENABLE COMMIT BUTTON\n';
+		codemessage = '';
 	}
 	var value = encodeURIComponent(
 		codemessage +

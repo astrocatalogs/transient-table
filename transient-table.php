@@ -20,9 +20,10 @@ $revo = '"' . implode('","', explode(",", trim($tt[6]))) . '"';
 $ocol = intval(trim($tt[7]));
 $plen = trim($tt[8]);
 $shrt = trim($tt[9]);
+$sing = trim($tt[10]);
 
 function datatables_functions() {
-	global $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol, $plen, $shrt, $lochtml;
+	global $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol, $plen, $shrt, $sing, $lochtml;
 ?>
 	<script>
 	var searchFields;
@@ -39,6 +40,7 @@ function datatables_functions() {
 	var ocol = <?php echo $ocol;?>;
 	var plen = [<?php echo $plen;?>];
 	var shrt = '<?php echo $shrt;?>';
+	var sing = '<?php echo $sing;?>';
 	var urlstem = 'https://' + subd + '.space/' + stem + '/'; 
 	var nameColumn;
 	var raColumn;
@@ -1594,7 +1596,7 @@ function transient_catalog($bones = false) {
 				{ "data": dataLinked, "name": "data", "responsivePriority": 4, "searchable": false },
 				{ "defaultContent": "" },
 			],
-            dom: 'Bflprt<"coordfoot">ip',
+            dom: '<"addmodal">Bflprt<"coordfoot">ip',
             //colReorder: true,
 			orderMulti: false,
             pagingType: 'simple_numbers',
@@ -1657,6 +1659,12 @@ function transient_catalog($bones = false) {
 						window.prompt("Permanent link to this table query:", querystring);
 					},
 					text: 'Copy Permalink'
+				},
+				{
+					text: '<span id="addicon">+</span> Add ' + sing,
+					action: function ( e, dt, node, conf ) {
+						document.getElementById('addmodalwindow').style.display = 'block';
+					}
 				}
             ],
             columnDefs: [ {
@@ -1783,6 +1791,19 @@ function transient_catalog($bones = false) {
 			'<label><input type="checkbox" id="postmaxspectra"> post-max</label> spectroscopy</span>' +
 			'</td></tr></table>';
 		jQuery("div.coordfoot").html(footstring);
+		var addmodalstring = '<div id="addmodalwindow" class="addmodal-bg">' +
+		    '<div class="addmodal-content">' +
+		    '<span class="addmodal-close">&times;</span>' +
+			'<p>Specify object details below:</p>' +
+		    '<table id="addtable"><tr><th>' + sing + ' name*</th><th>Bibcode*</th></tr>' +
+			'<tr><td><input type="text" id="objectname"></td>' +
+			'<td><input type="text" id="objectbibcode"></td></tr>' +
+			'</table>' +
+			'<p>* = Required</p>' +
+			'<a class="dt-button" id="addgithub"><span>Submit to GitHub</span></a>' +
+			'</div>' +
+			'</div>';
+		jQuery("div.addmodal").html(addmodalstring);
         table.columns().every( function ( index ) {
             var that = this;
 
@@ -1958,6 +1979,43 @@ function transient_catalog($bones = false) {
 			}
 		} );
 		searchFields = getSearchFields(allSearchCols);
+
+		var modal = document.getElementById('addmodalwindow');
+		var span = document.getElementsByClassName("addmodal-close")[0];
+		var addgithub = document.getElementById("addgithub");
+		span.onclick = function() {
+			modal.style.display = "none";
+		}
+		window.onclick = function(event) {
+			if (event.target == modal) {
+				modal.style.display = "none";
+			}
+		}
+		addgithub.onclick = function () {
+			var addname = document.getElementById('objectname').value;
+			var addnamel = addname.toLowerCase();
+			var bibcode = document.getElementById('objectbibcode').value;
+			if (addname === '') {
+				alert('Please provide name.');
+				return;
+			}
+			var oldnames = '';
+			table.data().each(function(val, ind) {
+				oldnames += ',' + val["name"].toLowerCase();
+				oldnames += ',' + getAliases(val).join(',');
+			});
+			oldnames = oldnames.toLowerCase().split(',');
+			if (oldnames.indexOf(addnamel) > -1) {
+				alert(sing + ' entry already exists.');
+				return;
+			}
+			if (bibcode === '' || bibcode.length != 19) {
+				alert('19 character bibcode required.');
+				return;
+			}
+			eSN(addname, addname, stem, bibcode);
+		}
+
 		setInterval( function () {
 			table.ajax.reload(null, false);
 			table.draw(false);
@@ -2457,6 +2515,7 @@ function atels() {
 	readfile("/root/better-atel/atels.html");
 ?>
 	<script>
+	var regPrefixes;
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
@@ -2515,15 +2574,60 @@ function atels() {
 		function numLinked ( row, type, full, meta ) {
 			return '<a href="http://astronomerstelegram.org/?read=' + String(row['num']) + '" target="_blank">' + String(row['num']) + '</a>';
 		}
-		function bodyRender ( data, type, full, meta ) {
-			if (!data) return '';
-			return data;
+		function escapeRegExp(str) {
+		    return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+		}
+		function replacer (match) {
+			var name = match;
+			return ['<a href="https://sne.space/sne/', name, '" target="_blank">', name, '</a>'].join('');
+		}
+		function nameMatcher ( txt ) {
+			return txt.replace(regPrefixes, replacer);
+		}
+		function bodyRender ( row, type, full, meta ) {
+			var bodyTxt = row['body'];
+			return nameMatcher ( bodyTxt );
+		}
+		function titleRender ( row, type, full, meta ) {
+			var titleTxt = row['title'];
+			return nameMatcher ( titleTxt );
 		}
 		function dateLinked ( row, type, full, meta ) {
 			var atelDate = new Date(row['date']);
+			if (!isFinite(atelDate)) return 'Unknown';
 			return String(atelDate.getFullYear()) + '/' + ("0" + (atelDate.getMonth() + 1)).slice(-2) + '/' + ("0" + atelDate.getDate()).slice(-2) +
 				'<br>' + ("0" + (atelDate.getHours() + 1)).slice(-2) + ':' + ("0" + (atelDate.getMinutes() + 1)).slice(-2);
 		}
+		namesObj = jQuery.parseJSON(
+			jQuery.ajax(
+				{
+				   url: '/../../astrocats/astrocats/' + modu + '/output/names.min.json', 
+				   async: false, 
+				   dataType: 'json'
+				}
+			).responseText
+		);
+		var names = [];
+		for (var name in namesObj) {
+			Array.prototype.push.apply(names, namesObj[name]);
+		}
+		var nameLen = names.length;
+		var prefixes = new Set();
+		for (var i = 0; i < nameLen; i++) {
+			var name = names[i];
+			var index = name.search(/\d/);
+			if (index > 0) {
+				var newPrefix = jQuery.trim(name.slice(0, index));
+				newPrefix = newPrefix.replace(/^-+|-+$/g, '');
+				if (newPrefix.length < 2) continue;
+				prefixes.add(newPrefix);
+			}
+		}
+		regexes = [];
+		for (let prefix of prefixes.values()) {
+			regexes.push('\\b(?!http|https)' + escapeRegExp(prefix) + '[\\s\\-]?\\d+[A-Za-z]+[A-Za-z0-9]*\\b');
+		}
+		regPrefixes = new RegExp('(' + regexes.join(')|(') + ')', 'g');
 		var table = jQuery('#example').DataTable( {
 			ajax: {
 				url: '/../../better-atel/atels.json',
@@ -2540,8 +2644,9 @@ function atels() {
 					"display": dateLinked
 			      }, "type": "date" },
 				{ "data": {
-					"_": "title"
-				  }, "type": "string", "defaultContent": "", "width": "30%" },
+					"_": "title",
+					"display": titleRender
+				  }, "type": "string", "width": "30%" },
 				{ "data": {
 					"_": "authors[; ]"
 				  }, "type": "string", "defaultContent": "" },
@@ -2549,8 +2654,9 @@ function atels() {
 					"_": "subjects[; ]"
 				  }, "type": "string", "defaultContent": "" },
 				{ "data": {
-					"_": "body"
-				  }, "type": "string", "defaultContent": "", "render": bodyRender, "className": "none" },
+					"_": "body",
+					"display": bodyRender
+				  }, "type": "string", "defaultContent": "", "className": "none" },
 				{ "defaultContent": "" },
 			],
             dom: 'Bflprtip',
@@ -2578,6 +2684,17 @@ function atels() {
                     text: 'Select all'
                 },
                 'selectNone',
+				{
+					action: function () {
+						jQuery('[id$="example"] tbody td:last-child').trigger('click');
+						if (this.text() == 'Collapse all') {
+							this.text('Expand all');
+						} else {
+							this.text('Collapse all');
+						}
+					},
+					text: 'Collapse all'
+				},
                 {
                     extend: 'colvis',
                     columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2))'
@@ -2641,6 +2758,11 @@ function atels() {
 				return true;
 			}
 		);
+		jQuery('#example').on( 'draw.dt', function () {
+			if (table.button(2).text() == 'Expand all') {
+				jQuery('[id$="example"] tbody td:last-child').trigger('click');
+			}
+		} );
 	} );
 	</script>
 <?php

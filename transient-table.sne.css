@@ -190,12 +190,15 @@
 	white-space:nowrap;
 }
 
-#example tr td {
+#example tr td
+{
     border-right:1px solid #777!important;
     color:#000!important;
 } 
 
-#example tr th, #example thead th, #example tfoot th {
+#example tr th, #example thead th, #example tfoot th,
+#addtable tr th, #addtable thead th, #addtable tfoot th
+{
 	white-space:nowrap;
     font-size:12px!important;
     border-right:1px solid #777!important;
@@ -211,7 +214,8 @@
     color:#333!important;
 } 
 
-#example tbody tr td {
+#example tbody tr td,
+#addtable tbody tr td {
     font-size:12px;
     padding:4px;
     line-height:16px;
@@ -569,12 +573,73 @@ input[type="search"].colsearch:hover {
 }
 
 .dataTable pre {
-	font-size:9px!important;
-	line-height:10px!important;
+	font-size:10px!important;
+	line-height:11px!important;
 	padding-top:0!important;
 	white-space:pre-wrap!important;
 }
 
 .dataTable ul {
 	margin-bottom:0!important;
+}
+
+#addicon {
+	color: green;
+    font-weight: bold;
+    font-size: x-large;
+    position: relative;
+    top: 4px;
+    line-height: 0;
+}
+
+/* The Modal (background) */
+.addmodal-bg {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.addmodal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.addmodal-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.addmodal-close:hover,
+.addmodal-close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#addtable input {
+	padding: 5px;
+}
+
+#addtable tr td {
+    border-bottom:1px solid #777!important;
+    border-left:1px solid #777!important;
+    border-right:1px solid #777!important;
+}
+
+#addgithub {
+	margin-top: -5px;
 }
