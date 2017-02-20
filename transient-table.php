@@ -766,9 +766,12 @@ function datatables_functions() {
 			var cData = splitData[d].trim();
 			var sslen = splitString.length;
 			for ( var i = 0; i < sslen; i++ ) {
-				if ( splitString[i].indexOf('-') !== -1 )
+				var cleanString = splitString[i].trim().replace(/\s+/g, ':').replace(/[hm]/g, ':');
+				if ( !ra ) cleanString = cleanString.replace(/[dm]/g, ':').replace(/s$/, '');
+				cleanString = cleanString.replace(/s$/, '');
+				if ( cleanString.indexOf('-') !== -1 )
 				{
-					var splitRange = splitString[i].split('-');
+					var splitRange = cleanString.split('-');
 					var minStr = splitRange[0].replace(/[<=>]/g, '').trim();
 					var maxStr = splitRange[1].replace(/[<=>]/g, '').trim();
 					if (minStr !== '') {
@@ -777,8 +780,9 @@ function datatables_functions() {
 					}
 				}
 				else if ( pmidString !== '' ) {
-					minCoord = convertRaDec(splitString[i], ra) - parseFloat(pmidString);
-					maxCoord = convertRaDec(splitString[i], ra) + parseFloat(pmidString);
+					var coorVal = convertRaDec(cleanString, ra);
+					minCoord = coorVal - parseFloat(pmidString);
+					maxCoord = coorVal + parseFloat(pmidString);
 					cCoord = convertRaDec(cData, ra);
 					if (cCoord == 0.0) {
 						return isNot;
@@ -803,7 +807,7 @@ function datatables_functions() {
 						}
 					}
 				}
-				var idStr = splitString[i].replace(/[<=>]/g, '').trim();
+				var idStr = cleanString.replace(/[<=>]/g, '').trim();
 				if ( idStr === "" || idStr === NaN || idStr === '-' ) {
 					if (i === 0) return !isNot;
 				}
@@ -812,19 +816,19 @@ function datatables_functions() {
 				}
 				else {
 					//if (cData === '') return false;
-					if ( splitString[i].indexOf('<=') !== -1 )
+					if ( cleanString.indexOf('<=') !== -1 )
 					{
 						if ( compRaDecs(cData, idStr, true) ) return !isNot;
 					}
-					else if ( splitString[i].indexOf('<') !== -1 )
+					else if ( cleanString.indexOf('<') !== -1 )
 					{
 						if ( compRaDecs(cData, idStr, false) ) return !isNot;
 					}
-					else if ( splitString[i].indexOf('>=') !== -1 )
+					else if ( cleanString.indexOf('>=') !== -1 )
 					{
 						if ( compRaDecs(idStr, cData, true) ) return !isNot;
 					}
-					else if ( splitString[i].indexOf('>') !== -1 )
+					else if ( cleanString.indexOf('>') !== -1 )
 					{
 						if ( compRaDecs(idStr, cData, false) ) return !isNot;
 					}
