@@ -120,10 +120,9 @@ function datatables_functions() {
 			}
 			break;
 		}
-		if (moonAlt <= 0.0) {
-			moonPhaseIcon = '◌';
-			moonPhaseDesc = 'No Moon';
-		} else {
+		moonPhaseIcon = '◌';
+		moonPhaseDesc = 'No Moon';
+		if (moonAlt > 0.0) {
 			var moonphases = [
 				[0.035, '🌑', 'New Moon'],
 				[0.2, '🌒', 'Waxing crescent'],
@@ -2048,7 +2047,7 @@ function duplicate_table() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = ['distdeg', 'maxdiffyear', 'maxdiffyear'];
+		var floatSearchCols = ['distdeg', 'maxdiffyear', 'discdiffyear'];
 		var stringColValDict = {};
 		var stringColInds = [];
 		var stringSearchCols = ['name1', 'name2'];
@@ -2280,10 +2279,10 @@ function frb_table() {
 	jQuery(document).ready(function() {
 		var floatColValDict = {};
 		var floatColInds = [];
-		var floatSearchCols = ['distdeg', 'maxdiffyear', 'maxdiffyear'];
+		var floatSearchCols = ['distdeg', 'discdiffyear', 'poserror'];
 		var stringColValDict = {};
 		var stringColInds = [];
-		var stringSearchCols = ['name1', 'name2'];
+		var stringSearchCols = ['name1', 'name2', 'claimedtype', 'host'];
 		var raDecColValDict = {};
 		var raDecColInds = [];
 		var raDecSearchCols = ['ra1', 'dec1', 'ra2', 'dec2'];
@@ -2296,21 +2295,21 @@ function frb_table() {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			return parseFloat((parseFloat(row.distdeg)*3600.).toFixed(5));
-		}
-		function maxDiffYearValue ( row, type, full, meta ) {
-			if (!row.maxdiffyear) {
-				if (type === 'sort') return NaN;
-				return '';
-			}
-			return parseFloat((parseFloat(row.maxdiffyear)*365.25).toFixed(3));
+			return parseFloat((parseFloat(row.distdeg)*60.).toFixed(2));
 		}
 		function discDiffYearValue ( row, type, full, meta ) {
 			if (!row.discdiffyear) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			return parseFloat((parseFloat(row.discdiffyear)*365.25).toFixed(3));
+			return parseFloat((parseFloat(row.discdiffyear)*365.25).toFixed(2));
+		}
+		function posErrorValue ( row, type, full, meta ) {
+			if (!row.poserror) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			return parseFloat((parseFloat(row.poserror)/60.).toFixed(2));
 		}
 		function performGoogleSearch ( row, type, full, meta ) {
 			var namearr = row.aliases1.concat(row.aliases2);
@@ -2328,10 +2327,10 @@ function frb_table() {
 			if (classname == 'aliases') {
 				jQuery(this).remove();
 			}
-			if (['check', 'google', 'aredupes', 'notdupes', 'responsive'].indexOf(classname) >= 0) {
+			if (['check', 'responsive'].indexOf(classname) >= 0) {
 				jQuery(this).html( '' );
 			}
-			if (['check', 'google', 'aredupes', 'notdupes', 'responsive'].indexOf(classname) >= 0) return;
+			if (['check', 'responsive'].indexOf(classname) >= 0) return;
 			var fslen = floatSearchCols.length;
 			for (i = 0; i < fslen; i++) {
 				if (jQuery(this).hasClass(floatSearchCols[i])) {
@@ -2373,14 +2372,16 @@ function frb_table() {
 			},
 			columns: [
 				{ "defaultContent": "", "responsivePriority": 6 },
-				{ "data": null, "type": "string", "responsivePriority": 1, "render": nameSwitcherName1 },
-				{ "data": null, "type": "string", "responsivePriority": 1, "render": nameSwitcherName2 },
+				{ "data": "name1", "type": "string", "responsivePriority": 1 },
 				{ "data": {
 					"_": "ra1"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
 				{ "data": {
 					"_": "dec1"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+				{ "data": null, "type": "string", "responsivePriority": 1, "render": nameSwitcherName2 },
+				{ "data": "claimedtype", "type": "string", "responsivePriority": 5, "width": "3%" },
+				{ "data": "host.0.value", "defaultContent": "", "type": "string", "width":"14%" },
 				{ "data": {
 					"_": "ra2"
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
@@ -2391,14 +2392,11 @@ function frb_table() {
 					"_": distDegValue,
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5, "width": "5%" },
 				{ "data": {
-					"_": maxDiffYearValue,
-				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5, "width": "5%" },
-				{ "data": {
 					"_": discDiffYearValue,
 				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5, "width": "5%" },
-				{ "data": performGoogleSearch, "responsivePriority": 4, "searchable": false },
-				{ "data": markAsDuplicate, "responsivePriority": 4, "searchable": false },
-				{ "data": markAsDistinct, "responsivePriority": 4, "searchable": false },
+				{ "data": {
+					"_": posErrorValue,
+				  }, "type": "non-empty-float", "defaultContent": "", "responsivePriority": 5, "width": "5%" },
 				{ "defaultContent": "" },
 			],
             dom: 'Bflprtip',
@@ -2427,14 +2425,14 @@ function frb_table() {
                 'selectNone',
                 {
                     extend: 'colvis',
-                    columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2)):not(:nth-last-child(3)):not(:nth-last-child(4))'
+                    columns: ':not(:first-child):not(:last-child)'
                 },
                 {
                     extend: 'csv',
                     text: 'Export selected to CSV',
                     exportOptions: {
                         modifier: { selected: true },
-                        columns: ':visible:not(:first-child):not(:last-child):not(:nth-last-child(2)):not(:nth-last-child(3)):not(:nth-last-child(4))',
+                        columns: ':visible:not(:first-child):not(:last-child)',
 						orthogonal: 'export'
                     }
 				}
@@ -2444,7 +2442,7 @@ function frb_table() {
                 orderable: false,
                 className: 'select-checkbox'
 			}, {
-                targets: [ 'ra1', 'dec1', 'ra2', 'dec2' ],
+                targets: [ 'ra1', 'dec1' ],
 				visible: false
 			}, {
 				className: 'control',
@@ -2452,14 +2450,14 @@ function frb_table() {
 				width: "2%",
 				targets: -1
 			}, {
-				targets: [ 'google', 'aredupes', 'notdupes' ],
+				targets: [ ],
 				orderable: false
 			} ],
             select: {
                 style:    'os',
                 selector: 'td:first-child'
             },
-            order: [[ 7, "asc" ], [8, "asc"], [9, "asc"]]
+            order: [[9, "asc"]]
 		} );
         table.columns().every( function ( index ) {
             var that = this;
@@ -3988,7 +3986,7 @@ function errata() {
 
 function transient_table_scripts() {
 	global $stem, $modu, $subd;
-	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'graveyard', 'atel', 'frbs')) || is_search()) {
+	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'graveyard', 'atel', 'frbs', 'mosfit')) || is_search()) {
 		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('datatables-css'));
 		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('parent-style'));
 		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );

@@ -643,3 +643,7 @@ input[type="search"].colsearch:hover {
 #addgithub {
 	margin-top: -5px;
 }
+
+.hide-nf {
+	display: none;
+}
