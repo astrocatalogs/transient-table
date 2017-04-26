@@ -21,9 +21,10 @@ $ocol = intval(trim($tt[7]));
 $plen = trim($tt[8]);
 $shrt = trim($tt[9]);
 $sing = trim($tt[10]);
+$outp = 'astrocats/astrocats/' . $modu . '/output/';
 
 function datatables_functions() {
-	global $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol, $plen, $shrt, $sing, $lochtml;
+	global $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol, $plen, $shrt, $sing, $lochtml, $outp;
 ?>
 	<script>
 	var searchFields;
@@ -41,7 +42,9 @@ function datatables_functions() {
 	var plen = [<?php echo $plen;?>];
 	var shrt = '<?php echo $shrt;?>';
 	var sing = '<?php echo $sing;?>';
-	var urlstem = 'https://' + subd + '.space/' + stem + '/'; 
+	var outp = '<?php echo $outp;?>';
+	var urlbase = 'https://' + subd + '.space/';
+	var urlstem = urlbase + stem + '/'; 
 	var nameColumn;
 	var raColumn;
 	var decColumn;
@@ -251,6 +254,9 @@ function datatables_functions() {
 	function getAliases (row, field) {
 		if (field === undefined) field = 'alias';
 		var aliases = [];
+		if (!(field in row)) {
+			return aliases;
+		}
 		for (i = 0; i < row[field].length; i++) {
 			if (typeof row[field][i] === 'string') {
 				aliases.push(row[field][i]);
@@ -263,6 +269,9 @@ function datatables_functions() {
 	function getAliasesOnly (row, field) {
 		if (field === undefined) field = 'alias';
 		var aliases = [];
+		if (!(field in row)) {
+			return aliases;
+		}
 		for (i = 1; i < row[field].length; i++) {
 			if (typeof row[field][i] === 'string') {
 				aliases.push(row[field][i]);
@@ -274,12 +283,14 @@ function datatables_functions() {
 	}
 	function eventAliases ( row, type, full, meta, field ) {
 		if (field === undefined) field = 'alias';
+		if (!(field in row)) return '';
 		if (!row[field]) return '';
 		var aliases = getAliases(row, field);
 		return aliases.join(', ');
 	}
 	function eventAliasesOnly ( row, type, full, meta, field ) {
 		if (field === undefined) field = 'alias';
+		if (!(field in row)) return '';
 		if (!row[field]) return '';
 		if (row[field].length > 1) {
 			var aliases = getAliasesOnly(row, field);
@@ -379,7 +390,7 @@ function datatables_functions() {
 			encodeURIComponent(row.host[0]['value']) +
 			"&submit=SIMBAD+search' target='_blank'>" + someBreak(row.host[0]['value']) + "</a>"; 
 		var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
-			"style='background-image:url(" + urlstem + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
+			"style='background-image:url(" + urlbase + outp + 'html/' + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
 		var hlen = row.host.length;
 		if (hlen > 1) {
 			var hostAliases = '';
@@ -404,7 +415,7 @@ function datatables_functions() {
 			if (hlen > 1) {
 				var mainHost = "<a href='http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=%s&submit=SIMBAD+search' target='_blank'>%s</a>"; 
 				var hostImg = (row.ra && row.dec) ? ("<div class='tooltipimg' " +
-					"style=background-image:url(" + urlstem + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
+					"style=background-image:url(" + urlbase + outp + 'html/' + nameToFilename(row.name) + "-host.jpg);'></div>") : "";
 				var idObj = searchFields['host'];
 				var filterTxt = searchFields['search'].val().toUpperCase().replace(/"/g, '');
 				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
@@ -1930,7 +1941,6 @@ function transient_catalog($bones = false) {
 			if ( document.getElementById('coordobservable').checked || altVisible ||
 					aziVisible || amVisible || sbVisible ) {
 				//table.rows().invalidate('data').draw();
-				console.log(table);
 				table.rows().invalidate('data').every( function () {
 					var d = this.data();
 					delete d.altitude;
@@ -2063,7 +2073,7 @@ function duplicate_table() {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			return parseFloat((parseFloat(row.distdeg)*3600.).toFixed(5));
+			return parseFloat((parseFloat(row.distdeg)).toFixed(5));
 		}
 		function maxDiffYearValue ( row, type, full, meta ) {
 			if (!row.maxdiffyear) {
@@ -2084,10 +2094,10 @@ function duplicate_table() {
 			return "<button class='googleit' type='button' onclick='googleNames(\"" + namearr.join(',') + "\")'>Google all names</button>"
 		}
 		function markAsDuplicate ( row, type, full, meta ) {
-			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\")'>These are the same</button>"
+			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + stem + "\")'>These are the same</button>"
 		}
 		function markAsDistinct ( row, type, full, meta ) {
-			return "<button class='diffevent' type='button' onclick='markDiff(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\")'>These are different</button>"
+			return "<button class='diffevent' type='button' onclick='markDiff(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + stem + "\")'>These are different</button>"
 		}
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
@@ -2316,10 +2326,10 @@ function frb_table() {
 			return "<button class='googleit' type='button' onclick='googleNames(\"" + namearr.join(',') + "\")'>Google all names</button>"
 		}
 		function markAsDuplicate ( row, type, full, meta ) {
-			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\")'>These are the same</button>"
+			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + stem + "\")'>These are the same</button>"
 		}
 		function markAsDistinct ( row, type, full, meta ) {
-			return "<button class='diffevent' type='button' onclick='markDiff(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\")'>These are different</button>"
+			return "<button class='diffevent' type='button' onclick='markDiff(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + stem + "\")'>These are different</button>"
 		}
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
@@ -3603,14 +3613,14 @@ function conflict_table() {
 				}
 				html += "<div class='tooltip'><button class='markerror' type='button' onclick='markError(\"" +
 					row.name + "\", \"" + row.quantity + "\", \"" + row.sources[i].idtype +
-					"\", \"" + row.sources[i].id + "\", \"" + row.edit + "\")'>" + quantityStr + ((quantityStr !== "") ? " =<br>" : "") +
+					"\", \"" + row.sources[i].id + "\", \"" + row.edit + "\",\"" + stem + "\")'>" + quantityStr + ((quantityStr !== "") ? " =<br>" : "") +
 					String(row.values[i]) + "<br>is erroneous</button><span class='tooltiptextbot'>" + row.sources[i].id + "</span></div>";
 			}
 			var aliases = getAliases(row);
 			for (i = 1; i < aliases.length; i++) {
 				html += ' ';
 				html += "<button class='diffevent' type='button' onclick='markDiff(\"" +
-					row.name + "\", \"" + aliases[i] + "\", \"" + row.edit + "\")'>Alias<br>" +
+					row.name + "\", \"" + aliases[i] + "\", \"" + row.edit + "\",\"" + stem + "\")'>Alias<br>" +
 					aliases[i] + "<br>is a different SN</button>";
 			}
 			return html;

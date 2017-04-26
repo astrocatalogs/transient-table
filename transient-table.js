@@ -26,7 +26,7 @@ function eSN(name, filename, stem, bibcode) {
 	win.focus();
 }
 
-function markSame(name1, name2, edit) {
+function markSame(name1, name2, edit, catalog) {
 	var filename = name1.replace("/", "_") + '.json';
 	var codemessage = '';
 	if (edit === "true") {
@@ -34,7 +34,7 @@ function markSame(name1, name2, edit) {
 		codemessage += '### Due to limitations of the GitHub URL interface, you must copy the contents\n';
 		codemessage += '### of this file into the existing JSON file for this event in order to edit it\n';
 		codemessage += '### The location of the file to paste into is located at:\n';
-		codemessage += '### https://github.com/astrocatalogs/sne-internal/edit/master/' + encodeURIComponent(filename) + '\n';
+		codemessage += '### https://github.com/astrocatalogs/' + catalog + '-internal/edit/master/' + encodeURIComponent(filename) + '\n';
 		codemessage += '### COMMITTING THE FILE ON THIS PAGE WILL RESULT IN A "FILE ALREADY EXISTS" ERROR.\n';
 		codemessage += '### Delete all lines preceded by a # before committing any changes to the file\n';
 		codemessage += '### located at the above URL.\n';
@@ -57,12 +57,12 @@ function markSame(name1, name2, edit) {
 		'\t}\n' +
 		'}')
 	var instructions = encodeURIComponent('Events ' + name1 + ' and ' + name2 + ' marked as being the same via OSC duplicate finder.');
-	var win = window.open('https://github.com/astrocatalogs/sne-internal/new/master/?filename=' +
+	var win = window.open('https://github.com/astrocatalogs/' + catalog + '-internal/new/master/?filename=' +
 		encodeURIComponent(filename) + '&value=' + value + '&message=' + instructions, '_blank')
 	win.focus();
 }
 
-function markDiff(name1, name2, edit) {
+function markDiff(name1, name2, edit, catalog) {
 	var filename = name1.replace("/", "_") + '.json';
 	var codemessage = '';
 	if (edit === "true") {
@@ -70,7 +70,7 @@ function markDiff(name1, name2, edit) {
 		codemessage += '### Due to limitations of the GitHub URL interface, you must copy the contents\n';
 		codemessage += '### of this file into the existing JSON file for this event in order to edit it\n';
 		codemessage += '### The location of the file to paste into is located at:\n';
-		codemessage += '### https://github.com/astrocatalogs/sne-internal/edit/master/' + encodeURIComponent(filename) + '\n';
+		codemessage += '### https://github.com/astrocatalogs/' + catalog + '-internal/edit/master/' + encodeURIComponent(filename) + '\n';
 		codemessage += '### COMMITTING THE FILE ON THIS PAGE WILL RESULT IN A "FILE ALREADY EXISTS" ERROR.\n';
 		codemessage += '### Delete all lines preceded by a # before committing any changes to the file\n';
 		codemessage += '### located at the above URL.\n';
@@ -90,13 +90,13 @@ function markDiff(name1, name2, edit) {
 		'\t}\n' +
 		'}')
 	var instructions = encodeURIComponent('Events ' + name1 + ' and ' + name2 + ' marked as being distinct from one another via OSC duplicate finder.');
-	var win = window.open('https://github.com/astrocatalogs/sne-internal/new/master/?filename=' +
+	var win = window.open('https://github.com/astrocatalogs/' + catalog + '-internal/new/master/?filename=' +
 		encodeURIComponent(filename) + '&value=' + value + '&message=' + instructions, '_blank')
 
 	win.focus();
 }
 
-function markError(name, quantity, sourcekind, source, edit) {
+function markError(name, quantity, sourcekind, source, edit, catalog) {
 	var filename = name.replace("/", "_") + '.json';
 	var sks = sourcekind.split(',');
 	var sis = source.split(',');
@@ -115,7 +115,7 @@ function markError(name, quantity, sourcekind, source, edit) {
 		codemessage += '### Due to limitations of the GitHub URL interface, you must copy the contents\n';
 		codemessage += '### of this file into the existing JSON file for this event in order to edit it\n';
 		codemessage += '### The location of the file to paste into is located at:\n';
-		codemessage += '### https://github.com/astrocatalogs/sne-internal/edit/master/' + encodeURIComponent(filename) + '\n';
+		codemessage += '### https://github.com/astrocatalogs/' + catalog + '-internal/edit/master/' + encodeURIComponent(filename) + '\n';
 		codemessage += '### COMMITTING THE FILE ON THIS PAGE WILL RESULT IN A "FILE ALREADY EXISTS" ERROR.\n';
 		codemessage += '### Delete all lines preceded by a # before committing any changes to the file\n';
 		codemessage += '### located at the above URL.\n';
@@ -133,12 +133,12 @@ function markError(name, quantity, sourcekind, source, edit) {
 		'\t}\n' +
 		'}');
 	var instructions = encodeURIComponent(name + '\'s ' + quantity + ' from ' + source + ' marked as being erroneous.');
-	var win = window.open('https://github.com/astrocatalogs/sne-internal/new/master/?filename=' +
+	var win = window.open('https://github.com/astrocatalogs/' + catalog + '-internal/new/master/?filename=' +
 		encodeURIComponent(filename) + '&value=' + value + '&message=' + instructions, '_blank');
 	win.focus();
 }
 
-function addQuantity(name, quantity, edit) {
+function addQuantity(name, quantity, edit, catalog) {
 	var filename = name.replace("/", "_") + '.json';
 	var codemessage = '';
 	if (edit === "true") {
@@ -146,7 +146,7 @@ function addQuantity(name, quantity, edit) {
 		codemessage += '### Due to limitations of the GitHub URL interface, you must copy the contents\n';
 		codemessage += '### of this file into the existing JSON file for this event in order to edit it\n';
 		codemessage += '### The location of the file to paste into is located at:\n';
-		codemessage += '### https://github.com/astrocatalogs/sne-internal/edit/master/' + encodeURIComponent(filename) + '\n';
+		codemessage += '### https://github.com/astrocatalogs/' + catalog + '-internal/edit/master/' + encodeURIComponent(filename) + '\n';
 		codemessage += '### COMMITTING THE FILE ON THIS PAGE WILL RESULT IN A "FILE ALREADY EXISTS" ERROR.\n';
 		codemessage += '### Delete all lines preceded by a # before committing any changes to the file\n';
 		codemessage += '### located at the above URL.\n';
@@ -173,7 +173,7 @@ function addQuantity(name, quantity, edit) {
 		'\t}\n' +
 		'}');
 	var instructions = encodeURIComponent('"' + quantity + '" added to ' + name + '.');
-	var win = window.open('https://github.com/astrocatalogs/sne-internal/new/master/?filename=' +
+	var win = window.open('https://github.com/astrocatalogs/' + catalog + '-internal/new/master/?filename=' +
 		encodeURIComponent(filename) + '&value=' + value + '&message=' + instructions, '_blank');
 	win.focus();
 }
