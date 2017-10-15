@@ -24,7 +24,7 @@ $sing = trim($tt[10]);
 $outp = 'astrocats/astrocats/' . $modu . '/output/';
 
 function datatables_functions() {
-	global $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol, $plen, $shrt, $sing, $lochtml, $outp;
+	global $tt, $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol, $plen, $shrt, $sing, $lochtml, $outp;
 ?>
 	<script>
 	var searchFields;
@@ -1039,7 +1039,7 @@ function transient_catalog($bones = false) {
 		var floatColInds = [];
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
 			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffsetang',
-			'hostoffsetdist', 'altitude', 'azimuth', 'airmass', 'skybrightness'];
+			'hostoffsetdist', 'altitude', 'azimuth', 'airmass', 'skybrightness', 'masses'];
 		var stringColValDict = {};
 		var stringColValPMDict = {};
 		var stringColInds = [];
@@ -1522,6 +1522,7 @@ function transient_catalog($bones = false) {
 				  }, "type": "non-empty-float", "defaultContent": "" },
 				{ "data": "maxappmag.0.value", "name": "maxappmag", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": "maxabsmag.0.value", "name": "maxabsmag", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
+				{ "data": "masses", "name": "masses", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
 				{ "data": null, "name": "host", "type": "string", "width":"14%", "render": hostSwitcher },
 				{ "data": {
 					"display": raLinked,
