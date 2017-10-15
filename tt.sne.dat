@@ -5,7 +5,7 @@ alias,maxdate,velocity,maxabsmag,hostra,hostdec,hostoffsetang,hostoffsetdist,ref
 maxdate,discoverdate
 download,spectralink,photolink,radiolink,xraylink
 photolink,spectralink,radiolink,xraylink
-24
+25
 10,50,250
 SNe
 Supernova
