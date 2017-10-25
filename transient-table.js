@@ -96,6 +96,16 @@ function markDiff(name1, name2, edit, catalog) {
 	win.focus();
 }
 
+function lookupSimbad(query) {
+	var win = window.open('http://simbad.u-strasbg.fr/simbad/sim-basic?Ident=' + query, '_blank');
+	win.focus();
+}
+
+function lookupTns(query) {
+	var win = window.open('https://wis-tns.weizmann.ac.il/object/' + query, '_blank');
+	win.focus();
+}
+
 function markError(name, quantity, sourcekind, source, edit, catalog) {
 	var filename = name.replace("/", "_") + '.json';
 	var sks = sourcekind.split(',');
