@@ -1,11 +1,11 @@
 tde
 tidaldisruptions
 tde
-alias,maxdate,velocity,maxabsmag,ra,dec,hostoffsetang,hostoffsetdist,radiolink,instruments,ebv,lumdist,references,altitude,azimuth,airmass,skybrightness
+alias,maxdate,velocity,maxabsmag,masses,ra,dec,hostoffsetang,hostoffsetdist,radiolink,instruments,ebv,lumdist,references,altitude,azimuth,airmass,skybrightness
 maxdate,discoverdate,xraylink
 download,photolink
 photolink,xraylink,spectralink
-24
+25
 10,100
 TDE
 TDE
