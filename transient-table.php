@@ -977,12 +977,10 @@ function datatables_functions() {
 					idVal = idStr*1.0;
 					if ( splitString[i].indexOf('<=') !== -1 )
 					{
-						if ( cData === "" ) return false;
 						if ( idVal >= cVal ) return true;
 					}
 					else if ( splitString[i].indexOf('<') !== -1 )
 					{
-						if ( cData === "" ) return false;
 						if ( idVal > cVal ) return true;
 					}
 					else if ( splitString[i].indexOf('>=') !== -1 )
@@ -1594,7 +1592,7 @@ function transient_catalog($bones = false) {
 				{ "data": {
 					"display": spectraLinked,
 					"_": spectraValue,
-					"source": spectraSort
+					"sort": spectraSort
 				  }, "name": "spectralink", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"5%" },
 				{ "data": {
 					"display": radioLinked,
