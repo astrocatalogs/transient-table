@@ -1,3 +1,8 @@
+function showSpecCSV() {
+	document.getElementById('speccsv').style.display = 'block';
+	parent.resizeWindowToContents();
+}
+
 function eSN(name, filename, stem, bibcode) {
 	var value = 
 		'{\n' +
