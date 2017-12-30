@@ -17,7 +17,7 @@ $invi = '"' . implode('","', explode(",", trim($tt[3]))) . '"';
 $nowr = '"' . implode('","', explode(",", trim($tt[4]))) . '"';
 $nwnm = '"' . implode('","', explode(",", trim($tt[5]))) . '"';
 $revo = '"' . implode('","', explode(",", trim($tt[6]))) . '"';
-$ocol = intval(trim($tt[7]));
+$ocol = trim($tt[7]);
 $plen = trim($tt[8]);
 $shrt = trim($tt[9]);
 $sing = trim($tt[10]);
@@ -35,10 +35,12 @@ function datatables_functions() {
 	var visi = [<?php echo (array_key_exists('visible', $_GET) ?
 		('"' . implode('","', explode(",", $_GET['visible'])) . '"') : '');?>];
 	invi = jQuery(invi).not(visi).get();
+	var ocol = '<?php echo $ocol;?>';
+	var srtb = '<?php echo (array_key_exists('sort', $_GET) ?  $_GET['sort'] : $ocol);?>';
+	var srtd = '<?php echo (array_key_exists('direction', $_GET) ?  $_GET['direction'] : 'desc');?>';
 	var nowr = [<?php echo $nowr;?>];
 	var nwnm = [<?php echo $nwnm;?>];
 	var revo = [<?php echo $revo;?>];
-	var ocol = <?php echo $ocol;?>;
 	var plen = [<?php echo $plen;?>];
 	var shrt = '<?php echo $shrt;?>';
 	var sing = '<?php echo $sing;?>';
@@ -1411,6 +1413,13 @@ function transient_catalog($bones = false) {
 			return refstr;
 		}
 		var $_GET = getQueryParams(document.location.search);
+		String.prototype.asId = function() {
+			var th = jQuery('#example thead th');
+			for (var i=0, l=th.length; i<l; i++) {
+				if (jQuery(th[i]).attr('class') == this.toString()) return i
+			}
+		}
+
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
@@ -1650,6 +1659,9 @@ function transient_catalog($bones = false) {
 					action: function ( e, dt, button, config ) {
 						var colsearches = document.getElementsByClassName('colsearch');
 						var querystring = '';
+						var sortclasses = jQuery(table.column(table.order()[0][0]).header()).attr('class');
+						console.log(sortclasses);
+						var sortstring = 'sort=' + sortclasses.split(' ')[0] + '&direction=' + sortclasses.split('sorting_').slice(-1);
 						for ( var i = 0; i < colsearches.length; i++ ) {
 							var cs = colsearches[i];
 							if (cs.value !== '') {
@@ -1668,6 +1680,7 @@ function transient_catalog($bones = false) {
 						}
 						visiblestring = 'visible=' + encodeURIComponent(visiblestring);
 						querystring = (querystring === '') ? '?' + visiblestring : querystring + '&' + visiblestring;
+						if (sortstring !== '') querystring += '&' + sortstring;
 						querystring = 'https://' + subd + '.space/' + querystring; 
 						window.prompt("Permanent link to this table query:", querystring);
 					},
@@ -1709,7 +1722,7 @@ function transient_catalog($bones = false) {
                 style:    'os',
                 selector: 'td:first-child'
             },
-            order: [[ ocol, "desc" ]]
+            order: [[ srtb.asId(), srtd ]]
 		} );
 
 		// Set up observable filter widget.

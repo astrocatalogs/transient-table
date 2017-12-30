@@ -5,7 +5,7 @@ alias,maxdate,velocity,maxabsmag,masses,ra,dec,hostoffsetang,hostoffsetdist,radi
 maxdate,discoverdate,xraylink
 download,photolink
 photolink,xraylink,spectralink
-25
+photolink
 10,100
 TDE
 TDE
