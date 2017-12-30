@@ -339,7 +339,7 @@ function datatables_functions() {
 		if (namefield === undefined) namefield = 'name';
 		if (aliasfield === undefined) aliasfield = 'alias';
 		if ( (type === 'display' || type === 'sort') ) {
-			if ( row[aliasfield].length > 1 ) {
+			if ( row[aliasfield] !== undefined && row[aliasfield].length > 1 ) {
 				var idObj = searchFields[namefield];
 				var filterTxt = searchFields['search'].val().toUpperCase().replace(/"/g, '');
 				var idObjTxt = (idObj === null) ? '' : idObj.value.toUpperCase().replace(/"/g, '');
