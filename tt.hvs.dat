@@ -1,0 +1,11 @@
+hvs
+faststars
+faststars
+alias,maxdate,velocity,maxabsmag,hostra,hostdec,hostoffsetang,hostoffsetdist,references,instruments,ebv,lumdist,altitude,azimuth,airmass,skybrightness
+maxdate,discoverdate
+download,spectralink,photolink,radiolink,xraylink
+photolink,spectralink,radiolink,xraylink
+photolink
+10,50,250
+HVS
+faststars
