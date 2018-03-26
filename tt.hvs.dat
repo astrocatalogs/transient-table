@@ -1,0 +1,11 @@
+hvs
+faststars
+faststars
+alias,maxdate,maxabsmag,references,instruments,ebv,lumdist,altitude,azimuth,airmass,skybrightness,redshift,radiolink,photolink,xraylink
+maxdate,discoverdate
+download,spectralink,radiolink,xraylink
+spectralink,radiolink,xraylink
+velocity
+10,50,250
+HVS
+fast star
