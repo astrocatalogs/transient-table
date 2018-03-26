@@ -1499,11 +1499,7 @@ function transient_catalog($bones = false) {
 		var table = jQuery('#example').DataTable( {
 			ajax: {
 				url: ajaxURL,
-				dataSrc: function ( json ) {
-					jQuery('#loadingMessage').html('Generating table...');
-					jQuery('#loadingMessage').toggleClass('force-redraw');
-					return json;
-				}
+				dataSrc: ''
 			},
 			"language": {
 				"loadingRecords": "<img style='vertical-align:-43%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif' title='Please wait!'><span id='loadingMessage'>Loading... (should take a few seconds)</span>"
