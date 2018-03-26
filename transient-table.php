@@ -1039,11 +1039,12 @@ function transient_catalog($bones = false) {
 		var floatColInds = [];
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
 			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffsetang',
-			'hostoffsetdist', 'altitude', 'azimuth', 'airmass', 'skybrightness', 'masses'];
+			'hostoffsetdist', 'altitude', 'azimuth', 'airmass', 'skybrightness', 'masses',
+			'propermotionra', 'propermotiondec'];
 		var stringColValDict = {};
 		var stringColValPMDict = {};
 		var stringColInds = [];
-		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype'];
+		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype', 'spectraltype'];
 		var raDecColValDict = {};
 		var raDecColValPMDict = {};
 		var raDecColInds = [];
@@ -1523,6 +1524,15 @@ function transient_catalog($bones = false) {
 			 { "data": "masses", "name": "masses", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
 			);
 		}
+		if (jQuery('.spectraltype')[0]) {
+			column_arr.push(
+			{ "data": "spectraltype.0.value",
+			  "name": "spectraltype",
+			  "type": "string",
+			  "defaultContent": ""
+			}
+			);
+		}
 		if (jQuery('.host')[0]) {
 			column_arr.push(
 			 { "data": null, "name": "host", "type": "string", "width":"14%", "render": hostSwitcher }
@@ -1542,6 +1552,16 @@ function transient_catalog($bones = false) {
 				"_": "dec[,].value"
 			  }, "name": "dec", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 }
 		]);
+		if (jQuery('.propermotionra')[0]) {
+			column_arr.push(
+			 { "data": "propermotionra.0.value", "name": "propermotionra", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
+			);
+		}
+		if (jQuery('.propermotiondec')[0]) {
+			column_arr.push(
+			 { "data": "propermotiondec.0.value", "name": "propermotiondec", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
+			);
+		}
 		if (jQuery('.host')[0]) {
 			column_arr = column_arr.concat([
 			 { "data": {
