@@ -1,11 +1,11 @@
 hvs
 faststars
 faststars
-alias,maxdate,velocity,maxabsmag,hostra,hostdec,hostoffsetang,hostoffsetdist,references,instruments,ebv,lumdist,altitude,azimuth,airmass,skybrightness
+alias,maxdate,maxabsmag,references,instruments,ebv,lumdist,altitude,azimuth,airmass,skybrightness,redshift,radiolink,photolink,xraylink
 maxdate,discoverdate
-download,spectralink,photolink,radiolink,xraylink
-photolink,spectralink,radiolink,xraylink
-photolink
+download,spectralink,radiolink,xraylink
+spectralink,radiolink,xraylink
+velocity
 10,50,250
 HVS
-faststars
+fast star

@@ -1496,6 +1496,132 @@ function transient_catalog($bones = false) {
 			  this.style.display='block';
 		  });
 		};
+		var column_arr = [
+			 { "defaultContent": "", "responsivePriority": 6 },
+			 { "data": null, "name": "name", "type": "string", "responsivePriority": 1, "render": nameSwitcherName },
+			 { "data": {
+				"_": eventAliases,
+				"display": eventAliasesOnly,
+			  }, "name": "aliases", "type": "string" },
+			 { "data": {
+				"display": discoverDateLinked,
+				"filter": "discoverdate.0.value",
+				"sort": discoverDateValue,
+				"_": "discoverdate[,].value"
+			  }, "name": "discoverdate", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2 },
+			 { "data": {
+				"display": maxDateLinked,
+				"filter": "maxdate.0.value",
+				"sort": maxDateValue,
+				"_": "maxdate[,].value"
+			  }, "type": "non-empty-float", "defaultContent": "" },
+			 { "data": "maxappmag.0.value", "name": "maxappmag", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
+			{ "data": "maxabsmag.0.value", "name": "maxabsmag", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
+		];
+		if (jQuery('.masses')[0]) {
+			column_arr.push(
+			 { "data": "masses", "name": "masses", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
+			);
+		}
+		if (jQuery('.host')[0]) {
+			column_arr.push(
+			 { "data": null, "name": "host", "type": "string", "width":"14%", "render": hostSwitcher }
+		    );
+		}
+		column_arr = column_arr.concat([
+			 { "data": {
+				"display": raLinked,
+				"filter": "ra.0.value",
+				"sort": raValue,
+				"_": "ra[,].value"
+			  }, "name": "ra", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+			 { "data": {
+				"display": decLinked,
+				"filter": "dec.0.value",
+				"sort": decValue,
+				"_": "dec[,].value"
+			  }, "name": "dec", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 }
+		]);
+		if (jQuery('.host')[0]) {
+			column_arr = column_arr.concat([
+			 { "data": {
+				"display": hostraLinked,
+				"filter": "hostra.0.value",
+				"sort": hostraValue,
+				"_": "hostra[,].value"
+			  }, "name": "hostra", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+			 { "data": {
+				"display": hostdecLinked,
+				"filter": "hostdec.0.value",
+				"sort": hostdecValue,
+				"_": "hostdec[,].value"
+			  }, "name": "hostdec", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+			 { "data": {
+				"filter": hostoffsetangValue,
+				"sort": hostoffsetangValue,
+				"_": "hostoffsetang.0.value"
+			  }, "name": "hostoffsetang", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
+			 { "data": {
+				"filter": hostoffsetdistValue,
+				"sort": hostoffsetdistValue,
+				"_": "hostoffsetdist.0.value"
+			  }, "name": "hostoffsetdist", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 }
+		  ]);
+		}
+		column_arr = column_arr.concat([
+			 { "data": altitudeValue, "name": "altitude", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
+			 { "data": azimuthValue, "name": "azimuth", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
+			 { "data": airmassValue, "name": "airmass", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
+			 { "data": skyBrightnessValue, "name": "skybrightness", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
+			 { "data": "instruments", "name": "instruments", "type": "string", "defaultContent": "" },
+			 { "data": {
+				"display": redshiftLinked,
+				"filter": redshiftValue,
+				"sort": redshiftValue,
+				"_": "redshift[,].value"
+			  }, "name": "redshift", "type": "non-empty-float", "defaultContent": "" },
+			 { "data": {
+				"display": velocityLinked,
+				"filter": velocityValue,
+				"sort": velocityValue,
+				"_": "velocity[,].value"
+			  }, "name": "velocity", "type": "non-empty-float", "defaultContent": "" },
+			 { "data": {
+				"display": lumdistLinked,
+				"filter": lumdistValue,
+				"sort": lumdistValue,
+				"_": "lumdist[,].value"
+			  }, "name": "lumdist", "type": "non-empty-float", "defaultContent": "" },
+			 { "data": null, "name": "claimedtype", "type": "string", "responsivePriority": 3, "render": typeSwitcher },
+			 { "data": {
+				"display": ebvLinked,
+				"_": ebvValue
+			  }, "name": "ebv", "type": "non-empty-float", "defaultContent": "" },
+			 { "data": {
+				"display": photoLinked,
+				"_": photoValue,
+				"sort": photoSort
+			  }, "name": "photolink", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"6%" },
+			 { "data": {
+				"display": spectraLinked,
+				"_": spectraValue,
+				"sort": spectraSort
+			  }, "name": "spectralink", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"5%" },
+			 { "data": {
+				"display": radioLinked,
+				"_": "radiolink"
+			  }, "name": "radiolink", "type": "num", "defaultContent": "", "responsivePriority": 2, "width":"4%" },
+			 { "data": {
+				"display": xrayLinked,
+				"_": "xraylink",
+			  }, "name": "xraylink", "type": "num", "defaultContent": "", "responsivePriority": 2 },
+			 { "data": {
+				"display": refLinked,
+				"_": "references"
+			  }, "name": "references", "type": "html", "searchable": false },
+			 { "data": dataLinked, "name": "data", "responsivePriority": 4, "searchable": false },
+			 { "defaultContent": "" },
+		]);
 		var table = jQuery('#example').DataTable( {
 			ajax: {
 				url: ajaxURL,
@@ -1508,116 +1634,7 @@ function transient_catalog($bones = false) {
 			"language": {
 				"loadingRecords": "<img style='vertical-align:-43%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif' title='Please wait!'><span id='loadingMessage'>Loading... (should take a few seconds)</span>"
 			},
-			columns: [
-				{ "defaultContent": "", "responsivePriority": 6 },
-				{ "data": null, "name": "name", "type": "string", "responsivePriority": 1, "render": nameSwitcherName },
-				{ "data": {
-					"_": eventAliases,
-					"display": eventAliasesOnly,
-				  }, "name": "aliases", "type": "string" },
-				{ "data": {
-					"display": discoverDateLinked,
-					"filter": "discoverdate.0.value",
-					"sort": discoverDateValue,
-					"_": "discoverdate[,].value"
-				  }, "name": "discoverdate", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2 },
-				{ "data": {
-					"display": maxDateLinked,
-					"filter": "maxdate.0.value",
-					"sort": maxDateValue,
-					"_": "maxdate[,].value"
-				  }, "type": "non-empty-float", "defaultContent": "" },
-				{ "data": "maxappmag.0.value", "name": "maxappmag", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
-				{ "data": "maxabsmag.0.value", "name": "maxabsmag", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
-				{ "data": "masses", "name": "masses", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
-				{ "data": null, "name": "host", "type": "string", "width":"14%", "render": hostSwitcher },
-				{ "data": {
-					"display": raLinked,
-					"filter": "ra.0.value",
-					"sort": raValue,
-					"_": "ra[,].value"
-				  }, "name": "ra", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
-				{ "data": {
-					"display": decLinked,
-					"filter": "dec.0.value",
-					"sort": decValue,
-					"_": "dec[,].value"
-				  }, "name": "dec", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
-				{ "data": {
-					"display": hostraLinked,
-					"filter": "hostra.0.value",
-					"sort": hostraValue,
-					"_": "hostra[,].value"
-				  }, "name": "hostra", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
-				{ "data": {
-					"display": hostdecLinked,
-					"filter": "hostdec.0.value",
-					"sort": hostdecValue,
-					"_": "hostdec[,].value"
-				  }, "name": "hostdec", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
-				{ "data": {
-					"filter": hostoffsetangValue,
-					"sort": hostoffsetangValue,
-					"_": "hostoffsetang.0.value"
-				  }, "name": "hostoffsetang", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
-				{ "data": {
-					"filter": hostoffsetdistValue,
-					"sort": hostoffsetdistValue,
-					"_": "hostoffsetdist.0.value"
-				  }, "name": "hostoffsetdist", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 10 },
-				{ "data": altitudeValue, "name": "altitude", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
-				{ "data": azimuthValue, "name": "azimuth", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
-				{ "data": airmassValue, "name": "airmass", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
-				{ "data": skyBrightnessValue, "name": "skybrightness", "type": "non-empty-float", "render": renderObsValue, "defaultContent": "" },
-				{ "data": "instruments", "name": "instruments", "type": "string", "defaultContent": "" },
-				{ "data": {
-					"display": redshiftLinked,
-					"filter": redshiftValue,
-					"sort": redshiftValue,
-					"_": "redshift[,].value"
-				  }, "name": "redshift", "type": "non-empty-float", "defaultContent": "" },
-				{ "data": {
-					"display": velocityLinked,
-					"filter": velocityValue,
-					"sort": velocityValue,
-					"_": "velocity[,].value"
-				  }, "name": "velocity", "type": "non-empty-float", "defaultContent": "" },
-				{ "data": {
-					"display": lumdistLinked,
-					"filter": lumdistValue,
-					"sort": lumdistValue,
-					"_": "lumdist[,].value"
-				  }, "name": "lumdist", "type": "non-empty-float", "defaultContent": "" },
-				{ "data": null, "name": "claimedtype", "type": "string", "responsivePriority": 3, "render": typeSwitcher },
-				{ "data": {
-					"display": ebvLinked,
-					"_": ebvValue
-				  }, "name": "ebv", "type": "non-empty-float", "defaultContent": "" },
-				{ "data": {
-					"display": photoLinked,
-					"_": photoValue,
-					"sort": photoSort
-				  }, "name": "photolink", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"6%" },
-				{ "data": {
-					"display": spectraLinked,
-					"_": spectraValue,
-					"sort": spectraSort
-				  }, "name": "spectralink", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2, "width":"5%" },
-				{ "data": {
-					"display": radioLinked,
-					"_": "radiolink"
-				  }, "name": "radiolink", "type": "num", "defaultContent": "", "responsivePriority": 2, "width":"4%" },
-				{ "data": {
-					"display": xrayLinked,
-					"_": "xraylink",
-				  }, "name": "xraylink", "type": "num", "defaultContent": "", "responsivePriority": 2 },
-				{ "data": {
-					"display": refLinked,
-					"_": "references"
-				  }, "name": "references", "type": "html", "searchable": false },
-				{ "data": dataLinked, "name": "data", "responsivePriority": 4, "searchable": false },
-				{ "defaultContent": "" },
-			],
+			columns: column_arr,
             dom: '<"addmodal">Bflprt<"coordfoot">ip',
             //colReorder: true,
 			orderMulti: false,
