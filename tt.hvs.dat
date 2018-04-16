@@ -1,7 +1,7 @@
 hvs
 faststars
 faststars
-alias,maxdate,maxabsmag,references,instruments,ebv,lumdist,altitude,azimuth,airmass,skybrightness,redshift,radiolink,photolink,xraylink,discoverdate,maxappmag
+alias,maxdate,maxabsmag,references,instruments,ebv,lumdist,altitude,azimuth,airmass,skybrightness,redshift,radiolink,xraylink,discoverdate,maxappmag
 maxdate,discoverdate
 download,spectralink,radiolink,xraylink
 spectralink,radiolink,xraylink

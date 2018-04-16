@@ -1038,7 +1038,7 @@ function transient_catalog($bones = false) {
 		var floatColValPMDict = {};
 		var floatColInds = [];
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
-			'xraylink', 'maxappmag', 'maxabsmag', 'velocity', 'lumdist', 'hostoffsetang',
+			'xraylink', 'maxappmag', 'maxabsmag', 'color', 'velocity', 'lumdist', 'hostoffsetang',
 			'hostoffsetdist', 'altitude', 'azimuth', 'airmass', 'skybrightness', 'masses',
 			'propermotionra', 'propermotiondec'];
 		var stringColValDict = {};
@@ -1480,7 +1480,7 @@ function transient_catalog($bones = false) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="± degs" value="' + getpmval + '" />';
 			} else if (['maxdate', 'discoverdate'].indexOf(classname) >= 0) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="± days" value="' + getpmval + '" />';
-			} else if (['maxabsmag', 'maxappmag'].indexOf(classname) >= 0) {
+			} else if (['maxabsmag', 'maxappmag', 'color'].indexOf(classname) >= 0) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="± mags" value="' + getpmval + '" />';
 			} else if (['redshift'].indexOf(classname) >= 0) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="±" value="' + getpmval + '" />';
@@ -1517,8 +1517,13 @@ function transient_catalog($bones = false) {
 				"_": "maxdate[,].value"
 			  }, "type": "non-empty-float", "defaultContent": "" },
 			 { "data": "maxappmag.0.value", "name": "maxappmag", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender },
-			{ "data": "maxabsmag.0.value", "name": "maxabsmag", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
+			 { "data": "maxabsmag.0.value", "name": "maxabsmag", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
 		];
+		if (jQuery('.color')[0]) {
+			column_arr.push(
+			 { "data": "color", "name": "color", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
+			);
+		}
 		if (jQuery('.masses')[0]) {
 			column_arr.push(
 			 { "data": "masses", "name": "masses", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
@@ -4046,11 +4051,11 @@ function errata() {
 function transient_table_scripts() {
 	global $stem, $modu, $subd;
 	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'graveyard', 'atel', 'frbs', 'mosfit')) || is_search()) {
-		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('datatables-css'));
-		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('parent-style'));
-		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery') );
-		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__), array() );
-		wp_enqueue_script( 'suncalc-js', plugins_url( "suncalc.js", __FILE__), array() );
+		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('datatables-css'), null );
+		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('parent-style'), null );
+		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery'), null );
+		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__), array(), null );
+		wp_enqueue_script( 'suncalc-js', plugins_url( "suncalc.js", __FILE__), array(), null );
 		#wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.js", array('jquery') );
 		#wp_enqueue_style( 'datatables-css', "https://cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.css", array('transient-table') );
 		#wp_enqueue_script( 'datatables-js', "https://nightly.datatables.net/js/jquery.dataTables.min.js", array('jquery') );
