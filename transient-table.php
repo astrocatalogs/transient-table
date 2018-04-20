@@ -1038,7 +1038,7 @@ function transient_catalog($bones = false) {
 		var floatColValPMDict = {};
 		var floatColInds = [];
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
-			'xraylink', 'maxappmag', 'maxabsmag', 'color', 'velocity', 'lumdist', 'hostoffsetang',
+			'xraylink', 'maxappmag', 'maxabsmag', 'color', 'velocity', 'escapevelocity', 'galactocentricvelocity', 'lumdist', 'hostoffsetang',
 			'hostoffsetdist', 'altitude', 'azimuth', 'airmass', 'skybrightness', 'masses',
 			'propermotionra', 'propermotiondec'];
 		var stringColValDict = {};
@@ -1259,6 +1259,30 @@ function transient_catalog($bones = false) {
 			var data = parseFloat(row.velocity[0]['value']);
 			return data;
 		}
+		function escapevelocityValue ( row, type, full, meta ) {
+			if (!row.escapevelocity) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = parseFloat(row.escapevelocity[0]['value']);
+			return data;
+		}
+		function galactocentricvelocityValue ( row, type, full, meta ) {
+			if (!row.galactocentricvelocity) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = parseFloat(row.galactocentricvelocity[0]['value']);
+			return data;
+		}
+		function boundprobabilityValue ( row, type, full, meta ) {
+			if (!row.boundprobability) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = parseFloat(row.boundprobability[0]['value']);
+			return data;
+		}
 		function lumdistValue ( row, type, full, meta ) {
 			if (!row.lumdist) {
 				if (type === 'sort') return NaN;
@@ -1286,11 +1310,29 @@ function transient_catalog($bones = false) {
 		}
 		function velocityLinked ( row, type, full, meta ) {
 			if (!row.velocity) return '';
-			var data = row.velocity[0]['value'];
+			var data = parseFloat(row.velocity[0]['value']).toPrecision(3);
 			if (row.velocity[0]['kind']) {
 				var kind = row.velocity[0]['kind'];
 				return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + kind + "</span></div>";
 			}
+			return data;
+		}
+		function escapevelocityLinked ( row, type, full, meta ) {
+			if (!row.escapevelocity) return '';
+			var data = Number(parseFloat(row.escapevelocity[0]['value']).toPrecision(4));
+			return data;
+		}
+		function galactocentricvelocityLinked ( row, type, full, meta ) {
+			if (!row.galactocentricvelocity) return '';
+			var data = Number(parseFloat(row.galactocentricvelocity[0]['value']).toPrecision(4));
+			return data;
+		}
+		function boundprobabilityLinked ( row, type, full, meta ) {
+			if (!row.boundprobability) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			var data = (100.0 * parseFloat(row.boundprobability[0]['value'])).toFixed(1) + "%";
 			return data;
 		}
 		function lumdistLinked ( row, type, full, meta ) {
@@ -1611,6 +1653,38 @@ function transient_catalog($bones = false) {
 				"sort": velocityValue,
 				"_": "velocity[,].value"
 			  }, "name": "velocity", "type": "non-empty-float", "defaultContent": "" },
+		]);
+		if (jQuery('.escapevelocity')[0]) {
+			column_arr.push(
+			 { "data": {
+				"display": escapevelocityLinked,
+				"filter": escapevelocityValue,
+				"sort": escapevelocityValue,
+				"_": "escapevelocity[,].value"
+			  }, "name": "escapevelocity", "type": "non-empty-float", "defaultContent": "" },
+		  );
+		}
+		if (jQuery('.galactocentricvelocity')[0]) {
+			column_arr.push(
+			 { "data": {
+				"display": galactocentricvelocityLinked,
+				"filter": galactocentricvelocityValue,
+				"sort": galactocentricvelocityValue,
+				"_": "galactocentricvelocity[,].value"
+			  }, "name": "galactocentricvelocity", "type": "non-empty-float", "defaultContent": "" },
+		  );
+		}
+		if (jQuery('.boundprobability')[0]) {
+			column_arr.push(
+			 { "data": {
+				"display": boundprobabilityLinked,
+				"filter": boundprobabilityValue,
+				"sort": boundprobabilityValue,
+				"_": "boundprobability[,].value"
+			  }, "name": "boundprobability", "type": "non-empty-float", "defaultContent": "" }
+		  );
+		}
+		column_arr = column_arr.concat([
 			 { "data": {
 				"display": lumdistLinked,
 				"filter": lumdistValue,
