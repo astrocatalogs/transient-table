@@ -1044,7 +1044,7 @@ function transient_catalog($bones = false) {
 		var stringColValDict = {};
 		var stringColValPMDict = {};
 		var stringColInds = [];
-		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype', 'spectraltype'];
+		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype', 'spectraltype', 'stellarclass'];
 		var raDecColValDict = {};
 		var raDecColValPMDict = {};
 		var raDecColInds = [];
@@ -1332,8 +1332,18 @@ function transient_catalog($bones = false) {
 				if (type === 'sort') return NaN;
 				return '';
 			}
-			var data = (100.0 * parseFloat(row.boundprobability[0]['value'])).toFixed(1) + "%";
-			return data;
+			var value = parseFloat(row.boundprobability[0]['value']);
+			var data = (100.0 * value).toFixed(1) + "%</span>";
+			var color = '';
+			if (value >= 0.75) {
+				color = '<span style="color:darkred; font-weight: bold">';
+			} else if (value <= 0.25) {
+				color = '<span style="color:darkgreen; font-weight: bold">';
+			} else {
+				color = '<span style="color:goldenrod; font-weight: bold">';
+			}
+			var ul = ('upperlimit' in row.boundprobability[0]) ? '<' : '';
+			return (color + ul + data);
 		}
 		function lumdistLinked ( row, type, full, meta ) {
 			if (!row.lumdist) return '';
@@ -1580,6 +1590,11 @@ function transient_catalog($bones = false) {
 			}
 			);
 		}
+		if (jQuery('.stellarclass')[0]) {
+			column_arr.push(
+				 { "data": "stellarclass[,].value", "name": "stellarclass", "type": "string", "responsivePriority": 3 }
+			);
+		}
 		if (jQuery('.host')[0]) {
 			column_arr.push(
 			 { "data": null, "name": "host", "type": "string", "width":"14%", "render": hostSwitcher }
@@ -1684,14 +1699,20 @@ function transient_catalog($bones = false) {
 			  }, "name": "boundprobability", "type": "non-empty-float", "defaultContent": "" }
 		  );
 		}
-		column_arr = column_arr.concat([
+		column_arr.push(
 			 { "data": {
 				"display": lumdistLinked,
 				"filter": lumdistValue,
 				"sort": lumdistValue,
 				"_": "lumdist[,].value"
-			  }, "name": "lumdist", "type": "non-empty-float", "defaultContent": "" },
-			 { "data": null, "name": "claimedtype", "type": "string", "responsivePriority": 3, "render": typeSwitcher },
+			  }, "name": "lumdist", "type": "non-empty-float", "defaultContent": "" }
+		);
+		if (jQuery('.claimedtype')[0]) {
+			column_arr.push(
+				 { "data": null, "name": "claimedtype", "type": "string", "responsivePriority": 3, "render": typeSwitcher }
+			);
+		}
+		column_arr = column_arr.concat([
 			 { "data": {
 				"display": ebvLinked,
 				"_": ebvValue
@@ -1829,6 +1850,9 @@ function transient_catalog($bones = false) {
 			}, {
 				targets: nowr,
 				className: 'nowrap'
+			}, {
+				targets: [ 'boundprobability' ],
+				className: 'dt-right'
 			} ],
             select: {
                 style:    'os',
