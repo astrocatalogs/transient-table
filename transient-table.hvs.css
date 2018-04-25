@@ -222,7 +222,8 @@
 	vertical-align:middle;
 }
 
-a.dt-button {
+button.dt-button {
+	padding:0.2em 0.5em!important;
     line-height:12px;
 }
 

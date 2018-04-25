@@ -1043,7 +1043,7 @@ function transient_catalog($bones = false) {
 		var floatSearchCols = ['redshift', 'ebv', 'photolink', 'spectralink', 'radiolink',
 			'xraylink', 'maxappmag', 'maxabsmag', 'color', 'velocity', 'escapevelocity', 'galactocentricvelocity', 'lumdist', 'hostoffsetang',
 			'hostoffsetdist', 'altitude', 'azimuth', 'airmass', 'skybrightness', 'masses',
-			'propermotionra', 'propermotiondec'];
+			'propermotionra', 'propermotiondec', 'boundprobability'];
 		var stringColValDict = {};
 		var stringColValPMDict = {};
 		var stringColInds = [];
@@ -1434,6 +1434,13 @@ function transient_catalog($bones = false) {
 			var mydate = new Date(row.discoverdate[0]['value']);
 			return mydate.getTime();
 		}
+		function colorValue ( row, type, full, meta ) {
+			if (!row.color || !row.color.length) {
+				if (type === 'sort') return NaN;
+				return '';
+			}
+			return parseFloat(row.color[0]['value']);
+		}
 		function maxDateLinked ( row, type, full, meta ) {
 			if (!row.maxdate) return '';
 			var mjd = String(dateToMJD(row.maxdate[0]['value']));
@@ -1453,6 +1460,12 @@ function transient_catalog($bones = false) {
 				return (datalink + "<a class='eci' title='Edit Data' href='https://github.com/astrocatalogs/" + ghpr + "-internal/edit/master/"
 					+ fileeventname + ".json' target='_blank'></a>")
 			}
+		}
+		function colorLinked ( row, type, full, meta ) {
+			if (!row.color || !row.color.length) return '';
+			var color = row.color[0]['value'];
+			return "<div class='tooltip'>" + row.color[0]['value'] + "<span class='tooltiptext'>" +
+				row.color[0]['kind'].replace(/\s/g, '&nbsp;') + "</span></div>";
 		}
 		function refLinked ( row, type, full, meta ) {
 			if (!row.references) return '';
@@ -1531,7 +1544,7 @@ function transient_catalog($bones = false) {
 			} else gclassname = classname;
 			var getval = (gclassname in $_GET) ? $_GET[gclassname] : '';
 			var classnamepm = classname + '-pm'
-			var getpmval = ((classnamepm) in $_GET) ? $_GET[gclassnamepm] : '';
+			var getpmval = ((classnamepm) in $_GET) ? $_GET[classnamepm] : '';
 			var inputstr = '<input class="colsearch" type="search" incremental="incremental" id="'+classname+'" placeholder="'+title+'" value="' + getval + '" />';
 			if (['ra', 'dec', 'hostra', 'hostdec'].indexOf(classname) >= 0) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="± degs" value="' + getpmval + '" />';
@@ -1539,9 +1552,9 @@ function transient_catalog($bones = false) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="± days" value="' + getpmval + '" />';
 			} else if (['maxabsmag', 'maxappmag', 'color'].indexOf(classname) >= 0) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="± mags" value="' + getpmval + '" />';
-			} else if (['redshift'].indexOf(classname) >= 0) {
+			} else if (['redshift', 'velocity', 'escapevelocity', 'galactocentricvelocity'].indexOf(classname) >= 0) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="±" value="' + getpmval + '" />';
-			} else if (['name', 'host', 'claimedtype'].indexOf(classname) >= 0) {
+			} else if (['name', 'host', 'claimedtype', 'spectraltype', 'stellarclass'].indexOf(classname) >= 0) {
 				inputstr += '<br><input class="colsearch" type="search" incremental="incremental" id="'+classnamepm+'" placeholder="w/ prefix" value="' + getpmval + '" />';
 			}
             jQuery(this).html( inputstr );
@@ -1579,7 +1592,12 @@ function transient_catalog($bones = false) {
 		];
 		if (jQuery('.color')[0]) {
 			column_arr.push(
-			 { "data": "color", "name": "color", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
+			 { "data": {
+				"display": colorLinked,
+				"filter": "color.0.value",
+				"sort": colorValue,
+				"_": "color[,].value"
+			  }, "name": "color", "type": "non-empty-float", "defaultContent": "", "responsivePriority": 2 },
 			);
 		}
 		if (jQuery('.masses')[0]) {
@@ -1785,7 +1803,11 @@ function transient_catalog($bones = false) {
                 {
                     extend: 'colvis',
                     columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2))',
-					collectionLayout: 'two-column'
+					collectionLayout: 'three-column',
+					columnText: function ( dt, idx, title ) {
+						var txt = dt.column(idx).header();
+						return title;
+					}
                 },
                 {
                     extend: 'csv',
@@ -4180,14 +4202,14 @@ function transient_table_scripts() {
 	global $stem, $modu, $ghpr, $subd;
 	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'graveyard', 'atel', 'frbs', 'mosfit')) || is_search()) {
 		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('datatables-css'), null );
-		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('parent-style'), null );
-		wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery'), null );
+		#wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('parent-style'), null );
+		#wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery'), null );
+		wp_enqueue_style( 'datatables-css', "//cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/b-colvis-1.5.1/b-html5-1.5.1/r-2.2.1/sl-1.2.5/datatables.min.css", array('parent-style') );
+		wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/b-colvis-1.5.1/b-html5-1.5.1/r-2.2.1/sl-1.2.5/datatables.min.js", array('jquery') );
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__), array(), null );
 		wp_enqueue_script( 'suncalc-js', plugins_url( "suncalc.js", __FILE__), array(), null );
-		#wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.js", array('jquery') );
-		#wp_enqueue_style( 'datatables-css', "https://cdn.datatables.net/s/dt/dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0,se-1.1.0/datatables.min.css", array('transient-table') );
 		#wp_enqueue_script( 'datatables-js', "https://nightly.datatables.net/js/jquery.dataTables.min.js", array('jquery') );
-		#wp_enqueue_style( 'datatables-css', "https://nightly.datatables.net/css/jquery.dataTables.min.css", array('transient-table') );
+		#wp_enqueue_style( 'datatables-css', "https://nightly.datatables.net/css/jquery.dataTables.min.css", array('parent-style') );
 		#wp_enqueue_script( 'datatables-buttons-js', "https://nightly.datatables.net/buttons/js/dataTables.buttons.min.js", array('datatables-js') );
 		#wp_enqueue_style( 'datatables-buttons-css', "https://nightly.datatables.net/buttons/css/buttons.dataTables.min.css", array('datatables-css') );
 		#wp_enqueue_script( 'datatables-colvis-js', "https://nightly.datatables.net/buttons/js/buttons.colVis.min.js", array('datatables-js') );
