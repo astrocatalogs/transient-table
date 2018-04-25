@@ -1,10 +1,11 @@
 hvs
 faststars
 faststars
-alias,maxdate,maxabsmag,references,instruments,ebv,lumdist,altitude,azimuth,airmass,skybrightness,redshift,radiolink,xraylink,discoverdate,maxappmag,spectralink
+faststars
+alias,discoverer,maxdate,maxabsmag,references,instruments,ebv,lumdist,altitude,azimuth,airmass,skybrightness,redshift,radiolink,xraylink,discoverdate,maxappmag,spectralink
 maxdate,discoverdate
 download,spectralink,radiolink,xraylink
-spectralink,radiolink,xraylink,velocity,escapevelocity,galactocentricvelocity
+spectralink,radiolink,xraylink
 velocity
 10,50,250
 HVS

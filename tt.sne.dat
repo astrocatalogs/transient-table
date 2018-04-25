@@ -1,6 +1,7 @@
 sne
 supernovae
 sne
+sne
 alias,maxdate,velocity,maxabsmag,masses,hostra,hostdec,hostoffsetang,hostoffsetdist,references,instruments,ebv,lumdist,altitude,azimuth,airmass,skybrightness
 maxdate,discoverdate
 download,spectralink,photolink,radiolink,xraylink

@@ -13,24 +13,26 @@ $tt = explode("\n", file_get_contents(__DIR__ . '/tt.dat'));
 $stem = trim($tt[0]);
 $modu = trim($tt[1]);
 $subd = trim($tt[2]);
-$invi = '"' . implode('","', explode(",", trim($tt[3]))) . '"';
-$nowr = '"' . implode('","', explode(",", trim($tt[4]))) . '"';
-$nwnm = '"' . implode('","', explode(",", trim($tt[5]))) . '"';
-$revo = '"' . implode('","', explode(",", trim($tt[6]))) . '"';
-$ocol = trim($tt[7]);
-$plen = trim($tt[8]);
-$shrt = trim($tt[9]);
-$sing = trim($tt[10]);
+$ghpr = trim($tt[3]);
+$invi = '"' . implode('","', explode(",", trim($tt[4]))) . '"';
+$nowr = '"' . implode('","', explode(",", trim($tt[5]))) . '"';
+$nwnm = '"' . implode('","', explode(",", trim($tt[6]))) . '"';
+$revo = '"' . implode('","', explode(",", trim($tt[7]))) . '"';
+$ocol = trim($tt[8]);
+$plen = trim($tt[9]);
+$shrt = trim($tt[10]);
+$sing = trim($tt[11]);
 $outp = 'astrocats/astrocats/' . $modu . '/output/';
 
 function datatables_functions() {
-	global $tt, $stem, $modu, $subd, $invi, $nowr, $nwnm, $revo, $ocol, $plen, $shrt, $sing, $lochtml, $outp;
+	global $tt, $stem, $modu, $subd, $ghpr, $invi, $nowr, $nwnm, $revo, $ocol, $plen, $shrt, $sing, $lochtml, $outp;
 ?>
 	<script>
 	var searchFields;
 	var stem = '<?php echo $stem;?>';
 	var modu = '<?php echo $modu;?>';
 	var subd = '<?php echo $subd;?>';
+	var ghpr = '<?php echo $ghpr;?>';
 	var invi = [<?php echo $invi;?>];
 	var visi = [<?php echo (array_key_exists('visible', $_GET) ?
 		('"' . implode('","', explode(",", $_GET['visible'])) . '"') : '');?>];
@@ -54,6 +56,7 @@ function datatables_functions() {
 	var aziColumn;
 	var amColumn;
 	var sbColumn;
+
 	var lst = 0.0;
 	var longitude = 0.0;
 	var latitude = 0.0;
@@ -1044,7 +1047,7 @@ function transient_catalog($bones = false) {
 		var stringColValDict = {};
 		var stringColValPMDict = {};
 		var stringColInds = [];
-		var stringSearchCols = ['name', 'alias', 'host', 'instruments', 'claimedtype', 'spectraltype', 'stellarclass'];
+		var stringSearchCols = ['name', 'alias', 'discoverer', 'host', 'instruments', 'claimedtype', 'spectraltype', 'stellarclass'];
 		var raDecColValDict = {};
 		var raDecColValPMDict = {};
 		var raDecColInds = [];
@@ -1054,6 +1057,8 @@ function transient_catalog($bones = false) {
 		var dateColInds = [];
 		var dateSearchCols = [ 'discoverdate', 'maxdate' ];
 		var allSearchCols = floatSearchCols.concat(stringSearchCols, raDecSearchCols, dateSearchCols);
+		var quantityNames = ['ra', 'dec', 'lumdist'];
+
 		function ebvValue ( row, type, full, meta ) {
 			if (!row.ebv) {
 				if (type === 'sort') return NaN;
@@ -1443,9 +1448,9 @@ function transient_catalog($bones = false) {
 			var fileeventname = nameToFilename(row.name);
 			var datalink = "<a class='dci' title='Download Data' href='" + stem + '/' + fileeventname + ".json' download></a>"
 			if (!row.download || row.download != 'e') {
-				return (datalink + "<a class='eci' title='Edit Data' onclick='eSN(\"" + row.name + "\",\"" + fileeventname + "\",\"" + stem + "\")'></a>") 
+				return (datalink + "<a class='eci' title='Edit Data' onclick='eSN(\"" + row.name + "\",\"" + fileeventname + "\",\"" + ghpr + "\")'></a>") 
 			} else {
-				return (datalink + "<a class='eci' title='Edit Data' href='https://github.com/astrocatalogs/" + stem + "-internal/edit/master/"
+				return (datalink + "<a class='eci' title='Edit Data' href='https://github.com/astrocatalogs/" + ghpr + "-internal/edit/master/"
 					+ fileeventname + ".json' target='_blank'></a>")
 			}
 		}
@@ -1556,6 +1561,7 @@ function transient_catalog($bones = false) {
 				"_": eventAliases,
 				"display": eventAliasesOnly,
 			  }, "name": "aliases", "type": "string" },
+			 { "data": "discoverer[,].value", "name": "discoverer", "type": "string", "defaultContent": "", "responsivePriority": 2 },
 			 { "data": {
 				"display": discoverDateLinked,
 				"filter": "discoverdate.0.value",
@@ -1583,7 +1589,7 @@ function transient_catalog($bones = false) {
 		}
 		if (jQuery('.spectraltype')[0]) {
 			column_arr.push(
-			{ "data": "spectraltype.0.value",
+			{ "data": "spectraltype[, ].value",
 			  "name": "spectraltype",
 			  "type": "string",
 			  "defaultContent": ""
@@ -1592,7 +1598,7 @@ function transient_catalog($bones = false) {
 		}
 		if (jQuery('.stellarclass')[0]) {
 			column_arr.push(
-				 { "data": "stellarclass[,].value", "name": "stellarclass", "type": "string", "responsivePriority": 3 }
+				 { "data": "stellarclass[, ].value", "name": "stellarclass", "type": "string", "responsivePriority": 3 }
 			);
 		}
 		if (jQuery('.host')[0]) {
@@ -1616,12 +1622,12 @@ function transient_catalog($bones = false) {
 		]);
 		if (jQuery('.propermotionra')[0]) {
 			column_arr.push(
-			 { "data": "propermotionra.0.value", "name": "propermotionra", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
+			 { "data": "propermotionra.0.value", "name": "propermotionra", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender, "responsivePriority": 10 }
 			);
 		}
 		if (jQuery('.propermotiondec')[0]) {
 			column_arr.push(
-			 { "data": "propermotiondec.0.value", "name": "propermotiondec", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender }
+			 { "data": "propermotiondec.0.value", "name": "propermotiondec", "type": "non-empty-float", "defaultContent": "", "render": noBlanksNumRender, "responsivePriority": 10 }
 			);
 		}
 		if (jQuery('.host')[0]) {
@@ -1747,6 +1753,7 @@ function transient_catalog($bones = false) {
 				url: ajaxURL,
 				dataSrc: ''
 			},
+			autoWidth: false,
 			"language": {
 				"loadingRecords": "<img style='vertical-align:-43%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif' title='Please wait!'><span id='loadingMessage'>Loading... (should take a few seconds)</span>"
 			},
@@ -1777,16 +1784,36 @@ function transient_catalog($bones = false) {
                 'selectNone',
                 {
                     extend: 'colvis',
-                    columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2))'
+                    columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2))',
+					collectionLayout: 'two-column'
                 },
                 {
                     extend: 'csv',
-                    text: 'Export selected to CSV',
+                    text: 'Export selected: CSV',
                     exportOptions: {
                         modifier: { selected: true },
                         columns: ':visible:not(:first-child):not(:last-child):not(:nth-last-child(2))',
 						orthogonal: 'export'
                     }
+				},
+				{
+					text: 'Export selected: JSON',
+					action: function ( e, dt, button, config ) {
+						var data = dt.buttons.exportData({modifier: {selected: true}});
+						var new_data = [];
+						for ( var i = 0; i < data["body"].length; i++ ) {
+							var item = {};
+							for ( var c = 0; c < data["header"].length; c++ ) {
+								item[data["header"][c]] = data["body"][i][c];
+							}
+							new_data.push(item);
+						}
+ 
+						jQuery.fn.dataTable.fileSave(
+							new Blob( [ JSON.stringify( new_data ) ] ),
+							'Export.json'
+						);
+					}
 				},
 				{
 					action: function ( e, dt, button, config ) {
@@ -1817,7 +1844,7 @@ function transient_catalog($bones = false) {
 						querystring = 'https://' + subd + '.space/' + querystring; 
 						window.prompt("Permanent link to this table query:", querystring);
 					},
-					text: 'Copy Permalink'
+					text: 'Permalink'
 				},
 				{
 					text: '<span id="addicon">+</span> Add ' + sing,
@@ -1957,9 +1984,16 @@ function transient_catalog($bones = false) {
 		    '<div class="addmodal-content">' +
 		    '<span class="addmodal-close">&times;</span>' +
 			'<p>Specify object details below:</p>' +
-		    '<table id="addtable"><tr><th>' + sing + ' name*</th><th>Bibcode*</th></tr>' +
-			'<tr><td><input type="text" id="objectname"></td>' +
-			'<td><input type="text" id="objectbibcode"></td></tr>' +
+		    '<table id="addtable"><tr><th>' + sing + ' name*</th>';
+		for (var i = 0; i < quantityNames.length; i++) {
+			addmodalstring += '<th>' + quantityNames[i] + '</th>';
+		}
+		addmodalstring += '<th>Bibcode*</th></tr><tr><td><input type="text" id="objectname"></td>';
+		for (var i = 0; i < quantityNames.length; i++) {
+			addmodalstring += '<td><input type="text" id="object' + quantityNames[
+				i] + '"></td>';
+		}
+		addmodalstring += '<td><input type="text" id="objectbibcode"></td></tr>' +
 			'</table>' +
 			'<p>* = Required</p>' +
 			'<a class="dt-button" id="addgithub"><span>Submit to GitHub</span></a>' +
@@ -2107,11 +2141,6 @@ function transient_catalog($bones = false) {
 			searchFields = getSearchFields(allSearchCols);
 			table.rows({page:'current'}).invalidate();
 		} );
-		table.on( 'column-visibility.dt', function (e, settings, column, state) {
-			//if ( column == altColumn || column == aziColumn || column == amColumn || column == sbColumn ) {
-			//	if ( state ) table.cells(null, column).invalidate();
-			//}
-		} );
 		jQuery('#premaxphoto, #postmaxphoto, #premaxspectra, #postmaxspectra').change( function () {
 			table.draw();
 		} );
@@ -2155,6 +2184,11 @@ function transient_catalog($bones = false) {
 		addgithub.onclick = function () {
 			var addname = document.getElementById('objectname').value;
 			var addnamel = addname.toLowerCase();
+			var quantities = Array();
+			for (var i = 0; i < quantityNames.length; i++) {
+				quantities.push([quantityNames[i], document.getElementById(
+					'object' + quantityNames[i]).value]);
+			}
 			var bibcode = document.getElementById('objectbibcode').value;
 			if (addname === '') {
 				alert('Please provide name.');
@@ -2174,7 +2208,7 @@ function transient_catalog($bones = false) {
 				alert('19 character bibcode required.');
 				return;
 			}
-			eSN(addname, addname, stem, bibcode);
+			eSN(addname, addname, ghpr, quantities, bibcode);
 		}
 
 		setInterval( function () {
@@ -2242,10 +2276,10 @@ function duplicate_table() {
 			return "<button class='googleit' type='button' onclick='googleNames(\"" + namearr.join(',') + "\")'>Google all names</button>"
 		}
 		function markAsDuplicate ( row, type, full, meta ) {
-			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + stem + "\")'>These are the same</button>"
+			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + ghpr + "\")'>These are the same</button>"
 		}
 		function markAsDistinct ( row, type, full, meta ) {
-			return "<button class='diffevent' type='button' onclick='markDiff(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + stem + "\")'>These are different</button>"
+			return "<button class='diffevent' type='button' onclick='markDiff(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + ghpr + "\")'>These are different</button>"
 		}
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
@@ -2352,7 +2386,7 @@ function duplicate_table() {
                 'selectNone',
                 {
                     extend: 'colvis',
-                    columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2)):not(:nth-last-child(3)):not(:nth-last-child(4))'
+					columns: ':not(:first-child):not(:last-child):not(:nth-last-child(2)):not(:nth-last-child(3)):not(:nth-last-child(4))'
                 },
                 {
                     extend: 'csv',
@@ -2474,10 +2508,10 @@ function frb_table() {
 			return "<button class='googleit' type='button' onclick='googleNames(\"" + namearr.join(',') + "\")'>Google all names</button>"
 		}
 		function markAsDuplicate ( row, type, full, meta ) {
-			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + stem + "\")'>These are the same</button>"
+			return "<button class='sameevent' type='button' onclick='markSame(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + ghpr + "\")'>These are the same</button>"
 		}
 		function markAsDistinct ( row, type, full, meta ) {
-			return "<button class='diffevent' type='button' onclick='markDiff(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + stem + "\")'>These are different</button>"
+			return "<button class='diffevent' type='button' onclick='markDiff(\"" + row.name1 + "\",\"" + row.name2 + "\",\"" + row.edit + "\",\"" + ghpr + "\")'>These are different</button>"
 		}
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
@@ -3761,14 +3795,14 @@ function conflict_table() {
 				}
 				html += "<div class='tooltip'><button class='markerror' type='button' onclick='markError(\"" +
 					row.name + "\", \"" + row.quantity + "\", \"" + row.sources[i].idtype +
-					"\", \"" + row.sources[i].id + "\", \"" + row.edit + "\",\"" + stem + "\")'>" + quantityStr + ((quantityStr !== "") ? " =<br>" : "") +
+					"\", \"" + row.sources[i].id + "\", \"" + row.edit + "\",\"" + ghpr + "\")'>" + quantityStr + ((quantityStr !== "") ? " =<br>" : "") +
 					String(row.values[i]) + "<br>is erroneous</button><span class='tooltiptextbot'>" + row.sources[i].id + "</span></div>";
 			}
 			var aliases = getAliases(row);
 			for (i = 1; i < aliases.length; i++) {
 				html += ' ';
 				html += "<button class='diffevent' type='button' onclick='markDiff(\"" +
-					row.name + "\", \"" + aliases[i] + "\", \"" + row.edit + "\",\"" + stem + "\")'>Alias<br>" +
+					row.name + "\", \"" + aliases[i] + "\", \"" + row.edit + "\",\"" + ghpr + "\")'>Alias<br>" +
 					aliases[i] + "<br>is a different SN</button>";
 			}
 			return html;
@@ -4143,7 +4177,7 @@ function errata() {
 }
 
 function transient_table_scripts() {
-	global $stem, $modu, $subd;
+	global $stem, $modu, $ghpr, $subd;
 	if (is_front_page() || is_page(array('find-duplicates', 'bibliography', 'sentinel', 'find-conflicts', 'errata', 'host-galaxies', 'graveyard', 'atel', 'frbs', 'mosfit')) || is_search()) {
 		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('datatables-css'), null );
 		wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('parent-style'), null );

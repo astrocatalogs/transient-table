@@ -1,6 +1,7 @@
 tde
 tidaldisruptions
 tde
+tde
 alias,maxdate,velocity,maxabsmag,masses,ra,dec,hostoffsetang,hostoffsetdist,radiolink,instruments,ebv,lumdist,references,altitude,azimuth,airmass,skybrightness
 maxdate,discoverdate,xraylink
 download,photolink

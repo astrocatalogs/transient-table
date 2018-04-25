@@ -3,7 +3,7 @@ function showSpecCSV() {
 	parent.resizeWindowToContents();
 }
 
-function eSN(name, filename, stem, bibcode) {
+function eSN(name, filename, stem, quantities, bibcode) {
 	var value = 
 		'{\n' +
 		'\t"' + name + '":{\n' + 
@@ -21,8 +21,20 @@ function eSN(name, filename, stem, bibcode) {
 		'\t\t\t{\n' +
 		'\t\t\t\t"value":"' + name + '"\n' +
 		'\t\t\t}\n' +
-		'\t\t]\n' +
-		'\t}\n' +
+		'\t\t]';
+	if (quantities !== undefined) {
+		for (var i = 0; i < quantities.length; i++) {
+			if (quantities[i][1] == '') continue;
+			value +=
+				',\n\t\t"' + quantities[i][0] + '":[\n' +
+				'\t\t\t{\n' +
+				'\t\t\t\t"value":"' + quantities[i][1] + '"\n' +
+				'\t\t\t}\n' +
+				'\t\t]';
+		}
+	}
+	value +=
+		'\n\t}\n' +
 		'}';
 	value = encodeURIComponent(value);
 	var instructions = 'PLEASE READ: Welcome to the new JSON page for ' + name + '! Before editing this file, please look at our JSON schema [https://github.com/astrocatalogs/supernovae/blob/master/SCHEMA.md]. Please replace this message with your own comments before committing.'
