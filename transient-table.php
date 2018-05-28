@@ -1560,6 +1560,7 @@ function transient_catalog($bones = false) {
             jQuery(this).html( inputstr );
         } );
 		var ajaxURL = '/../../astrocats/astrocats/' + modu + '/output/' + ((bones) ? 'bones' : 'catalog') + '.min.json';
+		// var ajaxURL = '/../../astrocats/astrocats/' + modu + '/output/' + ((bones) ? 'bones' : 'shm-catalog') + '.min.json';
 		jQuery.fn.redraw = function(){
 		  jQuery(this).each(function(){
 			  this.style.display='none';
@@ -1999,7 +2000,8 @@ function transient_catalog($bones = false) {
 			'</td><td>Has <span id="prepost"><label><input type="checkbox" id="premaxphoto"> pre-</label> ' +
 			'<label><input type="checkbox" id="postmaxphoto"> post-max</label> photometry' +
 			'<br><label><input type="checkbox" id="premaxspectra"> pre-</label> ' +
-			'<label><input type="checkbox" id="postmaxspectra"> post-max</label> spectroscopy</span>' +
+			'<label><input type="checkbox" id="postmaxspectra"> post-max</label> spectroscopy' +
+			'<br><input id="maxdayrange" size="7" value="0" type="search" incremental="incremental"> days before/after max</span>' +
 			'</td></tr></table>';
 		jQuery("div.coordfoot").html(footstring);
 		var addmodalstring = '<div id="addmodalwindow" class="addmodal-bg">' +
@@ -2105,33 +2107,35 @@ function transient_catalog($bones = false) {
 						if (sundist < 5.0*Math.PI/180.0) return false;
 					}
 				}
+				var maxdayrange = parseFloat(document.getElementById('maxdayrange').value);
+				if ( isNaN(maxdayrange) ) maxdayrange = 0.0;
 				if ( document.getElementById('premaxphoto').checked ) {
 					if ( !rowData.photolink ) return false;
 					var photosplit = rowData.photolink.split(',');
 					if ( photosplit.length < 2 ) return false;
 					var premaxep = parseFloat(photosplit[1]);
-					if ( premaxep >= 0.0 ) return false;
+					if ( premaxep >= maxdayrange ) return false;
 				}
 				if ( document.getElementById('postmaxphoto').checked ) {
 					if ( !rowData.photolink ) return false;
 					var photosplit = rowData.photolink.split(',');
 					if ( photosplit.length < 2 ) return false;
 					var postmaxep = parseFloat(photosplit[photosplit.length == 3 ? 2 : 1]);
-					if ( postmaxep <= 0.0 ) return false;
+					if ( postmaxep <= maxdayrange ) return false;
 				}
 				if ( document.getElementById('premaxspectra').checked ) {
 					if ( !rowData.spectralink ) return false;
 					var spectrasplit = rowData.spectralink.split(',');
 					if ( spectrasplit.length < 2 ) return false;
 					var premaxep = parseFloat(spectrasplit[1]);
-					if ( premaxep >= 0.0 ) return false;
+					if ( premaxep >= maxdayrange ) return false;
 				}
 				if ( document.getElementById('postmaxspectra').checked ) {
 					if ( !rowData.spectralink ) return false;
 					var spectrasplit = rowData.spectralink.split(',');
 					if ( spectrasplit.length < 2 ) return false;
 					var postmaxep = parseFloat(spectrasplit[spectrasplit.length == 3 ? 2 : 1]);
-					if ( postmaxep <= 0.0 ) return false;
+					if ( postmaxep <= maxdayrange ) return false;
 				}
 				return true;
 			}
@@ -2164,6 +2168,9 @@ function transient_catalog($bones = false) {
 			table.rows({page:'current'}).invalidate();
 		} );
 		jQuery('#premaxphoto, #postmaxphoto, #premaxspectra, #postmaxspectra').change( function () {
+			table.draw();
+		} );
+		jQuery('#maxdayrange').on( 'input paste', function () {
 			table.draw();
 		} );
 		jQuery('#coordobservable, #farfrommoon, #farfromsun').change( function () {
