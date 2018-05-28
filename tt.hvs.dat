@@ -2,11 +2,11 @@ hvs
 faststars
 faststars
 faststars
-alias,discoverer,maxdate,maxabsmag,references,instruments,ebv,lumdist,altitude,azimuth,airmass,skybrightness,redshift,radiolink,xraylink,discoverdate,maxappmag,spectralink
+alias,discoverer,maxdate,maxabsmag,references,instruments,ebv,lumdist,altitude,azimuth,airmass,skybrightness,redshift,radiolink,xraylink,discoverdate,maxappmag
 maxdate,discoverdate
-download,spectralink,radiolink,xraylink
-spectralink,radiolink,xraylink
-velocity
+download,radiolink,xraylink
+radiolink,xraylink
+galactocentricvelocity
 10,50,250
 HVS
 fast star

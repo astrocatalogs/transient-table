@@ -214,7 +214,7 @@ function datatables_functions() {
 			message.innerHTML = "Unable to retrieve your location";
 		}
 
-		message.innerHTML = "<img style='vertical-align:-26%; padding-right:3px; width:16px' src='wp-content/plugins/transient-table/loading.gif'>Finding your location...";
+		message.innerHTML = "<img style='vertical-align:-26%; padding-right:3px; width:16px' src='" + urlbase + "wp-content/plugins/transient-table/loading.gif'>Finding your location...";
 		locbutt.disabled = true;
 
 		navigator.geolocation.getCurrentPosition(success, error);
@@ -1315,7 +1315,7 @@ function transient_catalog($bones = false) {
 		}
 		function velocityLinked ( row, type, full, meta ) {
 			if (!row.velocity) return '';
-			var data = parseFloat(row.velocity[0]['value']).toPrecision(3);
+			var data = Number(parseFloat(row.velocity[0]['value']).toPrecision(4));
 			if (row.velocity[0]['kind']) {
 				var kind = row.velocity[0]['kind'];
 				return "<div class='tooltip'>" + data + "<span class='tooltiptext'> " + kind + "</span></div>";
@@ -1453,7 +1453,7 @@ function transient_catalog($bones = false) {
 		}
 		function dataLinked ( row, type, full, meta ) {
 			var fileeventname = nameToFilename(row.name);
-			var datalink = "<a class='dci' title='Download Data' href='" + stem + '/' + fileeventname + ".json' download></a>"
+			var datalink = "<a class='dci' title='Download Data' href='" + urlstem + fileeventname + ".json' download></a>"
 			if (!row.download || row.download != 'e') {
 				return (datalink + "<a class='eci' title='Edit Data' onclick='eSN(\"" + row.name + "\",\"" + fileeventname + "\",\"" + ghpr + "\")'></a>") 
 			} else {
@@ -1479,7 +1479,7 @@ function transient_catalog($bones = false) {
 			}
 			if (rlen >= 5) {
 				var fileeventname = nameToFilename(row.name);
-				refstr += "<br><a href='" + stem + "/" + fileeventname + "/'>(See full list)</a>";
+				refstr += "<br><a href='" + urlstem + fileeventname + "/'>(See full list)</a>";
 			}
 			return refstr;
 		}
@@ -1774,7 +1774,7 @@ function transient_catalog($bones = false) {
 			},
 			autoWidth: false,
 			"language": {
-				"loadingRecords": "<img style='vertical-align:-43%; padding-right:3px' src='wp-content/plugins/transient-table/loading.gif' title='Please wait!'><span id='loadingMessage'>Loading... (should take a few seconds)</span>"
+				"loadingRecords": "<img style='vertical-align:-43%; padding-right:3px' src='" + urlbase + "wp-content/plugins/transient-table/loading.gif' title='Please wait!'><span id='loadingMessage'>Loading... (should take a few seconds)</span>"
 			},
 			columns: column_arr,
             dom: '<"addmodal">Bflprt<"coordfoot">ip',
