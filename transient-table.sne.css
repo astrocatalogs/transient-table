@@ -206,6 +206,11 @@
     line-height:18px!important;
 }
 
+button.dt-button {
+	padding:0.2em 0.5em!important;
+    line-height:12px;
+}
+
 .dataTables_paginate a {
     color:#777!important;
 } 
@@ -220,10 +225,6 @@
     padding:4px;
     line-height:16px;
 	vertical-align:middle;
-}
-
-a.dt-button {
-    line-height:12px;
 }
 
 table.dataTable td.select-checkbox:before {
@@ -647,3 +648,4 @@ input[type="search"].colsearch:hover {
 .hide-nf {
 	display: none;
 }
+
