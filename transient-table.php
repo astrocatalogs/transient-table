@@ -1494,10 +1494,10 @@ function transient_catalog($bones = false) {
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
-			if (classname == 'alias') {
-				jQuery(this).remove();
-			}
-			if (['check', 'download', 'references', 'responsive'].indexOf(classname) >= 0) {
+			// if (classname == 'alias') {
+			// 	jQuery(this).remove();
+			// }
+			if (['check', 'alias', 'download', 'references', 'responsive'].indexOf(classname) >= 0) {
 				jQuery(this).html( '' );
 			}
 			if (['check', 'alias', 'download', 'references', 'responsive'].indexOf(classname) >= 0) return;
@@ -1539,7 +1539,7 @@ function transient_catalog($bones = false) {
 				}
 			}
 			if (classname == 'name') {
-				jQuery(this).attr('colspan', 2);
+				// jQuery(this).attr('colspan', 2);
 				gclassname = 'event';
 			} else gclassname = classname;
 			var getval = (gclassname in $_GET) ? $_GET[gclassname] : '';
@@ -2024,6 +2024,9 @@ function transient_catalog($bones = false) {
 			'</div>' +
 			'</div>';
 		jQuery("div.addmodal").html(addmodalstring);
+		table.on( 'responsive-resize.dt', function ( e, settings, columns, state ) {
+			jQuery( table.column('name:name').footer() ).find('th').attr('display', 'block');
+		} );
         table.columns().every( function ( index ) {
             var that = this;
 
@@ -2313,9 +2316,9 @@ function duplicate_table() {
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
-			if (classname == 'aliases') {
-				jQuery(this).remove();
-			}
+			// if (classname == 'aliases') {
+			// 	jQuery(this).remove();
+			// }
 			if (['check', 'google', 'aredupes', 'notdupes', 'responsive'].indexOf(classname) >= 0) {
 				jQuery(this).html( '' );
 			}
@@ -2545,9 +2548,9 @@ function frb_table() {
         jQuery('#example tfoot th').each( function ( index ) {
 			var title = jQuery(this).text();
 			var classname = jQuery(this).attr('class').split(' ')[0];
-			if (classname == 'aliases') {
-				jQuery(this).remove();
-			}
+			// if (classname == 'aliases') {
+			// 	jQuery(this).remove();
+			// }
 			if (['check', 'responsive'].indexOf(classname) >= 0) {
 				jQuery(this).html( '' );
 			}
@@ -4211,8 +4214,8 @@ function transient_table_scripts() {
 		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('datatables-css'), null );
 		#wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('parent-style'), null );
 		#wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery'), null );
-		wp_enqueue_style( 'datatables-css', "//cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/b-colvis-1.5.1/b-html5-1.5.1/r-2.2.1/sl-1.2.5/datatables.min.css", array('parent-style') );
-		wp_enqueue_script( 'datatables-js', "//cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/b-colvis-1.5.1/b-html5-1.5.1/r-2.2.1/sl-1.2.5/datatables.min.js", array('jquery') );
+		wp_enqueue_style( 'datatables-css', "https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.2/b-colvis-1.5.2/b-html5-1.5.2/r-2.2.2/sl-1.2.6/datatables.min.css", array('parent-style'), false );
+		wp_enqueue_script( 'datatables-js', "https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.2/b-colvis-1.5.2/b-html5-1.5.2/r-2.2.2/sl-1.2.6/datatables.min.js", array('jquery'), false );
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__), array(), null );
 		wp_enqueue_script( 'suncalc-js', plugins_url( "suncalc.js", __FILE__), array(), null );
 		#wp_enqueue_script( 'datatables-js', "https://nightly.datatables.net/js/jquery.dataTables.min.js", array('jquery') );
