@@ -4214,8 +4214,8 @@ function transient_table_scripts() {
 		wp_enqueue_style( 'transient-table.' . $stem, plugins_url( 'transient-table.' . $stem . '.css', __FILE__), array('datatables-css'), null );
 		#wp_enqueue_style( 'datatables-css', plugins_url( "datatables.min.css", __FILE__), array('parent-style'), null );
 		#wp_enqueue_script( 'datatables-js', plugins_url( "datatables.min.js", __FILE__), array('jquery'), null );
-		wp_enqueue_style( 'datatables-css', "https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.2/b-colvis-1.5.2/b-html5-1.5.2/r-2.2.2/sl-1.2.6/datatables.min.css", array('parent-style'), false );
-		wp_enqueue_script( 'datatables-js', "https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.2/b-colvis-1.5.2/b-html5-1.5.2/r-2.2.2/sl-1.2.6/datatables.min.js", array('jquery'), false );
+		wp_enqueue_style( 'datatables-css', "https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.2/b-colvis-1.5.2/b-html5-1.5.2/r-2.2.2/sc-1.5.0/sl-1.2.6/datatables.min.css", array('parent-style'), null );
+		wp_enqueue_script( 'datatables-js', "https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.2/b-colvis-1.5.2/b-html5-1.5.2/r-2.2.2/sc-1.5.0/sl-1.2.6/datatables.min.js", array('jquery'), null );
 		wp_enqueue_script( 'transient-table-js', plugins_url( "transient-table.js", __FILE__), array(), null );
 		wp_enqueue_script( 'suncalc-js', plugins_url( "suncalc.js", __FILE__), array(), null );
 		#wp_enqueue_script( 'datatables-js', "https://nightly.datatables.net/js/jquery.dataTables.min.js", array('jquery') );
